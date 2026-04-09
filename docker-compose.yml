@@ -1,0 +1,73 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY}
+        VITE_REVERB_HOST: ${VITE_REVERB_HOST}
+        VITE_REVERB_PORT: ${VITE_REVERB_PORT}
+        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME}
+    image: acispedia-app:latest
+    container_name: acispedia-web
+    env_file: .env
+    depends_on:
+      - db
+      - reverb
+    ports:
+      - "80:80"
+    volumes:
+      - storage:/var/www/html/storage
+      - cache:/var/www/html/bootstrap/cache
+    restart: unless-stopped
+
+  queue:
+    image: acispedia-app:latest
+    container_name: acispedia-queue
+    env_file: .env
+    depends_on:
+      - db
+    command: php artisan queue:work --sleep=1 --tries=3 --timeout=90
+    volumes:
+      - storage:/var/www/html/storage
+      - cache:/var/www/html/bootstrap/cache
+    restart: unless-stopped
+
+  scheduler:
+    image: acispedia-app:latest
+    container_name: acispedia-scheduler
+    env_file: .env
+    depends_on:
+      - db
+    command: php artisan schedule:work
+    volumes:
+      - storage:/var/www/html/storage
+      - cache:/var/www/html/bootstrap/cache
+    restart: unless-stopped
+
+  reverb:
+    image: acispedia-app:latest
+    container_name: acispedia-reverb
+    env_file: .env
+    depends_on:
+      - db
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11
+    container_name: acispedia-db
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE}
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "127.0.0.1:3306:3306"
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  storage:
+  cache:

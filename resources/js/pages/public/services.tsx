@@ -1,0 +1,538 @@
+import { Head } from '@inertiajs/react';
+import * as React from 'react';
+
+import Heading from '@/components/heading';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
+
+type Service = {
+    id: number;
+    name: string;
+    category: string;
+    description: string;
+    price: number;
+    price_formatted?: string;
+    min: number;
+    max: number;
+    average_time: string | null;
+};
+
+type ServicesPayload = {
+    success: boolean;
+    message?: string;
+    services?: Record<string, Service[]> | Service[];
+    categories?: Record<string, string> | string[];
+    valid_services?: number;
+    shown_services?: number;
+    page?: number;
+    per_page?: number;
+    total_pages?: number;
+};
+
+function b64ToUtf8(b64: string): string {
+    const bin = atob(b64);
+
+    if (window.TextDecoder) {
+        const bytes = new Uint8Array(bin.length);
+
+        for (let i = 0; i < bin.length; i++) {
+            bytes[i] = bin.charCodeAt(i);
+        }
+
+        return new TextDecoder('utf-8').decode(bytes);
+    }
+
+    let esc = '';
+
+    for (let i = 0; i < bin.length; i++) {
+        const hex = bin.charCodeAt(i).toString(16).padStart(2, '0');
+        esc += `%${hex}`;
+    }
+
+    return decodeURIComponent(esc);
+}
+
+function unpackApiPayload(obj: unknown): ServicesPayload {
+    if (!obj || typeof obj !== 'object') {
+        return { success: false, message: 'Response tidak valid.' };
+    }
+
+    const maybe = obj as { encoding?: unknown; payload?: unknown };
+
+    if (maybe.encoding !== 'b64json' || typeof maybe.payload !== 'string') {
+        return obj as ServicesPayload;
+    }
+
+    try {
+        const jsonText = b64ToUtf8(maybe.payload);
+        const parsed = JSON.parse(jsonText);
+
+        return parsed as ServicesPayload;
+    } catch {
+        return { success: false, message: 'Gagal membuka payload layanan.' };
+    }
+}
+
+function flattenServices(services: ServicesPayload['services']): Service[] {
+    if (!services) {
+        return [];
+    }
+
+    if (Array.isArray(services)) {
+        return services;
+    }
+
+    const flattened: Service[] = [];
+    Object.values(services).forEach((list) => {
+        if (Array.isArray(list)) {
+            list.forEach((s) => flattened.push(s));
+        }
+    });
+
+    return flattened;
+}
+
+function normalizeCategories(categories: ServicesPayload['categories']): string[] {
+    if (!categories) {
+        return [];
+    }
+
+    if (Array.isArray(categories)) {
+        return categories;
+    }
+
+    return Object.values(categories);
+}
+
+function normalizeDescription(input: string): string {
+    return input
+        .replace(/\r\n/g, '\n')
+        .replace(/<\s*br\s*\/?>/gi, '\n')
+        .replace(/<\s*\/\s*p\s*>/gi, '\n')
+        .replace(/<\s*p[^>]*>/gi, '')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .trim();
+}
+
+const ALL_CATEGORIES_VALUE = '__all__';
+const DEFAULT_SORT_VALUE = '__default__';
+
+const sortOptions = [
+    { value: DEFAULT_SORT_VALUE, label: 'Default' },
+    { value: 'price_asc', label: 'Harga: Termurah' },
+    { value: 'price_desc', label: 'Harga: Termahal' },
+    { value: 'name_asc', label: 'Nama: A-Z' },
+    { value: 'name_desc', label: 'Nama: Z-A' },
+] as const;
+
+type SortValue = (typeof sortOptions)[number]['value'];
+
+const perPageOptions = ['25', '50', '100', '200'] as const;
+type PerPageValue = (typeof perPageOptions)[number];
+
+export default function PublicServices() {
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [error, setError] = React.useState<string | null>(null);
+
+    const [q, setQ] = React.useState('');
+    const [debouncedQ, setDebouncedQ] = React.useState('');
+    const [category, setCategory] = React.useState<string>(ALL_CATEGORIES_VALUE);
+    const [sort, setSort] = React.useState<SortValue>(DEFAULT_SORT_VALUE);
+    const [perPage, setPerPage] = React.useState<PerPageValue>('25');
+    const [page, setPage] = React.useState(1);
+
+    const [categories, setCategories] = React.useState<string[]>([]);
+    const [services, setServices] = React.useState<Service[]>([]);
+
+    const [meta, setMeta] = React.useState({
+        valid: 0,
+        shown: 0,
+        totalPages: 0,
+    });
+
+    const [detail, setDetail] = React.useState<Service | null>(null);
+
+    const load = React.useCallback(
+        async (opts: { q?: string; category?: string; sort?: string; perPage?: string; page?: number }) => {
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const url = new URL('/api/services', window.location.origin);
+                url.searchParams.set('obf', '1');
+                url.searchParams.set('per_page', opts.perPage ?? '25');
+
+                if (opts.q) {
+                    url.searchParams.set('q', opts.q);
+                }
+
+                if (opts.category && opts.category !== ALL_CATEGORIES_VALUE) {
+                    url.searchParams.set('category', opts.category);
+                }
+
+                if (opts.sort && opts.sort !== DEFAULT_SORT_VALUE) {
+                    url.searchParams.set('sort', opts.sort);
+                }
+
+                if (opts.page) {
+                    url.searchParams.set('page', String(opts.page));
+                }
+
+                const res = await fetch(url.toString(), {
+                    method: 'GET',
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                });
+
+                const raw = (await res.json()) as unknown;
+                const json = unpackApiPayload(raw);
+
+                if (!json.success) {
+                    setError(json.message ?? 'Gagal memuat layanan.');
+                    setServices([]);
+                    setCategories([]);
+                    setMeta({ valid: 0, shown: 0, totalPages: 0 });
+
+                    return;
+                }
+
+                const nextServices = flattenServices(json.services);
+                const nextCategories = normalizeCategories(json.categories);
+
+                setServices(nextServices);
+                setCategories(nextCategories);
+
+                setMeta({
+                    valid: json.valid_services ?? nextServices.length,
+                    shown: json.shown_services ?? nextServices.length,
+                    totalPages: json.total_pages ?? 0,
+                });
+            } catch (e) {
+                const msg = e instanceof Error ? e.message : 'Kesalahan tidak diketahui.';
+                setError(msg);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [],
+    );
+
+    React.useEffect(() => {
+        const id = window.setTimeout(() => {
+            setDebouncedQ(q);
+            setPage(1);
+        }, 350);
+
+        return () => window.clearTimeout(id);
+    }, [q]);
+
+    React.useEffect(() => {
+        load({ q: debouncedQ, category, sort, perPage, page });
+    }, [load, debouncedQ, category, sort, perPage, page]);
+
+    return (
+        <>
+            <Head title="Layanan" />
+
+            <div className="flex flex-col gap-4">
+                <div className="space-y-1">
+                    <Heading variant="small" title="Layanan" description="Cari dan lihat daftar layanan." />
+                </div>
+
+                <Card className="py-4">
+                    <CardContent className="space-y-4">
+                        <div className="grid gap-3 md:grid-cols-12">
+                            <div className="md:col-span-4">
+                                <Label htmlFor="category">Kategori</Label>
+                                <Select
+                                    value={category}
+                                    onValueChange={(v) => {
+                                        setCategory(v);
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger id="category" className="mt-1 w-full">
+                                        <SelectValue placeholder="Semua kategori" />
+                                    </SelectTrigger>
+                                    <SelectContent align="start">
+                                        <SelectItem value={ALL_CATEGORIES_VALUE}>Semua kategori</SelectItem>
+                                        {categories.map((c) => (
+                                            <SelectItem key={c} value={c}>
+                                                {c}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="md:col-span-4">
+                                <Label htmlFor="sort">Urutkan</Label>
+                                <Select
+                                    value={sort}
+                                    onValueChange={(v) => {
+                                        setSort(v as SortValue);
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger id="sort" className="mt-1 w-full">
+                                        <SelectValue placeholder="Default" />
+                                    </SelectTrigger>
+                                    <SelectContent align="start">
+                                        {sortOptions.map((o) => (
+                                            <SelectItem key={o.value} value={o.value}>
+                                                {o.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="md:col-span-4">
+                                <Label htmlFor="q">Pencarian</Label>
+                                <Input
+                                    id="q"
+                                    className="mt-1"
+                                    value={q}
+                                    onChange={(e) => setQ(e.target.value)}
+                                    placeholder="Cari layanan atau kategori..."
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                                {isLoading ? (
+                                    <>
+                                        <Spinner className="size-4" />
+                                        <span>Memuat layanan...</span>
+                                    </>
+                                ) : error ? (
+                                    <span className="text-destructive">{error}</span>
+                                ) : (
+                                    <span>
+                                        Menampilkan {meta.shown} dari {meta.valid} layanan
+                                        {meta.totalPages > 0
+                                            ? ` (Halaman ${page} / ${meta.totalPages})`
+                                            : ''}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="overflow-hidden rounded-lg border">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full text-sm">
+                                    <thead className="bg-muted/30">
+                                        <tr className="text-left">
+                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                ID
+                                            </th>
+                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                Layanan
+                                            </th>
+                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                Harga/K
+                                            </th>
+                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                Min
+                                            </th>
+                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                Maks
+                                            </th>
+                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                Waktu
+                                            </th>
+                                            <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                                Aksi
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {services.map((s) => (
+                                            <tr
+                                                key={s.id}
+                                                className="border-t transition-colors hover:bg-muted/20"
+                                            >
+                                                <td className="px-4 py-3 align-top font-medium">
+                                                    {s.id}
+                                                </td>
+                                                <td className="px-4 py-3 align-top">
+                                                    <div className="font-semibold text-foreground">
+                                                        {s.name}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 align-top font-semibold text-emerald-600 dark:text-emerald-500">
+                                                    {s.price_formatted ?? '—'}
+                                                </td>
+                                                <td className="px-4 py-3 align-top">{s.min}</td>
+                                                <td className="px-4 py-3 align-top">{s.max}</td>
+                                                <td className="px-4 py-3 align-top">
+                                                    {s.average_time ?? ''}
+                                                </td>
+                                                <td className="px-4 py-3 align-top">
+                                                    <div className="flex flex-wrap justify-center gap-2">
+                                                        <Button type="button" onClick={() => setDetail(s)}>
+                                                            Detail
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+
+                                        {!isLoading && services.length === 0 && (
+                                            <tr>
+                                                <td
+                                                    colSpan={7}
+                                                    className="px-4 py-10 text-center text-sm text-muted-foreground"
+                                                >
+                                                    Tidak ada layanan untuk filter saat ini.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                            <div className="text-xs text-muted-foreground">
+                                {meta.totalPages > 1 ? `Halaman ${page} / ${meta.totalPages}` : ' '}
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                                {meta.totalPages > 1 && (
+                                    <>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            disabled={page <= 1}
+                                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                        >
+                                            Prev
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            disabled={meta.totalPages > 0 && page >= meta.totalPages}
+                                            onClick={() =>
+                                                setPage((p) =>
+                                                    meta.totalPages > 0
+                                                        ? Math.min(meta.totalPages, p + 1)
+                                                        : p + 1,
+                                                )
+                                            }
+                                        >
+                                            Next
+                                        </Button>
+                                    </>
+                                )}
+
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <span>Data:</span>
+                                    <Select
+                                        value={perPage}
+                                        onValueChange={(v) => {
+                                            setPerPage(v as PerPageValue);
+                                            setPage(1);
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-9 w-24">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent align="end">
+                                            {perPageOptions.map((v) => (
+                                                <SelectItem key={v} value={v}>
+                                                    {v}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Dialog open={detail !== null} onOpenChange={(open) => !open && setDetail(null)}>
+                    <DialogContent>
+                        {detail && (
+                            <>
+                                <DialogHeader>
+                                    <DialogTitle>Detail Layanan</DialogTitle>
+                                    <DialogDescription>
+                                        ID {detail.id} • {detail.category}
+                                    </DialogDescription>
+                                </DialogHeader>
+
+                                <div className="grid gap-3 text-sm">
+                                    <div>
+                                        <div className="text-xs font-semibold text-muted-foreground">Nama</div>
+                                        <div className="mt-1 font-medium">{detail.name}</div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <div className="text-xs font-semibold text-muted-foreground">Harga/K</div>
+                                            <div className="mt-1 font-semibold text-emerald-600 dark:text-emerald-500">
+                                                {detail.price_formatted ?? '—'}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs font-semibold text-muted-foreground">Waktu</div>
+                                            <div className="mt-1 font-medium">{detail.average_time ?? '—'}</div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <div className="text-xs font-semibold text-muted-foreground">Min</div>
+                                            <div className="mt-1 font-medium">{detail.min}</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs font-semibold text-muted-foreground">Maks</div>
+                                            <div className="mt-1 font-medium">{detail.max}</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-semibold text-muted-foreground">Deskripsi</div>
+                                        <div className="mt-1 whitespace-pre-wrap wrap-break-word text-muted-foreground">
+                                            {normalizeDescription(detail.description)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <DialogFooter>
+                                    <Button type="button" variant="outline" onClick={() => setDetail(null)}>
+                                        Tutup
+                                    </Button>
+                                </DialogFooter>
+                            </>
+                        )}
+                    </DialogContent>
+                </Dialog>
+            </div>
+        </>
+    );
+}

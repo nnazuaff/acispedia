@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Deploy ACISPedia ke VPS (Laravel + Vite + Reverb)</title>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --panel: #0f1b2d;
+            --text: #e6eefc;
+            --muted: #a9b7d1;
+            --border: rgba(255, 255, 255, 0.12);
+            --code-bg: rgba(255, 255, 255, 0.06);
+            --accent: #7dd3fc;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: #f6f8fc;
+                --panel: #ffffff;
+                --text: #0b1220;
+                --muted: #475569;
+                --border: rgba(15, 23, 42, 0.12);
+                --code-bg: rgba(15, 23, 42, 0.06);
+                --accent: #0284c7;
+            }
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue",
+                sans-serif;
+            line-height: 1.55;
+        }
+
+        a {
+            color: var(--accent);
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 28px 16px 80px;
+        }
+
+        .header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .badge {
+            border: 1px solid var(--border);
+            background: var(--panel);
+            background: color-mix(in oklab, var(--panel), transparent 10%);
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        h1 {
+            font-size: 28px;
+            letter-spacing: -0.02em;
+            margin: 0;
+        }
+
+        h2 {
+            margin-top: 28px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+            font-size: 18px;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 14px;
+            margin: 14px 0;
+        }
+
+        .panel h3 {
+            margin: 0 0 10px;
+            font-size: 14px;
+            color: var(--muted);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        code {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.95em;
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 12px;
+            overflow: auto;
+        }
+
+        pre code {
+            background: transparent;
+            border: 0;
+            padding: 0;
+            border-radius: 0;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .toc {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .toc a {
+            display: block;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-decoration: none;
+            background: var(--panel);
+            background: color-mix(in oklab, var(--panel), transparent 10%);
+            color: var(--text);
+        }
+
+        .toc a span {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+            display: grid;
+            gap: 10px;
+        }
+
+        .checklist li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 10px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--panel);
+            background: color-mix(in oklab, var(--panel), transparent 6%);
+        }
+
+        .checklist input[type='checkbox'] {
+            margin-top: 3px;
+            transform: scale(1.1);
+        }
+
+        .checklist small {
+            display: block;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 24px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Deploy ACISPedia ke VPS (Laravel + Vite + Reverb)</h1>
+            <div class="badge">Mode: testing deploy (step-by-step)</div>
+        </div>
+
+        <p>
+            Dokumen ini menjelaskan langkah praktis untuk upload/deploy project Laravel (dengan Vite frontend)
+            dan realtime via Laravel Reverb ke VPS/hosting.
+        </p>
+
+        <div class="panel">
+            <h3>Checklist Cepat (untuk testing sekarang)</h3>
+            <ul class="checklist">
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        <a href="#docker-hostinger">Docker (Hostinger)<span>DNS → GitHub → docker compose</span></a>
+                        Domain + SSL aktif (HTTPS) → realtime idealnya lewat <strong>WSS</strong>.
+                        <small>Kalau pakai Cloudflare, pastikan SSL mode sesuai (Full/Full Strict).</small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        App Laravel jalan via Nginx + PHP-FPM.
+                        <small>Minimal: request ke <code>/</code> mengarah ke Laravel, bukan 404.</small>
+                    </div>
+                </li>
+
+                <h2 id="docker-hostinger">Docker (Hostinger) — Setup cepat</h2>
+                <p>
+                    Catatan: di Ubuntu tidak ada menu “pilih domain”. Domain dihubungkan lewat <strong>DNS</strong>.
+                    Setelah DNS mengarah ke IP VPS, barulah web server/SSL di VPS bisa memakai domain tersebut.
+                </p>
+                <div class="panel">
+                    <h3>1) DNS domain → arahkan ke IP VPS</h3>
+                    <ul>
+                        <li>Buat record <code>A</code> untuk <code>@</code> (root) → IP VPS.</li>
+                        <li>(Opsional) record <code>A</code> untuk <code>www</code> → IP VPS.</li>
+                        <li>Tunggu propagasi DNS (biasanya menit–jam).</li>
+                    </ul>
+                </div>
+
+                <div class="panel">
+                    <h3>2) Deploy via GitHub + docker compose</h3>
+                    <p>
+                        Repo ini sudah punya <code>Dockerfile</code> + <code>docker-compose.yml</code>.
+                        Kamu bisa deploy dengan 2 cara:
+                    </p>
+                    <ul>
+                        <li><strong>Cara A (paling umum):</strong> SSH ke VPS → <code>git clone</code> → jalankan docker
+                            compose.</li>
+                        <li><strong>Cara B (panel Hostinger):</strong> connect GitHub → pilih repo → jalankan
+                            <code>docker compose up</code>.</li>
+                    </ul>
+                    <pre><code># di VPS
+sudo apt update
+sudo apt install -y git
+
+# pastikan docker & docker compose plugin sudah ada (Hostinger biasanya sudah ada)
+docker --version
+docker compose version
+
+# ambil kode
+cd /opt
+sudo git clone https://github.com/USERNAME/REPO.git acispedia
+cd acispedia
+
+# buat .env dari contoh
+cp .env.docker.example .env
+nano .env
+
+# build + start
+sudo docker compose up -d --build
+
+# set APP_KEY + migrate + storage link
+sudo docker compose exec -T web php artisan key:generate
+sudo docker compose exec -T web php artisan migrate --force
+sudo docker compose exec -T web php artisan storage:link
+
+# optimisasi
+sudo docker compose exec -T web php artisan config:cache
+sudo docker compose exec -T web php artisan route:cache</code></pre>
+                    <p>
+                        Jika realtime (Reverb) diproxy lewat domain HTTPS, pastikan di <code>.env</code>:
+                        <code>REVERB_HOST=reverb</code> (internal) dan <code>VITE_REVERB_HOST=domainkamu.com</code>,
+                        <code>VITE_REVERB_PORT=443</code>, <code>VITE_REVERB_SCHEME=https</code> (public).
+                    </p>
+                </div>
+
+                <div class="panel">
+                    <h3>3) SQLite di VPS: perlu diganti?</h3>
+                    <ul>
+                        <li><strong>Bisa</strong> pakai SQLite kalau trafik kecil, single server, dan worker sedikit.
+                        </li>
+                        <li><strong>Disarankan ganti ke MySQL/MariaDB</strong> untuk production, apalagi kalau pakai
+                            <code>SESSION_DRIVER=database</code>, <code>QUEUE_CONNECTION=database</code>,
+                            <code>CACHE_STORE=database</code>
+                            (SQLite lebih rawan lock saat ada banyak proses).
+                        </li>
+                        <li>Docker compose di atas sudah include MariaDB supaya stabil untuk queue/session/cache.</li>
+                    </ul>
+                </div>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Asset Vite sudah dibuild → <code>npm run build</code>.
+                        <small>Pastikan <code>VITE_*</code> sudah benar sebelum build.</small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Reverb jalan sebagai service (auto-restart).
+                        <small>Targetnya: WebSocket lewat port 443 via reverse proxy Nginx.</small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Env production aman: <code>APP_ENV=production</code>, <code>APP_DEBUG=false</code>, secret tidak
+                        bocor.
+                        <small>Jangan commit file <code>.env</code>.</small>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="panel">
+            <h3>Navigasi Cepat</h3>
+            <div class="toc">
+                <a href="#step-1">1) Install Dependensi<span>nginx, php-fpm, composer, node</span></a>
+                <a href="#step-2">2) Upload Code<span>git clone / upload source</span></a>
+                <a href="#step-3">3) Install Dependency<span>composer install, npm ci</span></a>
+                <a href="#step-4">4) .env Production<span>APP_URL, DB, Reverb, VITE_*</span></a>
+                <a href="#step-5">5) Permission + Migrate<span>storage, cache, migrate</span></a>
+                <a href="#step-6">6) Nginx + WS Proxy<span>Laravel + /app → Reverb</span></a>
+                <a href="#step-7">7) SSL / WSS<span>certbot / cloudflare</span></a>
+                <a href="#step-8">8) Service Reverb<span>systemd auto-restart</span></a>
+                <a href="#step-9">9) Queue (opsional)<span>systemd worker</span></a>
+                <a href="#step-10">10) Scheduler (opsional)<span>cron schedule:run</span></a>
+                <a href="#step-11">11) Update Deploy<span>git pull + build + cache</span></a>
+            </div>
+        </div>
+
+        <h2>Asumsi</h2>
+        <ul>
+            <li>OS VPS: Ubuntu 22.04/24.04 (atau sejenis).</li>
+            <li>Web server: Nginx.</li>
+            <li>PHP: 8.2+ (sesuaikan dengan requirement project).</li>
+            <li>Node.js: versi LTS.</li>
+            <li>Reverb berjalan lokal (mis. <code>127.0.0.1:8080</code>) dan diproxy lewat Nginx port 443.</li>
+        </ul>
+
+        <h2 id="step-1">1) Install Dependensi Server</h2>
+        <div class="panel">
+            <h3>Ceklis Testing</h3>
+            <ul class="checklist">
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Pastikan versi tool sudah benar.
+                        <small>Contoh: <code>php -v</code>, <code>composer -V</code>, <code>node -v</code>,
+                            <code>npm -v</code></small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Nginx aktif.
+                        <small>Contoh: <code>systemctl status nginx</code></small>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <p>Install tool dasar. Jalankan sebagai root / sudo.</p>
+        <pre><code>sudo apt update
+sudo apt install -y nginx git unzip curl
+
+# PHP (contoh paket umum; sesuaikan versi PHP yang kamu pakai)
+sudo apt install -y php-fpm php-cli php-mbstring php-xml php-curl php-zip php-mysql php-bcmath
+
+# Composer
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+
+# Node (contoh pakai NodeSource; bisa juga pakai nvm)
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt install -y nodejs</code></pre>
+
+        <h2 id="step-2">2) Upload Code ke VPS</h2>
+        <p>Direkomendasikan pakai Git (lebih gampang update). Contoh:</p>
+        <pre><code>cd /var/www
+sudo mkdir -p acispedia
+sudo chown -R $USER:$USER /var/www/acispedia
+
+git clone &lt;URL_REPO_KAMU&gt; /var/www/acispedia
+cd /var/www/acispedia</code></pre>
+
+        <h2 id="step-3">3) Install Dependency Project</h2>
+        <div class="panel">
+            <h3>Ceklis Testing</h3>
+            <ul class="checklist">
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Install backend dependency tanpa dev.
+                        <small><code>composer install --no-dev --optimize-autoloader</code></small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Build frontend.
+                        <small><code>npm ci</code> lalu <code>npm run build</code></small>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <pre><code># Backend
+composer install --no-dev --optimize-autoloader
+
+# Frontend
+npm ci
+npm run build</code></pre>
+
+        <h2 id="step-4">4) Konfigurasi .env Production</h2>
+        <div class="panel">
+            <h3>Ceklis Testing</h3>
+            <ul class="checklist">
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        <code>APP_URL</code> sudah memakai HTTPS dan domain production.
+                        <small>Contoh: <code>APP_URL=https://domainkamu.com</code></small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Database bisa konek.
+                        <small>Testing: <code>php artisan migrate:status</code> (harus tidak error koneksi)</small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Reverb + Vite env sesuai skema reverse proxy.
+                        <small>Jika proxy via 443: <code>VITE_REVERB_SCHEME=https</code>,
+                            <code>VITE_REVERB_PORT=443</code></small>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <p>Buat env dan isi nilai production:</p>
+        <pre><code>cp .env.example .env
+php artisan key:generate</code></pre>
+
+        <p>Minimal yang perlu kamu set (contoh):</p>
+        <pre><code>APP_NAME=ACISPedia
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://domainkamu.com
+
+# Database
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=acispedia
+DB_USERNAME=...
+DB_PASSWORD=...
+
+# Broadcasting / Reverb
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=...
+REVERB_APP_KEY=...
+REVERB_APP_SECRET=...
+REVERB_HOST=127.0.0.1
+REVERB_PORT=8080
+REVERB_SCHEME=http
+
+# Vite (dibaca saat build)
+VITE_REVERB_APP_KEY=${REVERB_APP_KEY}
+VITE_REVERB_HOST=domainkamu.com
+VITE_REVERB_PORT=443
+VITE_REVERB_SCHEME=https</code></pre>
+
+        <p>
+            Catatan penting:
+        </p>
+        <ul>
+            <li><code>VITE_*</code> harus sudah benar <strong>sebelum</strong> menjalankan <code>npm run build</code>.
+            </li>
+            <li>Kalau kamu proxy Reverb lewat Nginx/443, maka <code>VITE_REVERB_PORT=443</code> dan
+                <code>VITE_REVERB_SCHEME=https</code>.
+            </li>
+            <li>Kalau tidak proxy dan kamu expose port 8080 publik, maka set host/port sesuai dan pastikan firewall
+                membolehkan.</li>
+        </ul>
+
+        <h2 id="step-5">5) Storage, Permission, Migration</h2>
+        <div class="panel">
+            <h3>Ceklis Testing</h3>
+            <ul class="checklist">
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Permission folder writeable sudah benar.
+                        <small>Minimal: <code>storage/</code> dan <code>bootstrap/cache</code> bisa ditulis oleh user
+                            web server.</small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Migration sukses.
+                        <small><code>php artisan migrate --force</code></small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Cache production dibuat.
+                        <small><code>php artisan config:cache</code> dll selesai tanpa error.</small>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <pre><code># Permission folder yang wajib bisa ditulis
+sudo chown -R www-data:www-data storage bootstrap/cache
+sudo find storage bootstrap/cache -type d -exec chmod 775 {} \;
+
+php artisan storage:link
+php artisan migrate --force
+
+# Cache untuk production
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache</code></pre>
+
+        <h2 id="step-6">6) Nginx: Serve Laravel + Proxy WebSocket Reverb</h2>
+        <div class="panel">
+            <h3>Ceklis Testing</h3>
+            <ul class="checklist">
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Nginx config valid.
+                        <small><code>sudo nginx -t</code></small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Website bisa diakses (HTTP/HTTPS) dan tidak 404.
+                        <small>Contoh: <code>curl -I https://domainkamu.com</code></small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        WS proxy header sudah benar (Upgrade/Connection).
+                        <small>Tanpa ini, Reverb sering gagal connect di browser.</small>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <p>
+            Prinsipnya: Laravel di-handle oleh PHP-FPM, sedangkan koneksi WebSocket diarahkan ke Reverb
+            (yang berjalan di <code>127.0.0.1:8080</code>). Dengan cara ini kamu tidak perlu membuka port 8080 ke
+            publik.
+        </p>
+
+        <p>Buat file Nginx, contoh: <code>/etc/nginx/sites-available/acispedia</code></p>
+        <pre><code>server {
+    listen 80;
+    server_name domainkamu.com;
+
+    root /var/www/acispedia/public;
+    index index.php;
+
+    # (Opsional) redirect ke HTTPS kalau SSL sudah aktif
+    # return 301 https://$host$request_uri;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php-fpm.sock; # sesuaikan versi PHP (mis. php8.3-fpm.sock)
+    }
+
+    # Proxy WebSocket Reverb (path default biasanya /app)
+    location /app {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+    }
+}</code></pre>
+
+        <p>Aktifkan site:</p>
+        <pre><code>sudo ln -s /etc/nginx/sites-available/acispedia /etc/nginx/sites-enabled/acispedia
+sudo nginx -t
+sudo systemctl reload nginx</code></pre>
+
+        <h2 id="step-7">7) SSL (HTTPS) untuk WSS</h2>
+        <div class="panel">
+            <h3>Ceklis Testing</h3>
+            <ul class="checklist">
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        SSL aktif dan redirect ke HTTPS (kalau diperlukan).
+                        <small>Target: semua traffic pakai HTTPS supaya WebSocket bisa WSS.</small>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <p>Direkomendasikan pakai Certbot (LetsEncrypt) atau Cloudflare. Contoh Certbot:</p>
+        <pre><code>sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d domainkamu.com</code></pre>
+
+        <h2 id="step-8">8) Jalankan Reverb sebagai Service (systemd)</h2>
+        <div class="panel">
+            <h3>Ceklis Testing</h3>
+            <ul class="checklist">
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Service Reverb aktif.
+                        <small><code>sudo systemctl status acispedia-reverb</code></small>
+                    </div>
+                </li>
+                <li>
+                    <input type="checkbox" />
+                    <div>
+                        Port Reverb listening (internal).
+                        <small>Contoh: <code>sudo ss -lntp | grep 8080</code></small>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <p>Buat file: <code>/etc/systemd/system/acispedia-reverb.service</code></p>
+        <pre><code>[Unit]
+Description=ACISPedia Reverb Server
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/acispedia
+ExecStart=/usr/bin/php artisan reverb:start
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+
+        <p>Aktifkan service:</p>
+        <pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now acispedia-reverb
+sudo systemctl status acispedia-reverb</code></pre>
+
+        <h2 id="step-9">9) (Opsional) Queue Worker sebagai Service</h2>
+        <p>Kalau kamu pakai queue, buat: <code>/etc/systemd/system/acispedia-queue.service</code></p>
+        <pre><code>[Unit]
+Description=ACISPedia Queue Worker
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/acispedia
+ExecStart=/usr/bin/php artisan queue:work --sleep=1 --tries=3
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+
+        <pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now acispedia-queue</code></pre>
+
+        <h2 id="step-10">10) (Opsional) Scheduler</h2>
+        <p>Pakai cron untuk menjalankan scheduler Laravel:</p>
+        <pre><code>crontab -e
+
+# tambahkan:
+* * * * * cd /var/www/acispedia &amp;&amp; /usr/bin/php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</code></pre>
+
+        <h2 id="step-11">11) Update Deploy Berikutnya (Workflow)</h2>
+        <pre><code>cd /var/www/acispedia
+git pull
+
+composer install --no-dev --optimize-autoloader
+
+# kalau ada perubahan VITE_*/frontend
+npm ci
+npm run build
+
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+sudo systemctl restart acispedia-reverb
+sudo systemctl restart php-fpm
+sudo systemctl reload nginx</code></pre>
+
+        <h2>Troubleshooting Singkat</h2>
+        <ul>
+            <li><strong>Realtime tidak jalan</strong>: cek SSL/WSS, cek Nginx proxy header Upgrade, cek service Reverb
+                aktif.</li>
+            <li><strong>Event terkirim tapi UI tidak update</strong>: pastikan <code>VITE_REVERB_*</code> benar dan
+                asset
+                terbaru sudah dibuild.</li>
+            <li><strong>403 private channel</strong>: pastikan auth route broadcasting benar dan user login/session
+                berjalan
+                normal.</li>
+            <li><strong>Timeout WS</strong>: tambah <code>proxy_read_timeout</code> dan pastikan koneksi stabil.</li>
+        </ul>
+
+        <hr />
+        <p>
+            Kalau kamu sebut detail servernya (Nginx/Apache, Ubuntu versi berapa, domain, apakah pakai Cloudflare),
+            saya bisa sesuaikan contoh config di atas biar pas 100%.
+        </p>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,427 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Events\DashboardStatsUpdated;
+use App\Events\DepositStatusUpdated;
+use App\Http\Controllers\Controller;
+use App\Models\Deposit;
+use App\Models\UserBalance;
+use App\Services\DashboardStats;
+use App\Services\TripayClient;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use RuntimeException;
+use Throwable;
+
+class DepositsController extends Controller
+{
+    public function cancel(Request $request, Deposit $deposit): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user || (int) $deposit->user_id !== (int) $user->id) {
+            abort(Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            $changed = DB::transaction(function () use ($deposit) {
+                $row = Deposit::query()->lockForUpdate()->find($deposit->id);
+                if (! $row) {
+                    return false;
+                }
+
+                if ($row->status !== 'pending') {
+                    return false;
+                }
+
+                if ($row->processed_at !== null) {
+                    return false;
+                }
+
+                // If already expired, let history expire handler take over.
+                if ($row->expired_at !== null && $row->expired_at->isPast()) {
+                    return false;
+                }
+
+                $row->status = 'canceled';
+                $row->processed_at = now();
+
+                $payload = is_array($row->provider_payload) ? $row->provider_payload : [];
+                $payload['canceled_by_user_at'] = now()->toISOString();
+                $row->provider_payload = $payload;
+
+                $row->save();
+
+                return true;
+            });
+
+            if (! $changed) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Deposit tidak bisa dibatalkan.',
+                ], 422);
+            }
+
+            try {
+                $fresh = Deposit::query()->find((int) $deposit->id);
+                if ($fresh) {
+                    broadcast(new DepositStatusUpdated($fresh));
+                }
+            } catch (Throwable) {
+                // best-effort
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Deposit berhasil dibatalkan.',
+            ]);
+        } catch (Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() !== '' ? $e->getMessage() : 'Gagal membatalkan deposit.',
+            ], 500);
+        }
+    }
+
+    public function storeTripay(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'amount' => ['required', 'integer', 'min:1000', 'max:200000000'],
+            'method' => ['required', 'string', 'min:2', 'max:32'],
+            'customer_phone' => ['nullable', 'string', 'min:10', 'max:20'],
+        ]);
+
+        $amount = (int) $validated['amount'];
+        $method = strtoupper(trim((string) $validated['method']));
+        $customerPhone = preg_replace('/[^0-9+]/', '', (string) ($validated['customer_phone'] ?? '')) ?? '';
+        $customerPhone = trim($customerPhone);
+        if ($customerPhone === '') {
+            // Tripay expects a phone in the payload; use a safe placeholder by default.
+            $customerPhone = '0800000000';
+        }
+
+        if (! TripayClient::isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Metode pembayaran belum dikonfigurasi. Lengkapi pengaturan gateway pembayaran.',
+            ], 422);
+        }
+
+        $merchantRef = 'DEP-'.(int) $user->id.'-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6));
+
+        $depositId = null;
+
+        try {
+            $depositId = DB::transaction(function () use ($user, $amount, $method, $merchantRef) {
+                $activePending = Deposit::query()
+                    ->where('user_id', (int) $user->id)
+                    ->where('status', 'pending')
+                    ->where(function ($q) {
+                        $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
+                    })
+                    ->exists();
+
+                if ($activePending) {
+                    throw new RuntimeException('Masih ada deposit pending. Selesaikan atau tunggu expired.');
+                }
+
+                $deposit = Deposit::query()->create([
+                    'user_id' => (int) $user->id,
+                    'amount' => $amount,
+                    'final_amount' => $amount,
+                    'payment_method' => 'tripay',
+                    'status' => 'pending',
+                    'tripay_merchant_ref' => $merchantRef,
+                    'tripay_method' => $method,
+                    'expired_at' => now()->addDay(),
+                ]);
+
+                return (int) $deposit->id;
+            });
+
+            $json = TripayClient::createTransaction(
+                $merchantRef,
+                $amount,
+                $method,
+                [
+                    'name' => (string) ($user->name ?? 'Customer'),
+                    'email' => (string) ($user->email ?? ''),
+                    'phone' => $customerPhone,
+                ],
+                [[
+                    'sku' => 'DEPOSIT',
+                    'name' => 'Deposit Saldo',
+                    'price' => $amount,
+                    'quantity' => 1,
+                ]]
+            );
+
+            $data = Arr::get($json, 'data', []);
+            $reference = (string) (Arr::get($data, 'reference') ?? '');
+            $checkoutUrl = (string) (Arr::get($data, 'checkout_url') ?? '');
+            $payCode = Arr::get($data, 'pay_code');
+            $providerStatus = (string) (Arr::get($data, 'status') ?? '');
+            $expiredTime = Arr::get($data, 'expired_time');
+
+            $finalAmount = $amount;
+            $totalAmountRaw = Arr::get($data, 'total_amount');
+            if (is_numeric($totalAmountRaw)) {
+                $candidate = (int) $totalAmountRaw;
+                if ($candidate > 0) {
+                    $finalAmount = $candidate;
+                }
+            } else {
+                $feeRaw = Arr::get($data, 'total_fee');
+                if (! is_numeric($feeRaw)) {
+                    $feeRaw = Arr::get($data, 'fee_customer');
+                }
+                if (is_numeric($feeRaw)) {
+                    $fee = (int) $feeRaw;
+                    if ($fee > 0) {
+                        $finalAmount = $amount + $fee;
+                    }
+                }
+            }
+
+            DB::transaction(function () use ($depositId, $json, $reference, $checkoutUrl, $payCode, $providerStatus, $expiredTime, $finalAmount) {
+                $deposit = Deposit::query()->lockForUpdate()->find($depositId);
+                if (! $deposit) {
+                    return;
+                }
+
+                $deposit->tripay_reference = $reference !== '' ? $reference : $deposit->tripay_reference;
+                $deposit->tripay_checkout_url = $checkoutUrl !== '' ? $checkoutUrl : $deposit->tripay_checkout_url;
+                $deposit->tripay_pay_code = $payCode !== null ? (string) $payCode : $deposit->tripay_pay_code;
+                $deposit->tripay_status = $providerStatus !== '' ? $providerStatus : $deposit->tripay_status;
+                $deposit->provider_payload = $json;
+                $deposit->final_amount = $finalAmount > 0 ? $finalAmount : $deposit->final_amount;
+
+                if (is_numeric($expiredTime)) {
+                    $deposit->expired_at = now()->setTimestamp((int) $expiredTime);
+                }
+
+                $deposit->save();
+            });
+
+            try {
+                $fresh = Deposit::query()->find((int) $depositId);
+                if ($fresh) {
+                    broadcast(new DepositStatusUpdated($fresh));
+                }
+            } catch (Throwable) {
+                // best-effort
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Deposit dibuat. Silakan lanjutkan pembayaran.',
+                'checkout_url' => $checkoutUrl,
+                'reference' => $reference,
+                'amount' => $amount,
+                'final_amount' => $finalAmount,
+            ]);
+        } catch (RuntimeException $e) {
+            if (is_int($depositId)) {
+                try {
+                    Deposit::query()
+                        ->where('id', $depositId)
+                        ->where('status', 'pending')
+                        ->update([
+                            'status' => 'failed',
+                            'processed_at' => now(),
+                            'provider_payload' => [
+                                'error' => $e->getMessage(),
+                            ],
+                        ]);
+                } catch (Throwable) {
+                    // ignore
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (Throwable $e) {
+            report($e);
+
+            if (is_int($depositId)) {
+                try {
+                    Deposit::query()
+                        ->where('id', $depositId)
+                        ->where('status', 'pending')
+                        ->update([
+                            'status' => 'failed',
+                            'processed_at' => now(),
+                            'provider_payload' => [
+                                'error' => 'Gagal membuat transaksi pembayaran.',
+                            ],
+                        ]);
+                } catch (Throwable) {
+                    // ignore
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat deposit.',
+            ], 500);
+        }
+    }
+
+    public function tripayCallback(Request $request): JsonResponse
+    {
+        $raw = (string) $request->getContent();
+        $sig = (string) $request->header('X-Callback-Signature', '');
+
+        try {
+            $expected = TripayClient::callbackExpectedSignature($raw);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gateway belum dikonfigurasi.',
+            ], 500);
+        }
+
+        if (! hash_equals($expected, $sig)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid signature.',
+            ], 401);
+        }
+
+        $payload = $request->json()->all();
+        if (! is_array($payload)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid payload.',
+            ], 400);
+        }
+
+        $data = Arr::get($payload, 'data', []);
+        $merchantRef = (string) (Arr::get($data, 'merchant_ref') ?? Arr::get($payload, 'merchant_ref') ?? '');
+        $reference = (string) (Arr::get($data, 'reference') ?? Arr::get($payload, 'reference') ?? '');
+        $status = strtoupper((string) (Arr::get($data, 'status') ?? Arr::get($payload, 'status') ?? ''));
+
+        if ($merchantRef === '' && $reference === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing reference.',
+            ], 400);
+        }
+
+        $deposit = Deposit::query()
+            ->when($reference !== '', fn ($q) => $q->where('tripay_reference', $reference))
+            ->when($reference === '' && $merchantRef !== '', fn ($q) => $q->where('tripay_merchant_ref', $merchantRef))
+            ->first();
+
+        if (! $deposit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Deposit not found.',
+            ], 404);
+        }
+
+        $newStatus = match ($status) {
+            'PAID', 'SUCCESS' => 'success',
+            'EXPIRED' => 'expired',
+            'FAILED' => 'failed',
+            default => 'pending',
+        };
+
+        $shouldBroadcastStats = false;
+        $shouldBroadcastDeposit = false;
+
+        try {
+            DB::transaction(function () use ($deposit, $payload, $status, $newStatus, &$shouldBroadcastStats, &$shouldBroadcastDeposit) {
+                $row = Deposit::query()->lockForUpdate()->find((int) $deposit->id);
+                if (! $row) {
+                    return;
+                }
+
+                // Always store latest payload for auditing.
+                $row->provider_payload = $payload;
+                $row->tripay_status = $status !== '' ? $status : $row->tripay_status;
+
+                if (in_array($row->status, ['success', 'failed', 'expired'], true)) {
+                    $row->save();
+                    $shouldBroadcastDeposit = true;
+
+                    return;
+                }
+
+                if ($newStatus !== 'pending') {
+                    $row->status = $newStatus;
+                    $row->processed_at = now();
+                }
+
+                $row->save();
+                $shouldBroadcastDeposit = true;
+
+                if ($newStatus === 'success') {
+                    UserBalance::query()->firstOrCreate([
+                        'user_id' => (int) $row->user_id,
+                    ], [
+                        'balance' => 0,
+                        'total_spent' => 0,
+                        'total_deposit' => 0,
+                    ]);
+
+                    $bal = UserBalance::query()
+                        ->where('user_id', (int) $row->user_id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($bal) {
+                        $bal->balance = (int) $bal->balance + (int) $row->amount;
+                        $bal->total_deposit = (int) $bal->total_deposit + (int) $row->amount;
+                        $bal->save();
+                    }
+
+                    $shouldBroadcastStats = true;
+                }
+            });
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process callback.',
+            ], 500);
+        }
+
+        if ($shouldBroadcastDeposit) {
+            try {
+                $fresh = Deposit::query()->find((int) $deposit->id);
+                if ($fresh) {
+                    broadcast(new DepositStatusUpdated($fresh));
+                }
+            } catch (Throwable) {
+                // best-effort
+            }
+        }
+
+        if ($shouldBroadcastStats) {
+            try {
+                $stats = DashboardStats::forUser((int) $deposit->user_id);
+                broadcast(new DashboardStatsUpdated((int) $deposit->user_id, $stats));
+            } catch (Throwable) {
+                // best-effort
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OK',
+        ]);
+    }
+}

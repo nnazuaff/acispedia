@@ -1,0 +1,10 @@
+{
+    "preset": "laravel",
+    "exclude": [
+        "php-native",
+        "vendor",
+        "bootstrap/cache",
+        "storage",
+        "public/build"
+    ]
+}
