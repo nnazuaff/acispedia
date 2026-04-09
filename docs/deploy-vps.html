@@ -255,45 +255,54 @@
                         <li><strong>Cara A (paling umum):</strong> SSH ke VPS → <code>git clone</code> → jalankan docker
                             compose.</li>
                         <li><strong>Cara B (panel Hostinger):</strong> connect GitHub → pilih repo → jalankan
-                            <code>docker compose up</code>.</li>
+                            <code>docker compose up</code>.
+                        </li>
                     </ul>
-                    <pre><code># di VPS
-sudo apt update
-sudo apt install -y git
-
-# pastikan docker & docker compose plugin sudah ada (Hostinger biasanya sudah ada)
-docker --version
-docker compose version
-
-# ambil kode
-cd /opt
-sudo git clone https://github.com/USERNAME/REPO.git acispedia
+                    <pre><code># di VPS (sekali saja, jalankan sebagai root/sudo)
+git clone https://github.com/nnazuaff/acispedia.git
 cd acispedia
+sudo bash scripts/bootstrap-vps.sh
 
-# buat .env dari contoh
-cp .env.docker.example .env
+# edit env production
+cd /opt/acispedia
 nano .env
 
-# build + start
-sudo docker compose up -d --build
-
-# set APP_KEY + migrate + storage link
-sudo docker compose exec -T web php artisan key:generate
-sudo docker compose exec -T web php artisan migrate --force
-sudo docker compose exec -T web php artisan storage:link
-
-# optimisasi
-sudo docker compose exec -T web php artisan config:cache
-sudo docker compose exec -T web php artisan route:cache</code></pre>
+# deploy / update aplikasi
+bash scripts/deploy-on-vps.sh</code></pre>
                     <p>
                         Jika realtime (Reverb) diproxy lewat domain HTTPS, pastikan di <code>.env</code>:
                         <code>REVERB_HOST=reverb</code> (internal) dan <code>VITE_REVERB_HOST=domainkamu.com</code>,
                         <code>VITE_REVERB_PORT=443</code>, <code>VITE_REVERB_SCHEME=https</code> (public).
                     </p>
+                    <p>
+                        Script <code>deploy-on-vps.sh</code> akan generate <code>APP_KEY</code> langsung di file
+                        <code>.env</code> host jika masih kosong, lalu menjalankan build, migrate, storage link,
+                        dan optimize. Ini lebih aman untuk setup Docker karena file <code>.env</code> tidak ikut masuk
+                        ke image container.
+                    </p>
                 </div>
 
                 <div class="panel">
-                    <h3>3) SQLite di VPS: perlu diganti?</h3>
+                    <h3>3) Auto deploy dari GitHub Actions (opsional)</h3>
+                    <p>
+                        Repo ini juga punya workflow <code>.github/workflows/deploy.yml</code>. Setelah secrets di
+                        GitHub
+                        diisi, setiap push ke branch <code>main</code> bisa langsung menjalankan deploy ke VPS via SSH.
+                    </p>
+                    <ul>
+                        <li><code>VPS_HOST</code>: IP atau domain VPS.</li>
+                        <li><code>VPS_PORT</code>: biasanya <code>22</code>.</li>
+                        <li><code>VPS_USERNAME</code>: user SSH di VPS.</li>
+                        <li><code>VPS_SSH_KEY</code>: private key untuk login SSH.</li>
+                    </ul>
+                    <p>
+                        Workflow akan clone repo ke <code>~/acispedia</code> di VPS lalu memanggil
+                        <code>bash scripts/deploy-on-vps.sh</code>.
+                    </p>
+                </div>
+
+                <div class="panel">
+                    <h3>4) SQLite di VPS: perlu diganti?</h3>
                     <ul>
                         <li><strong>Bisa</strong> pakai SQLite kalau trafik kecil, single server, dan worker sedikit.
                         </li>
