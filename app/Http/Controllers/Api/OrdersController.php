@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Services\MedanpediaClient;
+use App\Services\ServicePolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -50,7 +51,7 @@ class OrdersController extends Controller
 
         $service = $this->findServiceById($client, $serviceId);
 
-        if (! $service) {
+        if (! $service || ServicePolicy::isDisallowed($service)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Service tidak ditemukan.',

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ServicePolicy;
 use App\Services\MedanpediaClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,6 +47,13 @@ class MedanpediaController extends Controller
         }
 
         if (! $found) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Service tidak ditemukan.',
+            ], 404);
+        }
+
+        if (ServicePolicy::isDisallowed($found)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Service tidak ditemukan.',
@@ -191,15 +199,23 @@ class MedanpediaController extends Controller
                 ? (string) $service['category']
                 : 'Other';
 
+            $desc = isset($service['description']) ? (string) $service['description'] : '';
+
+            if (ServicePolicy::isDisallowed([
+                'name' => (string) $sname,
+                'category' => $category,
+                'description' => $desc,
+            ])) {
+                continue;
+            }
+
             $price = $service['price'] ?? ($service['rate'] ?? 0);
             $priceNum = is_numeric($price) ? (float) $price : 0.0;
 
             $flat[] = [
                 'id' => (int) $sid,
                 'name' => (string) $sname,
-                'description' => isset($service['description'])
-                    ? (string) $service['description']
-                    : 'Tidak ada deskripsi tersedia',
+                'description' => $desc !== '' ? $desc : 'Tidak ada deskripsi tersedia',
                 'price' => $priceNum,
                 'min' => isset($service['min']) ? (int) $service['min'] : 1,
                 'max' => isset($service['max']) ? (int) $service['max'] : 10000,
