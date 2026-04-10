@@ -1,4 +1,4 @@
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
@@ -7,45 +7,50 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useI18n } from '@/i18n/i18n-provider';
 
-type UserEdit = {
-    id: number;
-    name: string;
-    email: string;
-    phone: string | null;
-};
-
-export default function AdminUserEdit() {
+export default function AdminUserCreate() {
     const { t } = useI18n();
-
-    const { user } = usePage().props as any as {
-        user: UserEdit;
-    };
 
     return (
         <>
-            <Head title={`${t('Edit Pengguna')} #${user?.id ?? ''}`} />
+            <Head title={t('Tambah Pengguna')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <Heading variant="small" title={t('Edit Pengguna')} description={`#${user?.id ?? '-'}`} />
+                <Heading variant="small" title={t('Tambah Pengguna')} description={t('Buat akun user baru.')} />
 
                 <Card>
                     <CardContent className="pt-6">
-                        <Form action={`/users/${user.id}`} method="put" className="grid gap-4 md:max-w-xl">
+                        <Form action="/users" method="post" className="grid gap-4 md:max-w-xl">
                             {() => (
                                 <>
                                     <div className="grid gap-2">
                                         <Label htmlFor="name">{t('Nama')}</Label>
-                                        <Input id="name" name="name" defaultValue={user?.name ?? ''} required />
+                                        <Input id="name" name="name" required />
                                     </div>
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="email">{t('Email')}</Label>
-                                        <Input id="email" value={user?.email ?? ''} readOnly disabled />
+                                        <Input id="email" name="email" type="email" required />
                                     </div>
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="phone">{t('Telepon')}</Label>
-                                        <Input id="phone" name="phone" defaultValue={user?.phone ?? ''} placeholder="08xxxxxxxxxx" />
+                                        <Input id="phone" name="phone" placeholder="08xxxxxxxxxx" />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="password">{t('Password')}</Label>
+                                        <Input id="password" name="password" type="password" autoComplete="new-password" required />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="password_confirmation">{t('Konfirmasi Password')}</Label>
+                                        <Input
+                                            id="password_confirmation"
+                                            name="password_confirmation"
+                                            type="password"
+                                            autoComplete="new-password"
+                                            required
+                                        />
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 pt-2">
@@ -66,9 +71,9 @@ export default function AdminUserEdit() {
     );
 }
 
-AdminUserEdit.layout = {
+AdminUserCreate.layout = {
     breadcrumbs: [
         { title: 'Pengguna', href: '/users' },
-        { title: 'Edit', href: '#' },
+        { title: 'Tambah', href: '#' },
     ],
 };

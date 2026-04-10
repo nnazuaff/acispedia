@@ -88,9 +88,12 @@ if ($adminDomain !== '') {
             Route::post('deposits/{deposit}/status', [AdminDepositsController::class, 'updateStatus'])->name('admin.deposits.status');
 
             Route::get('users', [AdminUsersController::class, 'index'])->name('admin.users');
+            Route::get('users/create', [AdminUsersController::class, 'create'])->name('admin.users.create');
+            Route::post('users', [AdminUsersController::class, 'store'])->name('admin.users.store');
             Route::get('users/{user}', [AdminUsersController::class, 'show'])->name('admin.users.show');
             Route::get('users/{user}/edit', [AdminUsersController::class, 'edit'])->name('admin.users.edit');
             Route::put('users/{user}', [AdminUsersController::class, 'update'])->name('admin.users.update');
+            Route::post('users/{user}/balance', [AdminUsersController::class, 'addBalance'])->name('admin.users.balance.add');
             Route::delete('users/{user}', [AdminUsersController::class, 'destroy'])->name('admin.users.destroy');
 
             Route::get('services', [AdminServicesController::class, 'index'])->name('admin.services');

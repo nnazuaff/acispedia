@@ -111,6 +111,14 @@ export default function AdminUsers() {
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <Heading variant="small" title={t('Pengguna')} description={t('Manajemen pengguna admin.')} />
 
+                <div className="flex flex-wrap gap-2">
+                    <Button asChild>
+                        <Link href="/users/create" prefetch>
+                            {t('Tambah User')}
+                        </Link>
+                    </Button>
+                </div>
+
                 <div className="grid gap-3 md:grid-cols-2">
                     <Card>
                         <CardContent className="pt-6">

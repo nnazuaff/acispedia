@@ -1,8 +1,10 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Form, Head, Link, usePage } from '@inertiajs/react';
 
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useI18n } from '@/i18n/i18n-provider';
 
 type UserDetail = {
@@ -98,6 +100,30 @@ export default function AdminUserDetail() {
                         </CardContent>
                     </Card>
                 </div>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="text-sm font-semibold">{t('Tambah Saldo')}</div>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                            {t('Menambah saldo user secara manual (akan tercatat di log aktivitas admin).')}
+                        </div>
+
+                        <Form action={`/users/${user.id}/balance`} method="post" className="mt-4 grid gap-3 md:max-w-md">
+                            {() => (
+                                <>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="amount">{t('Jumlah (Rp)')}</Label>
+                                        <Input id="amount" name="amount" inputMode="numeric" placeholder="10000" required />
+                                    </div>
+
+                                    <div className="flex justify-end">
+                                        <Button type="submit">{t('Tambah')}</Button>
+                                    </div>
+                                </>
+                            )}
+                        </Form>
+                    </CardContent>
+                </Card>
 
                 <Card>
                     <CardContent className="pt-6">

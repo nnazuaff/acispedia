@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Concerns\PasswordValidationRules;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\Order;
@@ -11,12 +12,15 @@ use App\Support\AdminActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
 
 class UsersController extends Controller
 {
+    use PasswordValidationRules;
+
     public function index(Request $request): Response
     {
         $q = trim((string) $request->query('q', ''));
@@ -134,6 +138,114 @@ class UsersController extends Controller
                 'phone' => $user->phone !== null ? (string) $user->phone : null,
             ],
         ]);
+    }
+
+    public function create(Request $request): Response
+    {
+        return Inertia::render('admin/user-create');
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:32'],
+            'password' => $this->passwordRules(),
+        ]);
+
+        $createdUserId = null;
+
+        try {
+            DB::transaction(function () use ($validated, &$createdUserId) {
+                $user = User::query()->create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'phone' => $validated['phone'] ?? null,
+                    'password' => Hash::make((string) $validated['password']),
+                    // Admin-created accounts are considered ready-to-use.
+                    'email_verified_at' => now(),
+                ]);
+
+                UserBalance::query()->create([
+                    'user_id' => (int) $user->id,
+                    'balance' => 0,
+                    'total_spent' => 0,
+                    'total_deposit' => 0,
+                ]);
+
+                $createdUserId = (int) $user->id;
+            });
+        } catch (Throwable $e) {
+            report($e);
+            return back()->with('error', 'Gagal membuat user.');
+        }
+
+        AdminActivity::log(
+            $request,
+            'user_create',
+            'user',
+            $createdUserId !== null ? (string) $createdUserId : null,
+            'Create user',
+            [
+                'user' => [
+                    'id' => $createdUserId,
+                    'email' => (string) $validated['email'],
+                    'name' => (string) $validated['name'],
+                ],
+            ]
+        );
+
+        return redirect()->route('admin.users')->with('success', 'User berhasil dibuat.');
+    }
+
+    public function addBalance(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'amount' => ['required', 'integer', 'min:1', 'max:1000000000'],
+        ]);
+
+        $amount = (int) $validated['amount'];
+
+        try {
+            DB::transaction(function () use ($user, $amount, $request) {
+                $balanceRow = UserBalance::query()->lockForUpdate()->firstOrCreate(
+                    ['user_id' => (int) $user->id],
+                    ['balance' => 0, 'total_spent' => 0, 'total_deposit' => 0]
+                );
+
+                $beforeBalance = (int) ($balanceRow->balance ?? 0);
+                $beforeTotalDeposit = (int) ($balanceRow->total_deposit ?? 0);
+
+                $balanceRow->balance = $beforeBalance + $amount;
+                $balanceRow->total_deposit = $beforeTotalDeposit + $amount;
+                $balanceRow->save();
+
+                AdminActivity::log(
+                    $request,
+                    'user_balance_add',
+                    'user',
+                    (string) $user->id,
+                    'Add user balance',
+                    [
+                        'amount' => $amount,
+                        'before' => [
+                            'balance' => $beforeBalance,
+                            'total_deposit' => $beforeTotalDeposit,
+                        ],
+                        'after' => [
+                            'balance' => (int) ($balanceRow->balance ?? 0),
+                            'total_deposit' => (int) ($balanceRow->total_deposit ?? 0),
+                        ],
+                    ]
+                );
+            });
+        } catch (Throwable $e) {
+            report($e);
+            return back()->with('error', 'Gagal menambah saldo user.');
+        }
+
+        return back()->with('success', 'Saldo berhasil ditambahkan.');
     }
 
     public function update(Request $request, User $user): RedirectResponse

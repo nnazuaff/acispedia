@@ -67,6 +67,21 @@ export default function AdminSystemStatus() {
                     </Card>
 
                     <Card>
+                        <CardHeader>{t('Realtime (Panduan)')}</CardHeader>
+                        <CardContent className="space-y-3 text-sm">
+                            <div className="text-muted-foreground">
+                                {t('Agar realtime berjalan, proses Reverb dan Queue Worker harus aktif di server.')}
+                            </div>
+                            <pre className="overflow-auto rounded-lg border bg-muted/20 p-3 text-xs">
+                                {`php artisan reverb:start\nphp artisan queue:work --tries=3`}
+                            </pre>
+                            <div className="text-xs text-muted-foreground">
+                                {t('Jika Queue masih sync, realtime biasanya tidak akan memproses event antrian.')}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
                         <CardHeader>{t('Queue')}</CardHeader>
                         <CardContent className="space-y-2 text-sm">
                             <div className="flex items-center justify-between gap-4">
