@@ -62,7 +62,7 @@ export default function AuthSimpleLayout({
                                         </div>
                                     </CardContent>
                                 </Card>
-                                <Card className="acis-fade-up [animation-delay:420ms]">
+                                <Card className="acis-fade-up acis-delay-4">
                                     <CardContent className="flex items-center gap-3 pt-6">
                                         <CreditCard className="size-5 text-primary" />
                                         <div className="leading-tight">
@@ -77,7 +77,7 @@ export default function AuthSimpleLayout({
                                         </div>
                                     </CardContent>
                                 </Card>
-                                <Card className="acis-fade-up [animation-delay:520ms]">
+                                <Card className="acis-fade-up acis-delay-5">
                                     <CardContent className="flex items-center gap-3 pt-6">
                                         <ShieldCheck className="size-5 text-primary" />
                                         <div className="leading-tight">

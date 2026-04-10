@@ -219,6 +219,14 @@
         animation-delay: 320ms;
     }
 
+    .acis-delay-4 {
+        animation-delay: 420ms;
+    }
+
+    .acis-delay-5 {
+        animation-delay: 520ms;
+    }
+
     @media (prefers-reduced-motion: reduce) {
         html {
             scroll-behavior: auto;
