@@ -18,17 +18,26 @@ class GuestEmailVerificationController
     {
         return Inertia::render('auth/verify-email-guest', [
             'status' => $request->session()->get('status'),
-            'email' => $request->session()->get('verify_email'),
+            'hasEmail' => (bool) $request->session()->get('verify_email'),
         ]);
     }
 
     public function resend(Request $request): RedirectResponse
     {
-        $data = $request->validate([
-            'email' => ['required', 'string', 'email'],
-        ]);
+        $email = (string) $request->input('email', $request->session()->get('verify_email', ''));
+        $normalized = Str::lower(trim($email));
 
-        $normalized = Str::lower(trim((string) $data['email']));
+        if ($normalized === '') {
+            throw ValidationException::withMessages([
+                'email' => 'Email wajib diisi.',
+            ]);
+        }
+
+        if (! filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
+            throw ValidationException::withMessages([
+                'email' => 'Format email tidak valid.',
+            ]);
+        }
 
         /** @var User|null $user */
         $user = User::query()->whereRaw('lower(email) = ?', [$normalized])->first();

@@ -1,5 +1,4 @@
 import { Form, Head } from '@inertiajs/react';
-import { Mail } from 'lucide-react';
 import * as React from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -11,43 +10,40 @@ import { login } from '@/routes';
 
 type Props = {
     status?: string;
-    email?: string | null;
+    hasEmail?: boolean;
 };
 
-export default function VerifyEmailGuest({ status, email }: Props) {
-    const [value, setValue] = React.useState(email ?? '');
+export default function VerifyEmailGuest({ status, hasEmail = false }: Props) {
+    const [value, setValue] = React.useState('');
 
     return (
         <>
             <Head title="Verifikasi Email" />
 
-            {status === 'verification-link-sent' && (
+            {status === 'email-already-verified' ? (
+                <div className="rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
+                    Email sudah terverifikasi. Silakan login.
+                </div>
+            ) : status === 'verify-rate-limited' ? (
+                <div className="rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
+                    Terlalu banyak permintaan. Coba lagi beberapa saat.
+                </div>
+            ) : (
                 <div className="rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
                     Link verifikasi sudah dikirim. Silakan cek inbox / spam.
                 </div>
             )}
 
-            {status === 'email-already-verified' && (
-                <div className="rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
-                    Email sudah terverifikasi. Silakan login.
-                </div>
-            )}
-
-            {status === 'verify-rate-limited' && (
-                <div className="rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
-                    Terlalu banyak permintaan. Coba lagi beberapa saat.
-                </div>
-            )}
-
-            <Form action="/verify-email/resend" method="post" className="flex flex-col gap-6">
+            <Form
+                action="/verify-email/resend"
+                method="post"
+                className="flex flex-col gap-6"
+            >
                 {({ processing, errors }) => (
                     <>
-                        <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
-                            <div className="relative">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
-                                    <Mail className="size-4" />
-                                </div>
+                        {!hasEmail && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="email">Email</Label>
                                 <Input
                                     id="email"
                                     name="email"
@@ -55,13 +51,12 @@ export default function VerifyEmailGuest({ status, email }: Props) {
                                     required
                                     value={value}
                                     onChange={(e) => setValue(e.target.value)}
-                                    className="pl-10"
                                     placeholder="email@example.com"
                                     autoComplete="email"
                                 />
+                                <InputError message={(errors as any).email} />
                             </div>
-                            <InputError message={(errors as any).email} />
-                        </div>
+                        )}
 
                         <Button type="submit" className="w-full" disabled={processing}>
                             {processing && <Spinner />}
