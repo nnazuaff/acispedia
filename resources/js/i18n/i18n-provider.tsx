@@ -67,6 +67,9 @@ const dictionaries: Record<Locale, Dict> = {
         'Maksimal': 'Maximum',
         'Memproses...': 'Processing...',
         'Lanjutkan': 'Continue',
+        'Terang': 'Light',
+        'Gelap': 'Dark',
+        'Sistem': 'System',
 
         // Landing
         'modern untuk pertumbuhan sosial media': 'modern for social media growth',
@@ -346,6 +349,13 @@ const dictionaries: Record<Locale, Dict> = {
         'Riwayat Transaksi': 'Transaction History',
         'Detail Transaksi': 'Transaction details',
         'Riwayat transaksi order Anda.': 'Your order transaction history.',
+
+        // Sidebar
+        'Transaksi': 'Transactions',
+        'Lainnya': 'Others',
+        'Bantuan': 'Help',
+        'Contoh Pengisian Target': 'Target filling example',
+        'Ketentuan Layanan (S&K)': 'Terms of Service (T&C)',
         'Cari layanan, target, atau provider id...': 'Search service, target, or provider ID...',
         'Target': 'Target',
         'Jumlah': 'Qty',

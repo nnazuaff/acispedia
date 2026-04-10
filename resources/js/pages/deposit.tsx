@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 import { toast } from 'sonner';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, QrCode, Wallet } from 'lucide-react';
 
 import { useConfirm } from '@/components/confirm-dialog-provider';
 import { useI18n } from '@/i18n/i18n-provider';
@@ -319,11 +319,11 @@ export default function DepositPage() {
                                     >
                                         <span
                                             className={
-                                                'flex h-10 w-10 items-center justify-center rounded-lg text-xs font-semibold ' +
+                                                'flex h-10 w-10 items-center justify-center rounded-lg ' +
                                                 (methodCategory === 'qris' ? 'bg-teal-500 text-white' : 'bg-muted text-foreground')
                                             }
                                         >
-                                            QR
+                                            <QrCode className="size-5" />
                                         </span>
                                         <div className="flex-1">
                                             <div className="text-sm font-semibold">QRIS</div>
@@ -356,11 +356,11 @@ export default function DepositPage() {
                                     >
                                         <span
                                             className={
-                                                'flex h-10 w-10 items-center justify-center rounded-lg text-xs font-semibold ' +
+                                                'flex h-10 w-10 items-center justify-center rounded-lg ' +
                                                 (methodCategory === 'ewallet' ? 'bg-teal-500 text-white' : 'bg-muted text-foreground')
                                             }
                                         >
-                                            EWLT
+                                            <Wallet className="size-5" />
                                         </span>
                                         <div className="flex-1">
                                             <div className="text-sm font-semibold">E-Wallet</div>

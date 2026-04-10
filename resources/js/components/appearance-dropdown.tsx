@@ -13,9 +13,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Appearance } from '@/hooks/use-appearance';
 import { useAppearance } from '@/hooks/use-appearance';
+import { useI18n } from '@/i18n/i18n-provider';
 
 export function AppearanceDropdown() {
     const { appearance, resolvedAppearance, updateAppearance } = useAppearance();
+    const { t } = useI18n();
 
     const [mounted, setMounted] = React.useState(false);
 
@@ -39,13 +41,13 @@ export function AppearanceDropdown() {
                     variant="ghost"
                     size="icon"
                     className="h-9 w-9"
-                    aria-label="Theme"
+                    aria-label={t('nav.theme')}
                 >
                     {triggerIcon}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Tema</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('nav.theme')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup
                     value={appearance}
@@ -53,15 +55,15 @@ export function AppearanceDropdown() {
                 >
                     <DropdownMenuRadioItem value="light">
                         <Sun className="size-4" />
-                        Light
+                        {t('Terang')}
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="dark">
                         <Moon className="size-4" />
-                        Dark
+                        {t('Gelap')}
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="system">
                         <Monitor className="size-4" />
-                        System
+                        {t('Sistem')}
                     </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
             </DropdownMenuContent>

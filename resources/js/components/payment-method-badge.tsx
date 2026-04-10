@@ -1,14 +1,15 @@
 import * as React from 'react';
-import { Landmark, QrCode } from 'lucide-react';
+import { Landmark, QrCode, Wallet } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 
-export type PaymentMethodKind = 'qris' | 'va' | 'other';
+export type PaymentMethodKind = 'qris' | 'va' | 'ewallet' | 'other';
 
 export function getPaymentMethodKind(label: string): PaymentMethodKind {
     const normalized = String(label ?? '').trim().toLowerCase();
 
     if (normalized === 'qris') return 'qris';
+    if (normalized === 'e-wallet' || normalized === 'e wallet' || normalized === 'ewallet') return 'ewallet';
     if (normalized === 'virtual account' || normalized === 'va') return 'va';
 
     return 'other';
@@ -26,7 +27,7 @@ export function PaymentMethodBadge({
     const kind = getPaymentMethodKind(label);
 
     const Icon =
-        kind === 'qris' ? QrCode : kind === 'va' ? Landmark : null;
+        kind === 'qris' ? QrCode : kind === 'ewallet' ? Wallet : kind === 'va' ? Landmark : null;
 
     return (
         <Badge variant={variant} className={className}>
@@ -47,7 +48,7 @@ export function PaymentMethodInline({
 }) {
     const kind = getPaymentMethodKind(label);
     const Icon =
-        kind === 'qris' ? QrCode : kind === 'va' ? Landmark : null;
+        kind === 'qris' ? QrCode : kind === 'ewallet' ? Wallet : kind === 'va' ? Landmark : null;
 
     return (
         <span className={className ?? 'inline-flex items-center gap-1.5'}>

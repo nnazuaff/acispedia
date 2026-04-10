@@ -16,6 +16,7 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
+import { useI18n } from '@/i18n/i18n-provider';
 import { dashboard, home } from '@/routes';
 import type { NavItem } from '@/types';
 
@@ -36,6 +37,7 @@ export function AppSidebar() {
     const page = usePage();
     const url = (page as any)?.url as string | undefined;
     const isHistoryActive = (url ?? '').startsWith('/history');
+    const { t } = useI18n();
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -55,22 +57,25 @@ export function AppSidebar() {
                 <NavMain items={mainNavItems} />
 
                 <SidebarGroup className="px-2 py-0">
-                    <SidebarGroupLabel>Transactions</SidebarGroupLabel>
+                    <SidebarGroupLabel>{t('Transaksi')}</SidebarGroupLabel>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip={{ children: 'Isi Saldo' }}>
+                            <SidebarMenuButton
+                                asChild
+                                tooltip={{ children: t('Isi Saldo') }}
+                            >
                                 <Link href="/deposit" prefetch>
                                     <CreditCard />
-                                    <span>Deposit Saldo</span>
+                                    <span>{t('Deposit Saldo')}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
 
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip={{ children: 'Order' }}>
+                            <SidebarMenuButton asChild tooltip={{ children: t('Order') }}>
                                 <Link href="/order" prefetch>
                                     <ShoppingCart />
-                                    <span>Order</span>
+                                    <span>{t('Order')}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -78,9 +83,9 @@ export function AppSidebar() {
                         <Collapsible defaultOpen={isHistoryActive} className="group/collapsible">
                             <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton tooltip={{ children: 'Riwayat' }}>
+                                    <SidebarMenuButton tooltip={{ children: t('Riwayat') }}>
                                         <History />
-                                        <span>Riwayat</span>
+                                        <span>{t('Riwayat')}</span>
                                         <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
                                     </SidebarMenuButton>
                                 </CollapsibleTrigger>
@@ -90,7 +95,7 @@ export function AppSidebar() {
                                         <SidebarMenuSubItem>
                                             <SidebarMenuSubButton asChild>
                                                 <Link href="/history/deposit" prefetch>
-                                                    <span>Riwayat Deposit</span>
+                                                    <span>{t('Riwayat Deposit')}</span>
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
@@ -98,7 +103,7 @@ export function AppSidebar() {
                                         <SidebarMenuSubItem>
                                             <SidebarMenuSubButton asChild>
                                                 <Link href="/history/transaction" prefetch>
-                                                    <span>Riwayat Transaksi</span>
+                                                    <span>{t('Riwayat Transaksi')}</span>
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
@@ -110,31 +115,37 @@ export function AppSidebar() {
                 </SidebarGroup>
 
                 <SidebarGroup className="px-2 py-0">
-                    <SidebarGroupLabel>Lainnya</SidebarGroupLabel>
+                    <SidebarGroupLabel>{t('Lainnya')}</SidebarGroupLabel>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip={{ children: 'Bantuan' }}>
+                            <SidebarMenuButton asChild tooltip={{ children: t('Bantuan') }}>
                                 <Link href="/kontak" prefetch>
                                     <CircleHelp />
-                                    <span>Bantuan</span>
+                                    <span>{t('Bantuan')}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
 
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip={{ children: 'Contoh Pengisian Target' }}>
+                            <SidebarMenuButton
+                                asChild
+                                tooltip={{ children: t('Contoh Pengisian Target') }}
+                            >
                                 <Link href="/panduan-target" prefetch>
                                     <ListChecks />
-                                    <span>Contoh Pengisian Target</span>
+                                    <span>{t('Contoh Pengisian Target')}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
 
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip={{ children: 'Ketentuan Layanan (S&K)' }}>
+                            <SidebarMenuButton
+                                asChild
+                                tooltip={{ children: t('Ketentuan Layanan (S&K)') }}
+                            >
                                 <Link href="/terms" prefetch>
                                     <FileText />
-                                    <span>Ketentuan Layanan (S&K)</span>
+                                    <span>{t('Ketentuan Layanan (S&K)')}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
