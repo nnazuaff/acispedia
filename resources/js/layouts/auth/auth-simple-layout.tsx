@@ -23,28 +23,26 @@ export default function AuthSimpleLayout({
                 <div className="grid min-h-svh lg:grid-cols-2">
                     <div className="relative hidden lg:flex lg:flex-col lg:justify-center lg:border-r lg:bg-muted/10">
                         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                            <div className="absolute -top-24 -left-24 size-80 rounded-full bg-primary/10 blur-3xl acis-ambient-pan" />
-                            <div className="absolute -bottom-28 -right-28 size-96 rounded-full bg-primary/10 blur-3xl acis-ambient-pan" />
-                            <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_1px_1px,color-mix(in_oklab,var(--color-primary)_18%,transparent)_1px,transparent_0)] [background-size:22px_22px]" />
+                            <div className="absolute inset-0 opacity-35 acis-grid-drift bg-[radial-gradient(circle_at_1px_1px,color-mix(in_oklab,var(--color-foreground)_12%,transparent)_1px,transparent_0)] bg-size-[22px_22px]" />
                         </div>
 
                         <div className="mx-auto w-full max-w-lg px-10">
-                            <Link href={home()} className="mb-10 inline-flex items-center gap-2 font-medium">
+                            <Link href={home()} className="mb-10 inline-flex items-center gap-2 font-medium acis-fade-up">
                                 <BrandLogoMark className="size-9" />
                                 <span>AcisPedia</span>
                             </Link>
 
                             <div className="space-y-2">
-                                <h2 className="text-2xl font-semibold tracking-tight">
+                                <h2 className="text-2xl font-semibold tracking-tight acis-fade-up acis-delay-1">
                                     Solusi Terpadu Untuk SMM Panel
                                 </h2>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-muted-foreground acis-fade-up acis-delay-2">
                                     Kelola layanan, deposit, dan order dalam satu dashboard.
                                 </p>
                             </div>
 
                             <div className="mt-8 grid gap-3">
-                                <Card>
+                                <Card className="acis-fade-up acis-delay-3">
                                     <CardContent className="flex items-center gap-3 pt-6">
                                         <UserPlus className="size-5 text-primary" />
                                         <div className="leading-tight">
@@ -55,7 +53,7 @@ export default function AuthSimpleLayout({
                                         </div>
                                     </CardContent>
                                 </Card>
-                                <Card>
+                                <Card className="acis-fade-up [animation-delay:420ms]">
                                     <CardContent className="flex items-center gap-3 pt-6">
                                         <CreditCard className="size-5 text-primary" />
                                         <div className="leading-tight">
@@ -66,7 +64,7 @@ export default function AuthSimpleLayout({
                                         </div>
                                     </CardContent>
                                 </Card>
-                                <Card>
+                                <Card className="acis-fade-up [animation-delay:520ms]">
                                     <CardContent className="flex items-center gap-3 pt-6">
                                         <ShieldCheck className="size-5 text-primary" />
                                         <div className="leading-tight">

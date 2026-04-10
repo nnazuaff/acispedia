@@ -193,6 +193,20 @@
         will-change: transform, opacity;
     }
 
+    @keyframes acis-grid-drift {
+        0% {
+            background-position: 0 0;
+        }
+        100% {
+            background-position: 44px 44px;
+        }
+    }
+
+    .acis-grid-drift {
+        animation: acis-grid-drift 18s linear infinite;
+        will-change: background-position;
+    }
+
     .acis-delay-1 {
         animation-delay: 120ms;
     }
@@ -212,7 +226,8 @@
 
         .acis-float-slow,
         .acis-ambient-pan,
-        .acis-fade-up {
+        .acis-fade-up,
+        .acis-grid-drift {
             animation: none !important;
             transform: none !important;
         }
