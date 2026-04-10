@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Actions\Fortify\AttemptToAuthenticateVerifiedUser;
 use App\Actions\Fortify\CreateNewUser;
+use App\Actions\Fortify\EnsureLoginIsNotThrottledInline;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Http\Responses\FortifyRegisterResponse;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -44,6 +45,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginThrough(function () {
             return [
                 CanonicalizeUsername::class,
+                EnsureLoginIsNotThrottledInline::class,
                 AttemptToAuthenticateVerifiedUser::class,
                 PrepareAuthenticatedSession::class,
             ];

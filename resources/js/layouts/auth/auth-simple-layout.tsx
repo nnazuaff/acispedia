@@ -12,7 +12,10 @@ export default function AuthSimpleLayout({
 }: AuthLayoutProps) {
     const page = usePage();
     const component = (page as any)?.component as string | undefined;
-    const isSplitAuth = component === 'auth/login' || component === 'auth/register';
+    const isSplitAuth =
+        component === 'auth/login' ||
+        component === 'auth/register' ||
+        component === 'auth/forgot-password';
 
     if (isSplitAuth) {
         return (

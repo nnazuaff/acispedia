@@ -61,7 +61,7 @@ class EmailTemplate
     <meta name="x-apple-disable-message-reformatting">
     <title>{$safeTitle}</title>
   </head>
-  <body style="margin:0;padding:0;background:#f6f7f9;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#111827;">
+  <body style="margin:0;padding:0;background:#f6f7f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Variable',Roboto,'Helvetica Neue',Arial,sans-serif;color:#111827;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">{$safeTitle}</div>
 
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f7f9;padding:32px 12px;">
