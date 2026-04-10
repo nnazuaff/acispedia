@@ -252,10 +252,13 @@ export default function DepositPage() {
             <Head title="Deposit Saldo" />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <Heading
-                    title="Deposit Saldo"
-                    description="Isi saldo dengan metode pembayaran yang tersedia."
-                />
+                <div className="space-y-1">
+                    <Heading
+                        variant="small"
+                        title="Deposit Saldo"
+                        description="Isi saldo dengan metode pembayaran yang tersedia."
+                    />
+                </div>
 
                 <Card className="py-4">
                     <CardHeader>

@@ -72,7 +72,7 @@ export default function TransactionShowPage() {
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                    <Heading title="Detail transaksi" description={`Order #${order.id}`} />
+                    <Heading variant="small" title="Detail transaksi" description={`Order #${order.id}`} />
                     <Button asChild variant="outline">
                         <Link href="/history/transaction" prefetch>
                             Kembali

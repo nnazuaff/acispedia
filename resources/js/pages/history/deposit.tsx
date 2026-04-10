@@ -400,7 +400,7 @@ export default function HistoryDepositPage() {
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                    <Heading title="Riwayat Deposit" description="Daftar deposit saldo Anda." />
+                    <Heading variant="small" title="Riwayat Deposit" description="Daftar deposit saldo Anda." />
                     <Button asChild>
                         <Link href="/deposit" prefetch>
                             Isi Saldo

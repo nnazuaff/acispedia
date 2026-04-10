@@ -310,7 +310,9 @@ export default function HistoryTransactionPage() {
             <Head title="Riwayat transaksi" />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <Heading title="Riwayat transaksi" description="Riwayat transaksi order Anda." />
+                <div className="space-y-1">
+                    <Heading variant="small" title="Riwayat transaksi" description="Riwayat transaksi order Anda." />
+                </div>
 
                 <Card className="py-4">
                     <CardHeader>
