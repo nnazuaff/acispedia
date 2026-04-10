@@ -10,7 +10,11 @@ return [
     | In local development you can set it to "admin.localhost".
     |
     */
-    'domain' => env('ADMIN_DOMAIN'),
+    'domain' => env('ADMIN_DOMAIN') ?: (function () {
+        $appUrl = (string) env('APP_URL', '');
+        $host = parse_url($appUrl, PHP_URL_HOST);
+        return $host ? 'admin.'.$host : null;
+    })(),
 
     /*
     |--------------------------------------------------------------------------

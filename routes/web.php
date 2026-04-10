@@ -19,10 +19,6 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
-Route::inertia('/', 'welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
-
 $adminDomain = (string) config('admin.domain', '');
 
 if ($adminDomain !== '') {
@@ -79,6 +75,10 @@ if ($adminDomain !== '') {
             Route::inertia('admin-users', 'admin/admin-users')->name('admin.admin-users');
         });
 }
+
+Route::inertia('/', 'welcome', [
+    'canRegister' => Features::enabled(Features::registration()),
+])->name('home');
 
 Route::get('security-check', function (Request $request) {
     $code = strtoupper(Str::random(5));
