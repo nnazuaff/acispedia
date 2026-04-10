@@ -4,7 +4,7 @@ import * as React from 'react';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 type OrderDetail = {
     id: number;
@@ -71,18 +71,16 @@ export default function TransactionShowPage() {
             <Head title="Detail transaksi" />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <Card className="py-4">
-                    <CardHeader>
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                            <Heading title="Detail transaksi" description={`Order #${order.id}`} />
-                            <Button asChild variant="outline">
-                                <Link href="/history/transaction" prefetch>
-                                    Kembali
-                                </Link>
-                            </Button>
-                        </div>
-                    </CardHeader>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                    <Heading title="Detail transaksi" description={`Order #${order.id}`} />
+                    <Button asChild variant="outline">
+                        <Link href="/history/transaction" prefetch>
+                            Kembali
+                        </Link>
+                    </Button>
+                </div>
 
+                <Card className="py-4">
                     <CardContent>
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="rounded-lg border p-4">

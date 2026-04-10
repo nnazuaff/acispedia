@@ -310,10 +310,10 @@ export default function HistoryTransactionPage() {
             <Head title="Riwayat transaksi" />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+                <Heading title="Riwayat transaksi" description="Riwayat transaksi order Anda." />
+
                 <Card className="py-4">
                     <CardHeader>
-                        <Heading title="Riwayat transaksi" description="Riwayat transaksi order Anda." />
-
                         <div className="grid gap-3 sm:grid-cols-3">
                             <div className="sm:col-span-2">
                                 <Label htmlFor="q">Pencarian</Label>

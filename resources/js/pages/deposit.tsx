@@ -252,13 +252,13 @@ export default function DepositPage() {
             <Head title="Deposit Saldo" />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+                <Heading
+                    title="Deposit Saldo"
+                    description="Isi saldo dengan metode pembayaran yang tersedia."
+                />
+
                 <Card className="py-4">
                     <CardHeader>
-                        <Heading
-                            title="Deposit Saldo"
-                            description="Isi saldo dengan metode pembayaran yang tersedia."
-                        />
-
                         {activePending ? (
                             <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm">
                                 <div className="font-semibold">Ada deposit pending</div>
@@ -283,7 +283,7 @@ export default function DepositPage() {
                             </div>
                         ) : null}
 
-                        <div className="mt-1 text-sm text-muted-foreground">
+                        <div className={`${activePending ? 'mt-1' : ''} text-sm text-muted-foreground`}>
                             Saldo saat ini: <span className="font-medium">Rp {formatRupiah(balanceState)}</span>
                         </div>
 
