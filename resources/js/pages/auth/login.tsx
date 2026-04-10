@@ -1,4 +1,4 @@
-import { Form, Head, setLayoutProps } from '@inertiajs/react';
+import { Form, Head, setLayoutProps, usePage } from '@inertiajs/react';
 import { LockKeyhole, Mail } from 'lucide-react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -26,14 +26,22 @@ export default function Login({
 }: Props) {
     const { t } = useI18n();
 
+    const page = usePage();
+    const isAdminArea = Boolean((page.props as any)?.isAdminArea);
+
+    const title = isAdminArea ? t('Masuk Admin') : t('Masuk');
+    const description = isAdminArea
+        ? t('Masuk untuk melanjutkan ke dashboard admin.')
+        : t('Masuk untuk melanjutkan ke dashboard dan transaksi Anda.');
+
     setLayoutProps({
-        title: t('Masuk'),
-        description: t('Masuk untuk melanjutkan ke dashboard dan transaksi Anda.'),
+        title,
+        description,
     });
 
     return (
         <>
-            <Head title={t('Masuk')} />
+            <Head title={title} />
 
             <Form
                 {...store.form()}
@@ -67,7 +75,7 @@ export default function Login({
                             <div className="grid gap-2">
                                 <div className="flex items-center">
                                     <Label htmlFor="password">{t('Kata sandi')}</Label>
-                                    {canResetPassword && (
+                                    {!isAdminArea && canResetPassword && (
                                         <TextLink
                                             href={request()}
                                             className="ml-auto text-sm"
@@ -110,7 +118,7 @@ export default function Login({
                             </Button>
                         </div>
 
-                        {canRegister && (
+                        {!isAdminArea && canRegister && (
                             <div className="text-center text-sm text-muted-foreground">
                                 {t('Belum punya akun?')}{' '}
                                 <TextLink href={register()} tabIndex={5}>

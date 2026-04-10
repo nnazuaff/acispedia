@@ -1,20 +1,352 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import * as React from 'react';
 
 import Heading from '@/components/heading';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useI18n } from '@/i18n/i18n-provider';
+
+type DepositRow = {
+    id: number;
+    amount: number;
+    final_amount: number;
+    status: string;
+    payment_method: string;
+    tripay_method: string | null;
+    tripay_merchant_ref: string | null;
+    tripay_reference: string | null;
+    tripay_pay_code: string | null;
+    tripay_checkout_url: string | null;
+    tripay_status: string | null;
+    created_at_wib: string | null;
+    expired_at_wib: string | null;
+    processed_at_wib: string | null;
+    user?: {
+        id: number;
+        name: string | null;
+        email: string | null;
+    };
+};
+
+type DepositsPaginator = {
+    data: DepositRow[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number | null;
+    to: number | null;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+};
+
+type Stats = {
+    total: number;
+    success: number;
+    pending: number;
+    expired: number;
+    failed: number;
+    canceled: number;
+};
+
+type Filters = {
+    q: string;
+    status: string;
+    method: string;
+    date_from: string;
+    date_to: string;
+    per_page: number;
+};
+
+function formatNumber(value: number): string {
+    return new Intl.NumberFormat('id-ID').format(value);
+}
 
 export default function AdminDeposits() {
     const { t } = useI18n();
+    const { deposits, stats, filters, known_statuses } = usePage().props as any as {
+        deposits: DepositsPaginator;
+        stats: Stats;
+        filters: Filters;
+        known_statuses: string[];
+    };
+
+    const [q, setQ] = React.useState(filters?.q ?? '');
+    const [status, setStatus] = React.useState(filters?.status ?? '');
+    const [method, setMethod] = React.useState(filters?.method ?? '');
+    const [dateFrom, setDateFrom] = React.useState(filters?.date_from ?? '');
+    const [dateTo, setDateTo] = React.useState(filters?.date_to ?? '');
+    const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 20));
+
+    React.useEffect(() => {
+        setQ(filters?.q ?? '');
+        setStatus(filters?.status ?? '');
+        setMethod(filters?.method ?? '');
+        setDateFrom(filters?.date_from ?? '');
+        setDateTo(filters?.date_to ?? '');
+        setPerPage(Number(filters?.per_page ?? 20));
+    }, [filters?.q, filters?.status, filters?.method, filters?.date_from, filters?.date_to, filters?.per_page]);
+
+    function applyFilters(next?: Partial<Filters> & { page?: number }) {
+        const merged = {
+            q,
+            status,
+            method,
+            date_from: dateFrom,
+            date_to: dateTo,
+            per_page: perPage,
+            ...(next ?? {}),
+        };
+
+        router.get('/deposits', merged as any, {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        });
+    }
+
+    function resetFilters() {
+        setQ('');
+        setStatus('');
+        setMethod('');
+        const today = new Date().toISOString().slice(0, 10);
+        setDateFrom(today);
+        setDateTo(today);
+        setPerPage(20);
+
+        router.get(
+            '/deposits',
+            {
+                q: '',
+                status: '',
+                method: '',
+                date_from: today,
+                date_to: today,
+                per_page: 20,
+            } as any,
+            {
+                preserveScroll: true,
+                preserveState: true,
+                replace: true,
+            }
+        );
+    }
+
+    const rows = Array.isArray(deposits?.data) ? deposits.data : [];
 
     return (
         <>
             <Head title={t('Deposit')} />
+
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <Heading
                     variant="small"
                     title={t('Deposit')}
                     description={t('Manajemen deposit admin.')}
                 />
+
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-6">
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Sukses')}</div>
+                            <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.success ?? 0)}</div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Pending')}</div>
+                            <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.pending ?? 0)}</div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Expired')}</div>
+                            <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.expired ?? 0)}</div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Gagal')}</div>
+                            <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.failed ?? 0)}</div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Canceled')}</div>
+                            <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.canceled ?? 0)}</div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Total')}</div>
+                            <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.total ?? 0)}</div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+                            <div className="lg:col-span-2">
+                                <Label htmlFor="q">{t('Cari')}</Label>
+                                <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nama / email')} />
+                            </div>
+
+                            <div>
+                                <Label>{t('Status')}</Label>
+                                <Select value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('Semua')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('Semua')}</SelectItem>
+                                        {(known_statuses ?? []).map((st) => (
+                                            <SelectItem key={st} value={st}>
+                                                {st}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <Label>{t('Metode')}</Label>
+                                <Select value={method || 'all'} onValueChange={(v) => setMethod(v === 'all' ? '' : v)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('Semua')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{t('Semua')}</SelectItem>
+                                        <SelectItem value="tripay">Tripay</SelectItem>
+                                        <SelectItem value="qris">QRIS</SelectItem>
+                                        <SelectItem value="ewallet">E-Wallet</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <Label htmlFor="date_from">{t('Dari Tanggal')}</Label>
+                                <Input id="date_from" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="date_to">{t('Sampai Tanggal')}</Label>
+                                <Input id="date_to" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+                            </div>
+
+                            <div>
+                                <Label>{t('Per Halaman')}</Label>
+                                <Select value={String(perPage)} onValueChange={(v) => setPerPage(Number(v))}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {[10, 20, 25, 50, 100].map((n) => (
+                                            <SelectItem key={n} value={String(n)}>
+                                                {n}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="flex items-end gap-2">
+                                <Button onClick={() => applyFilters({ page: 1 })}>{t('Filter')}</Button>
+                                <Button variant="outline" onClick={resetFilters}>
+                                    {t('Atur Ulang')}
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="overflow-x-auto rounded-lg border">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-muted/20">
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('ID')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Dibuat')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Pengguna')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Jumlah')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Metode')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Status')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Aksi')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {rows.length === 0 ? (
+                                        <tr>
+                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={7}>
+                                                {t('Tidak ada data.')}
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        rows.map((row) => (
+                                            <tr key={row.id} className="border-t">
+                                                <td className="px-4 py-3 whitespace-nowrap">#{row.id}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.created_at_wib ?? '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.user?.name || row.user?.email || '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(row.amount ?? 0))}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.tripay_method || row.payment_method || '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.status || '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    <Button asChild variant="outline" size="sm">
+                                                        <Link href={`/deposits/${row.id}`} prefetch>
+                                                            {t('Detail')}
+                                                        </Link>
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-sm text-muted-foreground">
+                                {t('Menampilkan')} {deposits?.from ?? 0}–{deposits?.to ?? rows.length} {t('dari')} {deposits?.total ?? rows.length}
+                            </div>
+
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    disabled={!deposits?.prev_page_url}
+                                    onClick={() => {
+                                        if (deposits?.prev_page_url) router.visit(deposits.prev_page_url);
+                                    }}
+                                >
+                                    {t('Sebelumnya')}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    disabled={!deposits?.next_page_url}
+                                    onClick={() => {
+                                        if (deposits?.next_page_url) router.visit(deposits.next_page_url);
+                                    }}
+                                >
+                                    {t('Berikutnya')}
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </>
     );

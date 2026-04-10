@@ -4,14 +4,22 @@ use App\Http\Controllers\Api\BalanceController;
 use App\Http\Controllers\Api\DepositsController;
 use App\Http\Controllers\Api\MedanpediaController;
 use App\Http\Controllers\Api\OrdersController;
+use App\Http\Controllers\Admin\ActivityLogsController as AdminActivityLogsController;
+use App\Http\Controllers\Admin\AdminUsersController as AdminAdminUsersController;
+use App\Http\Controllers\Admin\ConnectionsController as AdminConnectionsController;
+use App\Http\Controllers\Admin\DepositsController as AdminDepositsController;
+use App\Http\Controllers\Admin\FinancialReportController as AdminFinancialReportController;
+use App\Http\Controllers\Admin\OrdersController as AdminOrdersController;
+use App\Http\Controllers\Admin\ServicesController as AdminServicesController;
+use App\Http\Controllers\Admin\UsersController as AdminUsersController;
 use App\Http\Controllers\Auth\CleanPasswordResetController;
 use App\Http\Controllers\Auth\GuestEmailVerificationController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\HistoryController;
-use App\Services\DashboardStats;
 use App\Models\Deposit;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\DashboardStats;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
@@ -65,14 +73,25 @@ if ($adminDomain !== '') {
                 ]);
             })->name('admin.dashboard');
 
-            Route::inertia('financial-report', 'admin/financial-report')->name('admin.financial-report');
-            Route::inertia('orders', 'admin/orders')->name('admin.orders');
-            Route::inertia('deposits', 'admin/deposits')->name('admin.deposits');
-            Route::inertia('users', 'admin/users')->name('admin.users');
-            Route::inertia('services', 'admin/services')->name('admin.services');
-            Route::inertia('connections', 'admin/connections')->name('admin.connections');
-            Route::inertia('activity-logs', 'admin/activity-logs')->name('admin.activity-logs');
-            Route::inertia('admin-users', 'admin/admin-users')->name('admin.admin-users');
+            Route::get('financial-report', [AdminFinancialReportController::class, 'index'])->name('admin.financial-report');
+
+            Route::get('orders', [AdminOrdersController::class, 'index'])->name('admin.orders');
+            Route::get('orders/{order}', [AdminOrdersController::class, 'show'])->name('admin.orders.show');
+            Route::post('orders/{order}/status', [AdminOrdersController::class, 'updateStatus'])->name('admin.orders.status');
+
+            Route::get('deposits', [AdminDepositsController::class, 'index'])->name('admin.deposits');
+            Route::get('deposits/{deposit}', [AdminDepositsController::class, 'show'])->name('admin.deposits.show');
+            Route::post('deposits/{deposit}/status', [AdminDepositsController::class, 'updateStatus'])->name('admin.deposits.status');
+
+            Route::get('users', [AdminUsersController::class, 'index'])->name('admin.users');
+            Route::get('users/{user}', [AdminUsersController::class, 'show'])->name('admin.users.show');
+            Route::get('users/{user}/edit', [AdminUsersController::class, 'edit'])->name('admin.users.edit');
+            Route::put('users/{user}', [AdminUsersController::class, 'update'])->name('admin.users.update');
+
+            Route::get('services', [AdminServicesController::class, 'index'])->name('admin.services');
+            Route::get('connections', [AdminConnectionsController::class, 'index'])->name('admin.connections');
+            Route::get('activity-logs', [AdminActivityLogsController::class, 'index'])->name('admin.activity-logs');
+            Route::get('admin-users', [AdminAdminUsersController::class, 'index'])->name('admin.admin-users');
         });
 }
 
