@@ -119,7 +119,7 @@ export function AppSidebar() {
                     <SidebarMenu>
                         <SidebarMenuItem>
                             <SidebarMenuButton asChild tooltip={{ children: t('Bantuan') }}>
-                                <Link href="/kontak" prefetch>
+                                <Link href="/contact" prefetch>
                                     <CircleHelp />
                                     <span>{t('Bantuan')}</span>
                                 </Link>

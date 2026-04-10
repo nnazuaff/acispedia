@@ -29,7 +29,7 @@ const navItemsDefault: NavItem[] = [
     { label: 'Beranda', href: '#home' },
     { label: 'Layanan', href: '#services' },
     { label: 'Tentang', href: '#about' },
-    { label: 'Kontak', href: '/kontak' },
+    { label: 'Kontak', href: '/contact' },
 ];
 
 export default function LandingNavbar({

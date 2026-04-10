@@ -12,9 +12,9 @@ use App\Services\DashboardStats;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
-use Illuminate\Support\Str;
 
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
@@ -104,7 +104,7 @@ Route::get('services', function () {
     ]);
 })->name('services');
 
-Route::get('kontak', function () {
+Route::get('contact', function () {
     if (request()->user()) {
         return Inertia::render('contact');
     }
@@ -113,6 +113,8 @@ Route::get('kontak', function () {
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->name('contact');
+
+Route::redirect('kontak', 'contact', 301);
 
 Route::get('api/services', [MedanpediaController::class, 'services'])->name('api.medanpedia.services');
 

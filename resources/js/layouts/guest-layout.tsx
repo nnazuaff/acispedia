@@ -18,7 +18,7 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
     const navItems: NavItem[] = [
         { label: 'Beranda', href: home() },
         { label: 'Layanan', href: services() },
-        { label: 'Kontak', href: '/kontak' },
+        { label: 'Kontak', href: '/contact' },
     ];
 
     return (
