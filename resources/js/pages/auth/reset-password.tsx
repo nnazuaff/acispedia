@@ -1,27 +1,40 @@
 import { Form, Head } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
+import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { update } from '@/routes/password';
+import { request } from '@/routes/password';
 
 type Props = {
-    token: string;
+    token?: string | null;
     email?: string | null;
 };
 
 export default function ResetPassword({ token, email }: Props) {
-    const emailIsKnown = !!email;
+    const isValid = !!token && !!email;
 
     return (
         <>
             <Head title="Reset password" />
 
+            {!isValid && (
+                <div className="mb-4 rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
+                    Link reset password tidak valid atau sudah kedaluwarsa. Silakan minta link baru.
+                    <div className="mt-2">
+                        <TextLink href={request()} className="text-sm">
+                            Minta link reset password
+                        </TextLink>
+                    </div>
+                </div>
+            )}
+
             <Form
                 {...update.form()}
-                transform={(data) => ({ ...data, token })}
+                transform={(data) => ({ ...data, token: token ?? '', email: email ?? '' })}
                 resetOnSuccess={['password', 'password_confirmation']}
             >
                 {({ processing, errors }) => (
@@ -33,10 +46,9 @@ export default function ResetPassword({ token, email }: Props) {
                                 type="email"
                                 name="email"
                                 autoComplete="email"
-                                defaultValue={email ?? ''}
+                                value={email ?? ''}
                                 className="mt-1 block w-full"
-                                required
-                                readOnly={emailIsKnown}
+                                readOnly
                             />
                             <InputError
                                 message={errors.email}
@@ -77,7 +89,7 @@ export default function ResetPassword({ token, email }: Props) {
                         <Button
                             type="submit"
                             className="mt-4 w-full"
-                            disabled={processing}
+                            disabled={processing || !isValid}
                             data-test="reset-password-button"
                         >
                             {processing && <Spinner />}

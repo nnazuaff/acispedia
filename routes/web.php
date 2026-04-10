@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\BalanceController;
 use App\Http\Controllers\Api\DepositsController;
 use App\Http\Controllers\Api\MedanpediaController;
 use App\Http\Controllers\Api\OrdersController;
+use App\Http\Controllers\Auth\CleanPasswordResetController;
 use App\Http\Controllers\Auth\GuestEmailVerificationController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\HistoryController;
@@ -58,6 +59,12 @@ Route::get('security-check', function (Request $request) {
 })->name('security.check');
 
 Route::middleware('guest')->group(function () {
+    Route::get('reset-password-link/{key}', [CleanPasswordResetController::class, 'link'])
+        ->name('password.reset.link');
+
+    Route::get('reset-password', [CleanPasswordResetController::class, 'show'])
+        ->name('password.reset.clean');
+
     Route::get('verify-email', [GuestEmailVerificationController::class, 'notice'])->name('verify.email.notice');
     Route::post('verify-email/resend', [GuestEmailVerificationController::class, 'resend'])->name('verify.email.resend');
     Route::get('verify-email/{id}/{hash}', [GuestEmailVerificationController::class, 'verify'])

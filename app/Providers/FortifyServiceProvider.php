@@ -13,7 +13,6 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Actions\CanonicalizeUsername;
-use Laravel\Fortify\Actions\EnsureLoginIsNotThrottled;
 use Laravel\Fortify\Actions\PrepareAuthenticatedSession;
 use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Features;
@@ -44,7 +43,6 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::loginThrough(function () {
             return [
-                EnsureLoginIsNotThrottled::class,
                 CanonicalizeUsername::class,
                 AttemptToAuthenticateVerifiedUser::class,
                 PrepareAuthenticatedSession::class,

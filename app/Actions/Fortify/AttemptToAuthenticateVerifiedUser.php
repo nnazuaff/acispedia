@@ -41,7 +41,7 @@ class AttemptToAuthenticateVerifiedUser
             $limiter->increment($request);
 
             throw ValidationException::withMessages([
-                $usernameField => 'Email salah.',
+                $usernameField => 'Email atau password salah.',
             ]);
         }
 
@@ -51,7 +51,7 @@ class AttemptToAuthenticateVerifiedUser
             $limiter->increment($request);
 
             throw ValidationException::withMessages([
-                'password' => 'Password salah.',
+                $usernameField => 'Email atau password salah.',
             ]);
         }
 

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Schema;
@@ -129,9 +130,27 @@ class User extends Authenticatable implements MustVerifyEmail
 
         RateLimiter::hit($key, 600);
 
-        $resetUrl = URL::to(route('password.reset', [
-            'token' => $token,
-        ], false));
+        $linkKey = null;
+
+        for ($i = 0; $i < 5; $i++) {
+            $candidate = Str::random(40);
+            if (! Cache::has('password_reset_link:'.$candidate)) {
+                $linkKey = $candidate;
+                break;
+            }
+        }
+
+        if (! $linkKey) {
+            return;
+        }
+
+        Cache::put(
+            'password_reset_link:'.$linkKey,
+            ['email' => $email, 'token' => (string) $token],
+            now()->addMinutes(60),
+        );
+
+        $resetUrl = URL::to(route('password.reset.link', ['key' => $linkKey], false));
 
         $subject = 'Reset Password';
         $content = '<p>Kami menerima permintaan reset password.</p>'
