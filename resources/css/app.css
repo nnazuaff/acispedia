@@ -137,7 +137,84 @@
         @apply border-border;
     }
 
+    html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 5rem;
+    }
+
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+@layer utilities {
+    @keyframes acis-float-slow {
+        0%,
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+        50% {
+            transform: translate3d(0, -12px, 0);
+        }
+    }
+
+    .acis-float-slow {
+        animation: acis-float-slow 10s ease-in-out infinite;
+    }
+
+    @keyframes acis-ambient-pan {
+        0%,
+        100% {
+            transform: translate3d(-2%, -2%, 0) scale(1);
+        }
+        50% {
+            transform: translate3d(2%, 1%, 0) scale(1.03);
+        }
+    }
+
+    .acis-ambient-pan {
+        animation: acis-ambient-pan 14s ease-in-out infinite;
+        will-change: transform;
+    }
+
+    @keyframes acis-fade-up {
+        0% {
+            opacity: 0;
+            transform: translate3d(0, 10px, 0);
+        }
+        100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+    .acis-fade-up {
+        animation: acis-fade-up 550ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        will-change: transform, opacity;
+    }
+
+    .acis-delay-1 {
+        animation-delay: 120ms;
+    }
+
+    .acis-delay-2 {
+        animation-delay: 220ms;
+    }
+
+    .acis-delay-3 {
+        animation-delay: 320ms;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
+
+        .acis-float-slow,
+        .acis-ambient-pan,
+        .acis-fade-up {
+            animation: none !important;
+            transform: none !important;
+        }
     }
 }

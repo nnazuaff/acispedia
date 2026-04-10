@@ -75,10 +75,6 @@ class EmailTemplate
                     <td style="vertical-align:middle;">
                       <div style="display:flex;align-items:center;gap:10px;">
                         <img src="{$logoUrl}" width="36" height="36" alt="{$safeAppName}" style="display:block;border-radius:10px;" />
-                        <div>
-                          <div style="font-weight:700;font-size:16px;line-height:1.2;">{$safeAppName}</div>
-                          <div style="color:#6b7280;font-size:12px;line-height:1.2;">SMM Panel</div>
-                        </div>
                       </div>
                     </td>
                     <td align="right" style="color:#6b7280;font-size:12px;">

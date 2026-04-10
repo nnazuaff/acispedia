@@ -22,6 +22,12 @@ export default function AuthSimpleLayout({
             <div className="min-h-svh bg-background">
                 <div className="grid min-h-svh lg:grid-cols-2">
                     <div className="relative hidden lg:flex lg:flex-col lg:justify-center lg:border-r lg:bg-muted/10">
+                        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                            <div className="absolute -top-24 -left-24 size-80 rounded-full bg-primary/10 blur-3xl acis-ambient-pan" />
+                            <div className="absolute -bottom-28 -right-28 size-96 rounded-full bg-primary/10 blur-3xl acis-ambient-pan" />
+                            <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_1px_1px,color-mix(in_oklab,var(--color-primary)_18%,transparent)_1px,transparent_0)] [background-size:22px_22px]" />
+                        </div>
+
                         <div className="mx-auto w-full max-w-lg px-10">
                             <Link href={home()} className="mb-10 inline-flex items-center gap-2 font-medium">
                                 <BrandLogoMark className="size-9" />
