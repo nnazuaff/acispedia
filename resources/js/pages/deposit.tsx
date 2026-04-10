@@ -3,6 +3,7 @@ import * as React from 'react';
 import { toast } from 'sonner';
 import { ArrowRight } from 'lucide-react';
 
+import { useConfirm } from '@/components/confirm-dialog-provider';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
@@ -56,6 +57,7 @@ function getXsrfToken(): string | null {
 }
 
 export default function DepositPage() {
+    const confirm = useConfirm();
     const { auth, balance, active_pending: activePendingProp } = usePage().props as any as {
         auth: { user?: { id?: number; phone?: string | null } };
         balance: number;
@@ -150,7 +152,13 @@ export default function DepositPage() {
     async function cancelActivePending() {
         if (!activePending?.id) return;
 
-        const ok = confirm('Batalkan deposit pending ini?');
+        const ok = await confirm({
+            title: 'Batalkan deposit',
+            description: 'Batalkan deposit pending ini?',
+            confirmText: 'Batalkan',
+            cancelText: 'Kembali',
+            variant: 'destructive',
+        });
         if (!ok) return;
 
         try {

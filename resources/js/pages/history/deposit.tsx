@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 import { Copy, MoreHorizontal } from 'lucide-react';
 
+import { useConfirm } from '@/components/confirm-dialog-provider';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -211,6 +212,7 @@ async function cancelDeposit(id: number) {
 }
 
 export default function HistoryDepositPage() {
+    const confirm = useConfirm();
     const { auth, deposits: depositsProp, filters: filtersProp } = usePage().props as any as {
         auth: { user?: { id?: number } };
         deposits: DepositsPaginator;
@@ -595,8 +597,14 @@ export default function HistoryDepositPage() {
                                                                             <DropdownMenuSeparator />
                                                                             <DropdownMenuItem
                                                                                 className="text-destructive"
-                                                                                onClick={() => {
-                                                                                    const ok = confirm('Batalkan deposit ini?');
+                                                                                onClick={async () => {
+                                                                                    const ok = await confirm({
+                                                                                        title: 'Batalkan deposit',
+                                                                                        description: 'Batalkan deposit ini?',
+                                                                                        confirmText: 'Batalkan',
+                                                                                        cancelText: 'Kembali',
+                                                                                        variant: 'destructive',
+                                                                                    });
                                                                                     if (!ok) return;
                                                                                     cancelDeposit(row.id)
                                                                                         .then(() => applyFilters({ page: depositsProp?.current_page ?? 1 }))
@@ -854,8 +862,14 @@ export default function HistoryDepositPage() {
                                         <Button
                                             type="button"
                                             variant="destructive"
-                                            onClick={() => {
-                                                const ok = confirm('Batalkan deposit ini?');
+                                            onClick={async () => {
+                                                const ok = await confirm({
+                                                    title: 'Batalkan deposit',
+                                                    description: 'Batalkan deposit ini?',
+                                                    confirmText: 'Batalkan',
+                                                    cancelText: 'Kembali',
+                                                    variant: 'destructive',
+                                                });
                                                 if (ok) cancelDeposit(selectedDeposit.id);
                                             }}
                                         >
@@ -867,8 +881,14 @@ export default function HistoryDepositPage() {
                                         <Button
                                             type="button"
                                             variant="destructive"
-                                            onClick={() => {
-                                                const ok = confirm('Batalkan deposit ini?');
+                                            onClick={async () => {
+                                                const ok = await confirm({
+                                                    title: 'Batalkan deposit',
+                                                    description: 'Batalkan deposit ini?',
+                                                    confirmText: 'Batalkan',
+                                                    cancelText: 'Kembali',
+                                                    variant: 'destructive',
+                                                });
                                                 if (ok) cancelDeposit(selectedDeposit.id);
                                             }}
                                         >

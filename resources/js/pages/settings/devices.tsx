@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 
+import { useConfirm } from '@/components/confirm-dialog-provider';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,8 +34,16 @@ function fmtWib(iso: string | null): string {
 }
 
 export default function DevicesPage({ sessions }: { sessions: DeviceSession[] }) {
-    const logoutAllOther = () => {
-        const ok = confirm('Logout dari semua perangkat lain?');
+    const confirm = useConfirm();
+
+    const logoutAllOther = async () => {
+        const ok = await confirm({
+            title: 'Logout perangkat lain',
+            description: 'Logout dari semua perangkat lain?',
+            confirmText: 'Logout',
+            cancelText: 'Batal',
+            variant: 'destructive',
+        });
         if (!ok) return;
 
         router.delete('/settings/devices', {
@@ -42,8 +51,14 @@ export default function DevicesPage({ sessions }: { sessions: DeviceSession[] })
         });
     };
 
-    const logoutSession = (id: string) => {
-        const ok = confirm('Logout perangkat ini?');
+    const logoutSession = async (id: string) => {
+        const ok = await confirm({
+            title: 'Logout perangkat',
+            description: 'Logout perangkat ini?',
+            confirmText: 'Logout',
+            cancelText: 'Batal',
+            variant: 'destructive',
+        });
         if (!ok) return;
 
         router.delete(`/settings/devices/${encodeURIComponent(id)}`, {
