@@ -166,42 +166,42 @@ export default function AdminDeposits() {
                 />
 
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-6">
-                    <Card>
+                    <Card className="border-emerald-500/30 bg-emerald-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Sukses')}</div>
                             <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.success ?? 0)}</div>
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-amber-500/30 bg-amber-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Pending')}</div>
                             <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.pending ?? 0)}</div>
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-slate-500/30 bg-slate-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Expired')}</div>
                             <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.expired ?? 0)}</div>
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-red-500/30 bg-red-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Gagal')}</div>
                             <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.failed ?? 0)}</div>
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-slate-500/30 bg-slate-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Canceled')}</div>
                             <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.canceled ?? 0)}</div>
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-sky-500/30 bg-sky-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Total')}</div>
                             <div className="mt-2 text-2xl font-semibold">{formatNumber(stats?.total ?? 0)}</div>

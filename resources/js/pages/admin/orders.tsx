@@ -159,7 +159,7 @@ export default function AdminOrders() {
                 />
 
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                    <Card>
+                    <Card className="border-emerald-500/30 bg-emerald-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('Sukses')}
@@ -170,7 +170,7 @@ export default function AdminOrders() {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-red-500/30 bg-red-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('Gagal')}
@@ -181,7 +181,7 @@ export default function AdminOrders() {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-slate-500/30 bg-slate-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('Lainnya')}
@@ -192,7 +192,7 @@ export default function AdminOrders() {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-sky-500/30 bg-sky-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('Total')}

@@ -59,7 +59,7 @@ export default function AdminDashboard({
                 />
 
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                    <Card>
+                    <Card className="border-sky-500/30 bg-sky-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('Pengguna Baru Hari Ini')}
@@ -70,7 +70,7 @@ export default function AdminDashboard({
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-sky-500/30 bg-sky-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('Pesanan Hari Ini')}
@@ -81,7 +81,7 @@ export default function AdminDashboard({
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-emerald-500/30 bg-emerald-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('Deposit Berhasil Hari Ini')}
@@ -95,7 +95,7 @@ export default function AdminDashboard({
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-emerald-500/30 bg-emerald-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('Saldo masuk')}
