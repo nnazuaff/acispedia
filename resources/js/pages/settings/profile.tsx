@@ -28,7 +28,7 @@ export default function Profile({
                 <Heading
                     variant="small"
                     title="Profile information"
-                    description="Update your name and email address"
+                    description="Update your name, email address, and phone number"
                 />
 
                 <Form
@@ -76,6 +76,25 @@ export default function Profile({
                                 <InputError
                                     className="mt-2"
                                     message={errors.email}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="phone">Nomor HP / WhatsApp</Label>
+
+                                <Input
+                                    id="phone"
+                                    className="mt-1 block w-full"
+                                    defaultValue={(auth.user as any).phone ?? ''}
+                                    name="phone"
+                                    required
+                                    autoComplete="tel"
+                                    placeholder="08xxxxxxxxxx"
+                                />
+
+                                <InputError
+                                    className="mt-2"
+                                    message={(errors as any).phone}
                                 />
                             </div>
 

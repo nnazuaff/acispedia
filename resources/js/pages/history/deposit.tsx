@@ -98,7 +98,16 @@ function methodLabel(row: { payment_method: string; tripay_method: string | null
         return 'Virtual Account';
     }
 
-    return tripay || row.payment_method;
+    if (tripay) {
+        return tripay;
+    }
+
+    const payment = String(row.payment_method ?? '').trim();
+    if (payment.toLowerCase() === 'tripay') {
+        return 'Pembayaran';
+    }
+
+    return payment;
 }
 
 function statusLabel(status: string): string {
@@ -878,3 +887,12 @@ export default function HistoryDepositPage() {
         </>
     );
 }
+
+HistoryDepositPage.layout = {
+    breadcrumbs: [
+        {
+            title: 'Riwayat Deposit',
+            href: '/history/deposit',
+        },
+    ],
+};

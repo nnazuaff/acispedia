@@ -158,3 +158,12 @@ export default function TransactionShowPage() {
         </>
     );
 }
+
+TransactionShowPage.layout = {
+    breadcrumbs: [
+        {
+            title: 'Detail Transaksi',
+            href: '/history/transaction',
+        },
+    ],
+};

@@ -158,3 +158,12 @@ export default function Topup() {
         </>
     );
 }
+
+Topup.layout = {
+    breadcrumbs: [
+        {
+            title: 'Top Up Saldo',
+            href: '/topup',
+        },
+    ],
+};

@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 import { toast } from 'sonner';
 
@@ -539,6 +539,15 @@ export default function OrderPage() {
                                         onChange={(e) => setTarget(e.target.value)}
                                         placeholder="Link / Username"
                                     />
+                                    <div className="text-xs text-muted-foreground">
+                                        Bingung pengisian target?{' '}
+                                        <Link
+                                            href="/panduan-target"
+                                            className="underline underline-offset-4 hover:decoration-current"
+                                        >
+                                            klik disini
+                                        </Link>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">

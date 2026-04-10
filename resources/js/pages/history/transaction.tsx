@@ -633,3 +633,12 @@ export default function HistoryTransactionPage() {
         </>
     );
 }
+
+HistoryTransactionPage.layout = {
+    breadcrumbs: [
+        {
+            title: 'Riwayat Transaksi',
+            href: '/history/transaction',
+        },
+    ],
+};

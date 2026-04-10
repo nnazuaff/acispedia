@@ -70,14 +70,13 @@ export default function DepositPage() {
 
     const quickAmounts = React.useMemo(() => [1000, 5000, 10000, 20000, 50000, 100000, 200000], []);
     const [amount, setAmount] = React.useState<number>(0);
-    const [methodCategory, setMethodCategory] = React.useState<'qris' | 'ewallet' | 'va'>('qris');
+    const [methodCategory, setMethodCategory] = React.useState<'qris' | 'ewallet'>('qris');
     const [ewalletCode, setEwalletCode] = React.useState<'OVO' | 'DANA' | 'SHOPEEPAY'>('OVO');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [balanceState, setBalanceState] = React.useState<number>(Number(balance ?? 0));
     const [activePending, setActivePending] = React.useState<typeof activePendingProp>(activePendingProp);
 
-    const method =
-        methodCategory === 'qris' ? 'QRIS2' : methodCategory === 'ewallet' ? ewalletCode : 'BRIVA';
+    const method = methodCategory === 'qris' ? 'QRIS2' : ewalletCode;
 
     React.useEffect(() => {
         setBalanceState(Number(balance ?? 0));
@@ -386,41 +385,6 @@ export default function DepositPage() {
                                         </div>
                                     ) : null}
 
-                                    <button
-                                        type="button"
-                                        className={
-                                            'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ' +
-                                            (methodCategory === 'va'
-                                                ? 'border-teal-500/60 bg-teal-500/10'
-                                                : 'border-border/60 bg-muted/10 hover:bg-muted/20')
-                                        }
-                                        onClick={() => setMethodCategory('va')}
-                                    >
-                                        <span
-                                            className={
-                                                'flex h-10 w-10 items-center justify-center rounded-lg text-xs font-semibold ' +
-                                                (methodCategory === 'va' ? 'bg-teal-500 text-white' : 'bg-muted text-foreground')
-                                            }
-                                        >
-                                            VA
-                                        </span>
-                                        <div className="flex-1">
-                                            <div className="text-sm font-semibold">Virtual Account</div>
-                                        </div>
-                                        <span
-                                            className={
-                                                'h-5 w-5 rounded-full border-2 ' +
-                                                (methodCategory === 'va' ? 'border-teal-500' : 'border-muted-foreground/40')
-                                            }
-                                        >
-                                            <span
-                                                className={
-                                                    'block h-full w-full scale-50 rounded-full ' +
-                                                    (methodCategory === 'va' ? 'bg-teal-500' : 'bg-transparent')
-                                                }
-                                            />
-                                        </span>
-                                    </button>
                                 </div>
                             </div>
 
@@ -494,3 +458,12 @@ export default function DepositPage() {
         </>
     );
 }
+
+DepositPage.layout = {
+    breadcrumbs: [
+        {
+            title: 'Deposit Saldo',
+            href: '/deposit',
+        },
+    ],
+};

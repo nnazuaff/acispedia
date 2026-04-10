@@ -100,6 +100,15 @@ class DepositsController extends Controller
 
         $amount = (int) $validated['amount'];
         $method = strtoupper(trim((string) $validated['method']));
+
+        $allowedMethods = ['QRIS2', 'OVO', 'DANA', 'SHOPEEPAY'];
+        if (! in_array($method, $allowedMethods, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Metode pembayaran tidak tersedia.',
+            ], 422);
+        }
+
         $customerPhone = preg_replace('/[^0-9+]/', '', (string) ($validated['customer_phone'] ?? '')) ?? '';
         $customerPhone = trim($customerPhone);
         if ($customerPhone === '') {

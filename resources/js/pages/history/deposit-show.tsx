@@ -37,6 +37,34 @@ function fmtDate(iso: string | null): string {
     }
 }
 
+function methodLabel(row: { payment_method: string; tripay_method: string | null }): string {
+    const tripay = String(row.tripay_method ?? '').trim();
+    const upper = tripay.toUpperCase();
+
+    if (upper === 'QRIS2' || upper.startsWith('QRIS')) {
+        return 'QRIS';
+    }
+
+    if (['OVO', 'DANA', 'SHOPEEPAY'].includes(upper)) {
+        return 'E-Wallet';
+    }
+
+    if (upper.endsWith('VA')) {
+        return 'Virtual Account';
+    }
+
+    if (tripay) {
+        return tripay;
+    }
+
+    const payment = String(row.payment_method ?? '').trim();
+    if (payment.toLowerCase() === 'tripay') {
+        return 'Pembayaran';
+    }
+
+    return payment;
+}
+
 function getCookie(name: string): string | null {
     const parts = document.cookie.split(';');
     for (const part of parts) {
@@ -152,7 +180,9 @@ export default function DepositShowPage() {
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
                                         <span className="text-muted-foreground">Metode</span>
-                                        <span className="font-medium">{deposit.tripay_method ?? deposit.payment_method}</span>
+                                        <span className="font-medium">
+                                            {methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method })}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -230,3 +260,12 @@ export default function DepositShowPage() {
         </>
     );
 }
+
+DepositShowPage.layout = {
+    breadcrumbs: [
+        {
+            title: 'Detail Deposit',
+            href: '/history/deposit',
+        },
+    ],
+};

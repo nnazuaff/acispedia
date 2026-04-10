@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
-import { ShieldCheck, User } from 'lucide-react';
+import { ShieldCheck, Smartphone, User } from 'lucide-react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,6 +20,11 @@ const sidebarNavItems: NavItem[] = [
         title: 'Security',
         href: editSecurity(),
         icon: ShieldCheck,
+    },
+    {
+        title: 'Devices',
+        href: '/settings/devices',
+        icon: Smartphone,
     },
 ];
 
