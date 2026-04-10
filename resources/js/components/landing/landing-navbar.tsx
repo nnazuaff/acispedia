@@ -5,6 +5,7 @@ import * as React from 'react';
 import { AppearanceDropdown } from '@/components/appearance-dropdown';
 import AppearanceToggleTab from '@/components/appearance-tabs';
 import { BrandLogoMark } from '@/components/brand-logo';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -17,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { dashboard, home, login, register } from '@/routes';
 import type { RouteDefinition } from '@/wayfinder';
+import { useI18n } from '@/i18n/i18n-provider';
 
 type NavItem = {
     label: string;
@@ -40,6 +42,19 @@ export default function LandingNavbar({
     navItems?: NavItem[];
 }) {
     const isAuthenticated = Boolean(authUser);
+    const { t } = useI18n();
+
+    const translatedNavItems = React.useMemo<NavItem[]>(
+        () =>
+            navItems.map((item) => {
+                if (item.label === 'Beranda') return { ...item, label: t('nav.home') };
+                if (item.label === 'Layanan') return { ...item, label: t('nav.services') };
+                if (item.label === 'Tentang') return { ...item, label: t('nav.about') };
+                if (item.label === 'Kontak') return { ...item, label: t('nav.contact') };
+                return item;
+            }),
+        [navItems, t],
+    );
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/80 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/60">
@@ -59,7 +74,7 @@ export default function LandingNavbar({
                 </Link>
 
                 <nav className="ml-6 hidden items-center gap-1 md:flex">
-                    {navItems.map((item) =>
+                    {translatedNavItems.map((item) =>
                         typeof item.href === 'string' && item.href.startsWith('#') ? (
                             <a
                                 key={item.href}
@@ -82,6 +97,7 @@ export default function LandingNavbar({
 
                 <div className="ml-auto hidden items-center gap-2 md:flex">
                     <AppearanceDropdown />
+                    <LanguageSwitcher compact />
                     {isAuthenticated ? (
                         <Button asChild>
                             <Link href={dashboard()}>Dashboard</Link>
@@ -89,11 +105,11 @@ export default function LandingNavbar({
                     ) : (
                         <>
                             <Button asChild variant="ghost">
-                                <Link href={login()}>Login</Link>
+                                <Link href={login()}>{t('auth.login')}</Link>
                             </Button>
                             {canRegister && (
                                 <Button asChild>
-                                    <Link href={register()}>Register</Link>
+                                    <Link href={register()}>{t('auth.register')}</Link>
                                 </Button>
                             )}
                         </>
@@ -102,6 +118,7 @@ export default function LandingNavbar({
 
                 <div className="ml-auto flex items-center gap-2 md:hidden">
                     <AppearanceDropdown />
+                    <LanguageSwitcher compact />
                     <Sheet>
                         <SheetTrigger asChild>
                             <Button variant="ghost" size="icon" aria-label="Open menu">
@@ -110,11 +127,11 @@ export default function LandingNavbar({
                         </SheetTrigger>
                         <SheetContent side="right" className="p-0">
                             <SheetHeader className="border-b">
-                                <SheetTitle>Menu</SheetTitle>
+                                <SheetTitle>{t('nav.menu')}</SheetTitle>
                             </SheetHeader>
 
                             <div className="grid gap-1 p-4">
-                                {navItems.map((item) =>
+                                {translatedNavItems.map((item) =>
                                     typeof item.href === 'string' && item.href.startsWith('#') ? (
                                         <SheetClose asChild key={item.href}>
                                             <a
@@ -151,7 +168,7 @@ export default function LandingNavbar({
                             <div className="border-t p-4">
                                 <div className="mb-4">
                                     <div className="mb-2 text-xs font-semibold text-muted-foreground">
-                                        Tema
+                                        {t('nav.theme')}
                                     </div>
                                     <AppearanceToggleTab className="w-full justify-between" />
                                 </div>
@@ -166,13 +183,13 @@ export default function LandingNavbar({
                                     <div className="grid gap-2">
                                         <SheetClose asChild>
                                             <Button asChild variant="outline" className="w-full">
-                                                <Link href={login()}>Login</Link>
+                                                <Link href={login()}>{t('auth.login')}</Link>
                                             </Button>
                                         </SheetClose>
                                         {canRegister && (
                                             <SheetClose asChild>
                                                 <Button asChild className="w-full">
-                                                    <Link href={register()}>Register</Link>
+                                                    <Link href={register()}>{t('auth.register')}</Link>
                                                 </Button>
                                             </SheetClose>
                                         )}

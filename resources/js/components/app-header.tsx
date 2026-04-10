@@ -1,9 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
+import * as React from 'react';
 import { LayoutGrid, Layers, Menu, Search, ShoppingCart } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { AppearanceDropdown } from '@/components/appearance-dropdown';
 import { BrandLogoMark } from '@/components/brand-logo';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +29,7 @@ import {
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
+import { useI18n } from '@/i18n/i18n-provider';
 import { cn } from '@/lib/utils';
 import { dashboard, home } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
@@ -61,6 +64,18 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
     const { auth } = page.props;
     const getInitials = useInitials();
     const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
+    const { t } = useI18n();
+
+    const navItems = React.useMemo<NavItem[]>(
+        () =>
+            mainNavItems.map((item) => {
+                if (item.href === dashboard()) return { ...item, title: t('nav.dashboard') };
+                if (item.href === '/services') return { ...item, title: t('nav.services') };
+                if (item.href === '/order') return { ...item, title: t('nav.order') };
+                return item;
+            }),
+        [t],
+    );
 
     return (
         <>
@@ -94,7 +109,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 <div className="flex h-full flex-1 flex-col space-y-4 p-4">
                                     <div className="flex h-full flex-col justify-between text-sm">
                                         <div className="flex flex-col space-y-4">
-                                            {mainNavItems.map((item) => (
+                                            {navItems.map((item) => (
                                                 <Link
                                                     key={item.title}
                                                     href={item.href}
@@ -127,7 +142,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                     <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">
                         <NavigationMenu className="flex h-full items-stretch">
                             <NavigationMenuList className="flex h-full items-stretch space-x-2">
-                                {mainNavItems.map((item, index) => (
+                                {navItems.map((item, index) => (
                                     <NavigationMenuItem
                                         key={index}
                                         className="relative flex h-full items-center"
@@ -159,6 +174,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
 
                     <div className="ml-auto flex items-center space-x-2">
                         <AppearanceDropdown />
+                        <LanguageSwitcher compact />
                         <div className="relative flex items-center space-x-1">
                             <Button
                                 variant="ghost"

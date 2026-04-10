@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 
 import { AppearanceDropdown } from '@/components/appearance-dropdown';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +33,7 @@ export function AppSidebarHeader({
 
             <div className="ml-auto flex items-center gap-2">
                 <AppearanceDropdown />
+                <LanguageSwitcher compact />
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

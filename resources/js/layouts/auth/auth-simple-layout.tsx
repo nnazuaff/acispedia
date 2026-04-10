@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { CreditCard, ShieldCheck, UserPlus } from 'lucide-react';
 import { BrandLogoMark } from '@/components/brand-logo';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { Card, CardContent } from '@/components/ui/card';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
@@ -80,6 +81,10 @@ export default function AuthSimpleLayout({
                     </div>
 
                     <div className="flex flex-col items-center justify-center p-6 md:p-10">
+                        <div className="absolute right-4 top-4">
+                            <LanguageSwitcher compact />
+                        </div>
+
                         <div className="w-full max-w-sm">
                             <div className="flex flex-col gap-8">
                                 <div className="flex flex-col items-center gap-4 lg:hidden">

@@ -179,7 +179,7 @@ export default function DepositPage() {
             }
 
             toast.success(json?.message ?? 'Deposit dibatalkan.');
-            router.reload({ preserveScroll: true });
+            router.reload({ preserveScroll: true } as any);
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Kesalahan tidak diketahui.';
             toast.error(msg);

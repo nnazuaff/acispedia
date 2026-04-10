@@ -6,6 +6,7 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { PaymentMethodInline } from '@/components/payment-method-badge';
 
 type DepositDetail = {
     id: number;
@@ -178,9 +179,10 @@ export default function DepositShowPage() {
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
                                         <span className="text-muted-foreground">Metode</span>
-                                        <span className="font-medium">
-                                            {methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method })}
-                                        </span>
+                                        <PaymentMethodInline
+                                            className="font-medium"
+                                            label={methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method })}
+                                        />
                                     </div>
                                 </div>
 

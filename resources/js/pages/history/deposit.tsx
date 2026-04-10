@@ -7,6 +7,7 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { PaymentMethodBadge } from '@/components/payment-method-badge';
 import {
     Dialog,
     DialogContent,
@@ -554,7 +555,7 @@ export default function HistoryDepositPage() {
                                                         <td className="px-4 py-3 whitespace-nowrap">Rp {formatRupiah(totalPay)}</td>
                                                         <td className="px-4 py-3 whitespace-nowrap">Rp {formatRupiah(saldoMasuk)}</td>
                                                         <td className="px-4 py-3 whitespace-nowrap">
-                                                            <Badge variant="outline">{methodText}</Badge>
+                                                            <PaymentMethodBadge label={methodText} />
                                                         </td>
                                                         <td className="px-4 py-3 whitespace-nowrap">
                                                             <Badge

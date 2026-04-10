@@ -3,6 +3,7 @@ import { ConfirmProvider } from '@/components/confirm-dialog-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
+import { I18nProvider } from '@/i18n/i18n-provider';
 import './echo';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
@@ -31,10 +32,12 @@ createInertiaApp({
     withApp(app) {
         return (
             <TooltipProvider delayDuration={0}>
-                <ConfirmProvider>
-                    {app}
-                    <Toaster />
-                </ConfirmProvider>
+                <I18nProvider>
+                    <ConfirmProvider>
+                        {app}
+                        <Toaster />
+                    </ConfirmProvider>
+                </I18nProvider>
             </TooltipProvider>
         );
     },

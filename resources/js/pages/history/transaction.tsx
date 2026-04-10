@@ -236,7 +236,7 @@ export default function HistoryTransactionPage() {
                 only: ['orders'],
                 preserveScroll: true,
                 preserveState: true,
-            });
+            } as any);
         });
 
         return () => {
