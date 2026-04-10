@@ -5,6 +5,7 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useI18n } from '@/i18n/i18n-provider';
 
 type OrderDetail = {
     id: number;
@@ -63,19 +64,38 @@ function fmtDate(iso: string | null): string {
     }
 }
 
+function statusLabel(status: string): string {
+    const s = (status ?? '').toLowerCase();
+    if (s === 'success') return 'Selesai';
+    if (s === 'pending') return 'Menunggu';
+    if (s === 'processing' || s === 'in progress') return 'Diproses';
+    if (s === 'partial') return 'Parsial';
+    if (s === 'canceled' || s === 'cancelled') return 'Dibatalkan';
+    if (s === 'error' || s === 'failed') return 'Gagal';
+    if (s === 'submitting') return 'Mengirim';
+    return status;
+}
+
 export default function TransactionShowPage() {
     const { order } = usePage().props as any as { order: OrderDetail };
+    const { t, locale } = useI18n();
+
+    const statusUpper = t(statusLabel(order.status)).toUpperCase();
 
     return (
         <>
-            <Head title="Detail transaksi" />
+            <Head title={t('Detail Transaksi')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                    <Heading variant="small" title="Detail transaksi" description={`Order #${order.id}`} />
+                    <Heading
+                        variant="small"
+                        title={t('Detail Transaksi')}
+                        description={`Order #${order.id}`}
+                    />
                     <Button asChild variant="outline">
                         <Link href="/history/transaction" prefetch>
-                            Kembali
+                            {t('Kembali')}
                         </Link>
                     </Button>
                 </div>
@@ -85,28 +105,28 @@ export default function TransactionShowPage() {
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="rounded-lg border p-4">
                                 <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    Status
+                                    {t('Status')}
                                 </div>
                                 <div className="mt-2">
                                     <Badge
                                         variant={badgeVariantForStatus(order.status)}
                                         className={badgeClassNameForStatus(order.status)}
                                     >
-                                        {(order.status ?? '').toUpperCase()}
+                                        {statusUpper}
                                     </Badge>
                                 </div>
 
                                 <div className="mt-4 grid gap-2 text-sm">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Tanggal</span>
+                                        <span className="text-muted-foreground">{t('Tanggal')}</span>
                                         <span className="font-medium">{fmtDate(order.created_at)}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Provider ID</span>
+                                        <span className="text-muted-foreground">{t('Provider ID')}</span>
                                         <span className="font-medium">{order.provider_order_id ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Total</span>
+                                        <span className="text-muted-foreground">{t('Total')}</span>
                                         <span className="font-medium">Rp {formatRupiah(order.total_price)}</span>
                                     </div>
                                 </div>
@@ -114,39 +134,40 @@ export default function TransactionShowPage() {
 
                             <div className="rounded-lg border p-4">
                                 <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    Detail
+                                    {t('Detail')}
                                 </div>
 
                                 <div className="mt-4 grid gap-2 text-sm">
                                     <div>
-                                        <div className="text-muted-foreground">Layanan</div>
+                                        <div className="text-muted-foreground">{t('Layanan')}</div>
                                         <div className="font-medium">{order.service_name}</div>
                                     </div>
                                     <div>
-                                        <div className="text-muted-foreground">Target</div>
+                                        <div className="text-muted-foreground">{t('Target')}</div>
                                         <div className="font-medium break-all">{order.target}</div>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Qty</span>
+                                        <span className="text-muted-foreground">{t('Jumlah')}</span>
                                         <span className="font-medium">{order.quantity}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Start count</span>
+                                        <span className="text-muted-foreground">{t('Jumlah awal')}</span>
                                         <span className="font-medium">{order.start_count ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Remains</span>
+                                        <span className="text-muted-foreground">{t('Sisa')}</span>
                                         <span className="font-medium">{order.remains ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Charge</span>
+                                        <span className="text-muted-foreground">{t('Charge')}</span>
                                         <span className="font-medium">{order.charge != null ? `Rp ${formatRupiah(order.charge)}` : '-'}</span>
                                     </div>
                                 </div>
 
                                 <div className="mt-4 text-xs text-muted-foreground">
-                                    Terakhir dicek: {fmtDate(order.last_status_check)} • Percobaan:{' '}
-                                    {order.status_check_attempts}
+                                    {locale === 'en'
+                                        ? `Last checked: ${fmtDate(order.last_status_check)} • Attempts: ${order.status_check_attempts}`
+                                        : `Terakhir dicek: ${fmtDate(order.last_status_check)} • Percobaan: ${order.status_check_attempts}`}
                                 </div>
                             </div>
                         </div>

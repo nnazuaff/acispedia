@@ -14,6 +14,7 @@ import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useI18n } from '@/i18n/i18n-provider';
 import { dashboard } from '@/routes';
 
 function formatRupiah(value: number): string {
@@ -21,9 +22,10 @@ function formatRupiah(value: number): string {
 }
 
 export default function Dashboard() {
+    const { t } = useI18n();
     const { auth, stats: statsProp } = usePage().props as any;
 
-    const userName = auth.user?.name ?? 'Pengguna';
+    const userName = auth.user?.name ?? t('Pengguna');
 
     const initialStats =
         statsProp && typeof statsProp === 'object'
@@ -87,17 +89,16 @@ export default function Dashboard() {
 
     return (
         <>
-            <Head title="Dashboard" />
+            <Head title={t('Dashboard')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 {/* Welcome */}
                 <div className="rounded-xl bg-linear-to-br from-primary to-primary/80 p-6 text-primary-foreground shadow-sm">
                     <div className="text-xl font-semibold">
-                        Selamat Datang, {userName}!
+                        {t('Selamat Datang')}, {userName}!
                     </div>
                     <p className="mt-1 text-sm text-primary-foreground/90">
-                        Kelola pesanan dan pantau aktivitas Anda dari dashboard
-                        ini.
+                        {t('Kelola pesanan dan pantau aktivitas Anda dari dashboard ini.')}
                     </p>
                 </div>
 
@@ -106,7 +107,7 @@ export default function Dashboard() {
                     <Card className="py-4">
                         <CardHeader className="flex flex-row items-center justify-between gap-3">
                             <div className="text-xs font-semibold tracking-wide text-muted-foreground">
-                                Saldo Anda
+                                {t('Saldo Anda')}
                             </div>
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                                 <Wallet className="size-5" />
@@ -117,7 +118,7 @@ export default function Dashboard() {
                                 Rp {formatRupiah(stats.balance)}
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
-                                Saldo tersedia
+                                {t('Saldo tersedia')}
                             </div>
                         </CardContent>
                     </Card>
@@ -125,7 +126,7 @@ export default function Dashboard() {
                     <Card className="py-4">
                         <CardHeader className="flex flex-row items-center justify-between gap-3">
                             <div className="text-xs font-semibold tracking-wide text-muted-foreground">
-                                Total Pesanan
+                                {t('Total Pesanan')}
                             </div>
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-500/10 text-green-600 dark:text-green-500">
                                 <ClipboardList className="size-5" />
@@ -136,7 +137,7 @@ export default function Dashboard() {
                                 {formatRupiah(stats.totalMonth)}
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
-                                Pesanan bulan ini
+                                {t('Pesanan bulan ini')}
                             </div>
                         </CardContent>
                     </Card>
@@ -144,7 +145,7 @@ export default function Dashboard() {
                     <Card className="py-4">
                         <CardHeader className="flex flex-row items-center justify-between gap-3">
                             <div className="text-xs font-semibold tracking-wide text-muted-foreground">
-                                Pesanan Aktif
+                                {t('Pesanan Aktif')}
                             </div>
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-500/10 text-yellow-600 dark:text-yellow-500">
                                 <Clock className="size-5" />
@@ -155,7 +156,7 @@ export default function Dashboard() {
                                 {formatRupiah(stats.active)}
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
-                                Sedang diproses
+                                {t('Sedang diproses')}
                             </div>
                         </CardContent>
                     </Card>
@@ -163,7 +164,7 @@ export default function Dashboard() {
                     <Card className="py-4">
                         <CardHeader className="flex flex-row items-center justify-between gap-3">
                             <div className="text-xs font-semibold tracking-wide text-muted-foreground">
-                                Pesanan Selesai
+                                {t('Pesanan Selesai')}
                             </div>
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-500">
                                 <CheckCircle2 className="size-5" />
@@ -174,7 +175,7 @@ export default function Dashboard() {
                                 {formatRupiah(stats.completed)}
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
-                                Berhasil diselesaikan
+                                {t('Berhasil diselesaikan')}
                             </div>
                         </CardContent>
                     </Card>
@@ -182,7 +183,7 @@ export default function Dashboard() {
                     <Card className="py-4">
                         <CardHeader className="flex flex-row items-center justify-between gap-3">
                             <div className="text-xs font-semibold tracking-wide text-muted-foreground">
-                                Total Pengeluaran
+                                {t('Total Pengeluaran')}
                             </div>
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
                                 <TrendingDown className="size-5" />
@@ -193,7 +194,7 @@ export default function Dashboard() {
                                 Rp {formatRupiah(stats.totalSpent)}
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
-                                Total yang dibelanjakan
+                                {t('Total yang dibelanjakan')}
                             </div>
                         </CardContent>
                     </Card>
@@ -202,7 +203,7 @@ export default function Dashboard() {
                 {/* Quick actions */}
                 <Card className="py-4">
                     <CardHeader>
-                        <div className="text-base font-semibold">Aksi Cepat</div>
+                        <div className="text-base font-semibold">{t('Aksi Cepat')}</div>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -214,7 +215,7 @@ export default function Dashboard() {
                             >
                                 <Link href="/order" prefetch>
                                     <PlusCircle className="size-6" />
-                                    Buat Pesanan
+                                    {t('Buat Pesanan')}
                                 </Link>
                             </Button>
                             <Button
@@ -225,7 +226,7 @@ export default function Dashboard() {
                             >
                                 <Link href="/services" prefetch>
                                     <Layers className="size-6" />
-                                    Lihat Layanan
+                                    {t('Lihat Layanan')}
                                 </Link>
                             </Button>
                             <Button
@@ -236,7 +237,7 @@ export default function Dashboard() {
                             >
                                 <Link href="/deposit" prefetch>
                                     <CreditCard className="size-6" />
-                                    Isi Saldo
+                                    {t('Isi Saldo')}
                                 </Link>
                             </Button>
                             <Button
@@ -247,7 +248,7 @@ export default function Dashboard() {
                             >
                                 <Link href="/history/transaction" prefetch>
                                     <History className="size-6" />
-                                    Riwayat
+                                    {t('Riwayat')}
                                 </Link>
                             </Button>
                         </div>

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PaymentMethodInline } from '@/components/payment-method-badge';
+import { useI18n } from '@/i18n/i18n-provider';
 
 type DepositDetail = {
     id: number;
@@ -107,6 +108,16 @@ function badgeClassNameForStatus(status: string): string {
     return '';
 }
 
+function statusLabel(status: string): string {
+    const s = (status ?? '').toLowerCase();
+    if (s === 'pending') return 'Menunggu';
+    if (s === 'success') return 'Berhasil';
+    if (s === 'failed' || s === 'error') return 'Gagal';
+    if (s === 'expired') return 'Kadaluarsa';
+    if (s === 'canceled' || s === 'cancelled') return 'Dibatalkan';
+    return status;
+}
+
 async function cancelDeposit(id: number) {
     try {
         const xsrf = getXsrfToken();
@@ -135,19 +146,24 @@ async function cancelDeposit(id: number) {
 
 export default function DepositShowPage() {
     const { deposit } = usePage().props as any as { deposit: DepositDetail };
+    const { t } = useI18n();
 
-    const statusUpper = (deposit.status ?? '').toUpperCase();
+    const statusUpper = t(statusLabel(deposit.status)).toUpperCase();
 
     return (
         <>
-            <Head title="Detail deposit" />
+            <Head title={t('Detail deposit')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                    <Heading variant="small" title="Detail deposit" description={`Deposit #${deposit.id}`} />
+                    <Heading
+                        variant="small"
+                        title={t('Detail deposit')}
+                        description={`${t('Deposit')} #${deposit.id}`}
+                    />
                     <Button asChild variant="outline">
                         <Link href="/history/deposit" prefetch>
-                            Kembali
+                            {t('Kembali')}
                         </Link>
                     </Button>
                 </div>
@@ -157,7 +173,7 @@ export default function DepositShowPage() {
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="rounded-lg border p-4">
                                 <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    Status
+                                    {t('Status')}
                                 </div>
                                 <div className="mt-2">
                                     <Badge
@@ -170,15 +186,15 @@ export default function DepositShowPage() {
 
                                 <div className="mt-4 grid gap-2 text-sm">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Tanggal</span>
+                                        <span className="text-muted-foreground">{t('Tanggal')}</span>
                                         <span className="font-medium">{fmtDate(deposit.created_at)}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Nominal</span>
+                                        <span className="text-muted-foreground">{t('Nominal')}</span>
                                         <span className="font-medium">Rp {formatRupiah(deposit.final_amount ?? deposit.amount)}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Metode</span>
+                                        <span className="text-muted-foreground">{t('Metode')}</span>
                                         <PaymentMethodInline
                                             className="font-medium"
                                             label={methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method })}
@@ -190,14 +206,14 @@ export default function DepositShowPage() {
                                     {deposit.status === 'pending' && deposit.tripay_checkout_url ? (
                                         <Button asChild variant="outline">
                                             <a href={deposit.tripay_checkout_url} target="_blank" rel="noopener noreferrer">
-                                                Bayar
+                                                {t('Bayar')}
                                             </a>
                                         </Button>
                                     ) : null}
 
                                     {deposit.status === 'pending' ? (
                                         <Button type="button" variant="destructive" onClick={() => cancelDeposit(deposit.id)}>
-                                            Batalkan
+                                            {t('Batalkan')}
                                         </Button>
                                     ) : null}
                                 </div>
@@ -205,24 +221,24 @@ export default function DepositShowPage() {
 
                             <div className="rounded-lg border p-4">
                                 <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    Referensi
+                                    {t('Referensi')}
                                 </div>
 
                                 <div className="mt-4 grid gap-2 text-sm">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Merchant ref</span>
+                                        <span className="text-muted-foreground">{t('Merchant ref')}</span>
                                         <span className="font-medium">{deposit.tripay_merchant_ref ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Reference</span>
+                                        <span className="text-muted-foreground">{t('Reference')}</span>
                                         <span className="font-medium">{deposit.tripay_reference ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Pay code</span>
+                                        <span className="text-muted-foreground">{t('Pay code')}</span>
                                         <span className="font-medium">{deposit.tripay_pay_code ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Checkout</span>
+                                        <span className="text-muted-foreground">{t('Checkout')}</span>
                                         {deposit.tripay_checkout_url ? (
                                             <a
                                                 className="font-medium underline underline-offset-4"
@@ -230,14 +246,14 @@ export default function DepositShowPage() {
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
-                                                Buka
+                                                {t('Buka')}
                                             </a>
                                         ) : (
                                             <span className="font-medium">-</span>
                                         )}
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Status pembayaran</span>
+                                        <span className="text-muted-foreground">{t('Status pembayaran')}</span>
                                         <span className="font-medium">{deposit.tripay_status ?? '-'}</span>
                                     </div>
                                 </div>

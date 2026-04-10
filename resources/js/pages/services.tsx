@@ -1,10 +1,10 @@
 import { Head } from '@inertiajs/react';
 import * as React from 'react';
-import { toast } from 'sonner';
 
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useI18n } from '@/i18n/i18n-provider';
 import {
     Dialog,
     DialogContent,
@@ -156,6 +156,8 @@ const perPageOptions = ['25', '50', '100', '200'] as const;
 type PerPageValue = (typeof perPageOptions)[number];
 
 export default function Services() {
+    const { t, locale } = useI18n();
+
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
 
@@ -176,7 +178,6 @@ export default function Services() {
     });
 
     const [detail, setDetail] = React.useState<Service | null>(null);
-
 
     const load = React.useCallback(
         async (opts: { q?: string; category?: string; sort?: string; perPage?: string; page?: number }) => {
@@ -214,11 +215,10 @@ export default function Services() {
                 const json = unpackApiPayload(raw);
 
                 if (!json.success) {
-                    setError(json.message ?? 'Gagal memuat layanan.');
+                    setError(t(json.message ?? 'Gagal memuat layanan.'));
                     setServices([]);
                     setCategories([]);
                     setMeta({ valid: 0, shown: 0, totalPages: 0 });
-
                     return;
                 }
 
@@ -234,13 +234,13 @@ export default function Services() {
                     totalPages: json.total_pages ?? 0,
                 });
             } catch (e) {
-                const msg = e instanceof Error ? e.message : 'Kesalahan tidak diketahui.';
+                const msg = e instanceof Error ? e.message : t('Kesalahan tidak diketahui.');
                 setError(msg);
             } finally {
                 setIsLoading(false);
             }
         },
-        []
+        [t]
     );
 
     React.useEffect(() => {
@@ -258,14 +258,14 @@ export default function Services() {
 
     return (
         <>
-            <Head title="Layanan" />
+            <Head title={t('Layanan')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="space-y-1">
                     <Heading
                         variant="small"
-                        title="Layanan"
-                        description="Cari dan lihat daftar layanan."
+                        title={t('Layanan')}
+                        description={t('Cari dan lihat daftar layanan.')}
                     />
                 </div>
 
@@ -273,7 +273,7 @@ export default function Services() {
                     <CardContent className="space-y-4">
                         <div className="grid gap-3 md:grid-cols-12">
                             <div className="md:col-span-4">
-                                <Label htmlFor="category">Kategori</Label>
+                                <Label htmlFor="category">{t('Kategori')}</Label>
                                 <Select
                                     value={category}
                                     onValueChange={(v) => {
@@ -282,12 +282,10 @@ export default function Services() {
                                     }}
                                 >
                                     <SelectTrigger id="category" className="mt-1 w-full">
-                                        <SelectValue placeholder="Semua kategori" />
+                                        <SelectValue placeholder={t('Semua kategori')} />
                                     </SelectTrigger>
                                     <SelectContent align="start">
-                                        <SelectItem value={ALL_CATEGORIES_VALUE}>
-                                            Semua kategori
-                                        </SelectItem>
+                                        <SelectItem value={ALL_CATEGORIES_VALUE}>{t('Semua kategori')}</SelectItem>
                                         {categories.map((c) => (
                                             <SelectItem key={c} value={c}>
                                                 {c}
@@ -298,7 +296,7 @@ export default function Services() {
                             </div>
 
                             <div className="md:col-span-4">
-                                <Label htmlFor="sort">Urutkan</Label>
+                                <Label htmlFor="sort">{t('Urutkan')}</Label>
                                 <Select
                                     value={sort}
                                     onValueChange={(v) => {
@@ -307,12 +305,12 @@ export default function Services() {
                                     }}
                                 >
                                     <SelectTrigger id="sort" className="mt-1 w-full">
-                                        <SelectValue placeholder="Default" />
+                                        <SelectValue placeholder={t('Default')} />
                                     </SelectTrigger>
                                     <SelectContent align="start">
                                         {sortOptions.map((o) => (
                                             <SelectItem key={o.value} value={o.value}>
-                                                {o.label}
+                                                {t(o.label)}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -320,13 +318,13 @@ export default function Services() {
                             </div>
 
                             <div className="md:col-span-4">
-                                <Label htmlFor="q">Pencarian</Label>
+                                <Label htmlFor="q">{t('Pencarian')}</Label>
                                 <Input
                                     id="q"
                                     className="mt-1"
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
-                                    placeholder="Cari layanan atau kategori..."
+                                    placeholder={t('Cari layanan atau kategori...')}
                                 />
                             </div>
                         </div>
@@ -336,16 +334,15 @@ export default function Services() {
                                 {isLoading ? (
                                     <>
                                         <Spinner className="size-4" />
-                                        <span>Memuat layanan...</span>
+                                        <span>{t('Memuat layanan...')}</span>
                                     </>
                                 ) : error ? (
                                     <span className="text-destructive">{error}</span>
                                 ) : (
                                     <span>
-                                        Menampilkan {meta.shown} dari {meta.valid} layanan
-                                        {meta.totalPages > 0
-                                            ? ` (Halaman ${page} / ${meta.totalPages})`
-                                            : ''}
+                                        {locale === 'en'
+                                            ? `Showing ${meta.shown} of ${meta.valid} services${meta.totalPages > 0 ? ` (Page ${page} / ${meta.totalPages})` : ''}`
+                                            : `Menampilkan ${meta.shown} dari ${meta.valid} layanan${meta.totalPages > 0 ? ` (Halaman ${page} / ${meta.totalPages})` : ''}`}
                                     </span>
                                 )}
                             </div>
@@ -360,47 +357,38 @@ export default function Services() {
                                                 ID
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Layanan
+                                                {t('Layanan')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Harga/K
+                                                {t('Harga/K')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Min
+                                                {t('Min')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Maks
+                                                {t('Maks')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Waktu
+                                                {t('Waktu')}
                                             </th>
                                             <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Aksi
+                                                {t('Aksi')}
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {services.map((s) => (
-                                            <tr
-                                                key={s.id}
-                                                className="border-t transition-colors hover:bg-muted/20"
-                                            >
-                                                <td className="px-4 py-3 align-top font-medium">
-                                                    {s.id}
-                                                </td>
+                                            <tr key={s.id} className="border-t transition-colors hover:bg-muted/20">
+                                                <td className="px-4 py-3 align-top font-medium">{s.id}</td>
                                                 <td className="px-4 py-3 align-top">
-                                                    <div className="font-semibold text-foreground">
-                                                        {s.name}
-                                                    </div>
+                                                    <div className="font-semibold text-foreground">{s.name}</div>
                                                 </td>
                                                 <td className="px-4 py-3 align-top font-semibold text-emerald-600 dark:text-emerald-500">
                                                     {s.price_formatted ?? '—'}
                                                 </td>
                                                 <td className="px-4 py-3 align-top">{s.min}</td>
                                                 <td className="px-4 py-3 align-top">{s.max}</td>
-                                                <td className="px-4 py-3 align-top">
-                                                    {s.average_time ?? ''}
-                                                </td>
+                                                <td className="px-4 py-3 align-top">{s.average_time ?? ''}</td>
                                                 <td className="px-4 py-3 align-top">
                                                     <div className="flex flex-wrap justify-center gap-2">
                                                         <Button
@@ -425,13 +413,10 @@ export default function Services() {
                                                                 }
                                                             }}
                                                         >
-                                                            Beli
+                                                            {t('Beli')}
                                                         </Button>
-                                                        <Button
-                                                            type="button"
-                                                            onClick={() => setDetail(s)}
-                                                        >
-                                                            Detail
+                                                        <Button type="button" onClick={() => setDetail(s)}>
+                                                            {t('Detail')}
                                                         </Button>
                                                     </div>
                                                 </td>
@@ -444,7 +429,7 @@ export default function Services() {
                                                     colSpan={7}
                                                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                                                 >
-                                                    Tidak ada layanan untuk filter saat ini.
+                                                    {t('Tidak ada layanan untuk filter saat ini.')}
                                                 </td>
                                             </tr>
                                         )}
@@ -455,7 +440,11 @@ export default function Services() {
 
                         <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                             <div className="text-xs text-muted-foreground">
-                                {meta.totalPages > 1 ? `Halaman ${page} / ${meta.totalPages}` : ' '}
+                                {meta.totalPages > 1
+                                    ? locale === 'en'
+                                        ? `Page ${page} / ${meta.totalPages}`
+                                        : `Halaman ${page} / ${meta.totalPages}`
+                                    : ' '}
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2">
@@ -467,7 +456,7 @@ export default function Services() {
                                             disabled={page <= 1}
                                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                                         >
-                                            Prev
+                                            {t('Sebelumnya')}
                                         </Button>
                                         <Button
                                             type="button"
@@ -481,13 +470,13 @@ export default function Services() {
                                                 )
                                             }
                                         >
-                                            Next
+                                            {t('Berikutnya')}
                                         </Button>
                                     </>
                                 )}
 
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <span>Data:</span>
+                                    <span>{t('Data')}:</span>
                                     <Select
                                         value={perPage}
                                         onValueChange={(v) => {
@@ -517,7 +506,7 @@ export default function Services() {
                         {detail && (
                             <>
                                 <DialogHeader>
-                                    <DialogTitle>Detail Layanan</DialogTitle>
+                                    <DialogTitle>{t('Detail Layanan')}</DialogTitle>
                                     <DialogDescription>
                                         ID {detail.id} • {detail.category}
                                     </DialogDescription>
@@ -525,17 +514,14 @@ export default function Services() {
 
                                 <div className="grid gap-3 text-sm">
                                     <div>
-                                        <div className="text-xs font-semibold text-muted-foreground">
-                                            Nama
-                                        </div>
-                                        <div className="mt-1 font-medium">
-                                            {detail.name}
-                                        </div>
+                                        <div className="text-xs font-semibold text-muted-foreground">{t('Nama')}</div>
+                                        <div className="mt-1 font-medium">{detail.name}</div>
                                     </div>
+
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <div className="text-xs font-semibold text-muted-foreground">
-                                                Harga/K
+                                                {t('Harga/K')}
                                             </div>
                                             <div className="mt-1 font-semibold text-emerald-600 dark:text-emerald-500">
                                                 {detail.price_formatted ?? '—'}
@@ -543,34 +529,26 @@ export default function Services() {
                                         </div>
                                         <div>
                                             <div className="text-xs font-semibold text-muted-foreground">
-                                                Waktu
+                                                {t('Waktu')}
                                             </div>
-                                            <div className="mt-1 font-medium">
-                                                {detail.average_time ?? '—'}
-                                            </div>
+                                            <div className="mt-1 font-medium">{detail.average_time ?? '—'}</div>
                                         </div>
                                     </div>
+
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <div className="text-xs font-semibold text-muted-foreground">
-                                                Min
-                                            </div>
-                                            <div className="mt-1 font-medium">
-                                                {detail.min}
-                                            </div>
+                                            <div className="text-xs font-semibold text-muted-foreground">{t('Min')}</div>
+                                            <div className="mt-1 font-medium">{detail.min}</div>
                                         </div>
                                         <div>
-                                            <div className="text-xs font-semibold text-muted-foreground">
-                                                Maks
-                                            </div>
-                                            <div className="mt-1 font-medium">
-                                                {detail.max}
-                                            </div>
+                                            <div className="text-xs font-semibold text-muted-foreground">{t('Maks')}</div>
+                                            <div className="mt-1 font-medium">{detail.max}</div>
                                         </div>
                                     </div>
+
                                     <div>
                                         <div className="text-xs font-semibold text-muted-foreground">
-                                            Deskripsi
+                                            {t('Deskripsi')}
                                         </div>
                                         <div className="mt-1 whitespace-pre-wrap wrap-break-word text-muted-foreground">
                                             {normalizeDescription(detail.description)}
@@ -580,7 +558,7 @@ export default function Services() {
 
                                 <DialogFooter>
                                     <Button type="button" variant="outline" onClick={() => setDetail(null)}>
-                                        Tutup
+                                        {t('Tutup')}
                                     </Button>
                                 </DialogFooter>
                             </>

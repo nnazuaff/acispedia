@@ -15,6 +15,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/i18n/i18n-provider';
 
 type Service = {
     id: number;
@@ -148,6 +149,7 @@ function formatRupiah(value: number): string {
 }
 
 export default function OrderPage() {
+    const { t, locale } = useI18n();
     const page = usePage();
     const user = (page.props as any).auth?.user as any;
     const balance = typeof user?.balance === 'number' ? user.balance : 0;
@@ -223,7 +225,7 @@ export default function OrderPage() {
             const next = payload?.order?.status;
             const name = payload?.order?.service_name;
             if (typeof next === 'string' && next.trim()) {
-                toast.message('Status pesanan diperbarui', {
+                toast.message(t('Status pesanan diperbarui'), {
                     description: name ? `${name} • ${next}` : next,
                 });
             }
@@ -236,7 +238,7 @@ export default function OrderPage() {
                 // ignore
             }
         };
-    }, [user?.id]);
+    }, [t, user?.id]);
 
     const loadCategories = React.useCallback(async () => {
         setError(null);
@@ -256,18 +258,18 @@ export default function OrderPage() {
             const json = unpackApiPayload(raw);
 
             if (!json.success) {
-                setError(json.message ?? 'Gagal memuat kategori.');
+                setError(t(json.message ?? 'Gagal memuat kategori.'));
                 setCategories([]);
                 return;
             }
 
             setCategories(normalizeCategories(json.categories));
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Kesalahan tidak diketahui.');
+            setError(e instanceof Error ? e.message : t('Kesalahan tidak diketahui.'));
         } finally {
             setIsBootLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const loadServices = React.useCallback(
         async (opts: { category: string; q: string; preselectId?: string | null }) => {
@@ -297,7 +299,7 @@ export default function OrderPage() {
                 const json = unpackApiPayload(raw);
 
                 if (!json.success) {
-                    setError(json.message ?? 'Gagal memuat layanan.');
+                    setError(t(json.message ?? 'Gagal memuat layanan.'));
                     setServices([]);
                     setServiceId(NO_SERVICE_VALUE);
                     return;
@@ -329,12 +331,12 @@ export default function OrderPage() {
                     }
                 }
             } catch (e) {
-                setError(e instanceof Error ? e.message : 'Kesalahan tidak diketahui.');
+                setError(e instanceof Error ? e.message : t('Kesalahan tidak diketahui.'));
             } finally {
                 setIsServiceLoading(false);
             }
         },
-        []
+        [t]
     );
 
     React.useEffect(() => {
@@ -374,7 +376,7 @@ export default function OrderPage() {
 
                 if (!didShowPreselectToast.current && preselectMeta.shouldToast) {
                     didShowPreselectToast.current = true;
-                    toast.success('Layanan berhasil dipilih.', {
+                    toast.success(t('Layanan berhasil dipilih.'), {
                         description: svc.name,
                     });
                 }
@@ -406,21 +408,21 @@ export default function OrderPage() {
 
     return (
         <>
-            <Head title="Order" />
+            <Head title={t('Order')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-hidden rounded-xl p-4">
                 <div className="space-y-1">
                     <Heading
                         variant="small"
-                        title="Buat Pesanan"
-                        description="Pilih layanan, masukkan target, lalu buat pesanan."
+                        title={t('Buat Pesanan')}
+                        description={t('Pilih layanan, masukkan target, lalu buat pesanan.')}
                     />
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-12">
                     <Card className="lg:col-span-8">
                         <CardHeader>
-                            <CardTitle>Form Order</CardTitle>
+                            <CardTitle>{t('Form Order')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {error && (
@@ -431,7 +433,7 @@ export default function OrderPage() {
 
                             <div className="grid gap-3 md:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="category">Kategori</Label>
+                                    <Label htmlFor="category">{t('Kategori')}</Label>
                                     <Select
                                         value={category}
                                         onValueChange={(v) => {
@@ -444,13 +446,13 @@ export default function OrderPage() {
                                             <div className="min-w-0 flex-1 overflow-hidden">
                                                 <SelectValue
                                                     className="block truncate"
-                                                    placeholder="Pilih kategori"
+                                                    placeholder={t('Pilih kategori')}
                                                 />
                                             </div>
                                         </SelectTrigger>
                                         <SelectContent align="start">
                                             <SelectItem value={ALL_CATEGORIES_VALUE}>
-                                                Semua kategori
+                                                {t('Semua kategori')}
                                             </SelectItem>
                                             {categories.map((c) => (
                                                 <SelectItem key={c} value={c}>
@@ -462,13 +464,13 @@ export default function OrderPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="service_search">Cari layanan</Label>
+                                    <Label htmlFor="service_search">{t('Cari layanan')}</Label>
                                     <div className="flex gap-2">
                                         <Input
                                             id="service_search"
                                             value={serviceQuery}
                                             onChange={(e) => setServiceQuery(e.target.value)}
-                                            placeholder="Ketik nama layanan..."
+                                            placeholder={t('Ketik nama layanan...')}
                                         />
                                         <Button
                                             type="button"
@@ -485,7 +487,7 @@ export default function OrderPage() {
                                             {isServiceLoading ? (
                                                 <Spinner className="size-4" />
                                             ) : (
-                                                'Cari'
+                                                t('Cari')
                                             )}
                                         </Button>
                                     </div>
@@ -493,7 +495,7 @@ export default function OrderPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="service">Layanan</Label>
+                                <Label htmlFor="service">{t('Layanan')}</Label>
                                 <Select
                                     value={serviceId}
                                     onValueChange={(v) => {
@@ -510,13 +512,15 @@ export default function OrderPage() {
                                         <div className="min-w-0 flex-1 overflow-hidden">
                                             <SelectValue
                                                 className="block truncate"
-                                                placeholder={isBootLoading ? 'Memuat...' : 'Pilih layanan'}
+                                                placeholder={
+                                                    isBootLoading ? t('Memuat...') : t('Pilih layanan')
+                                                }
                                             />
                                         </div>
                                     </SelectTrigger>
                                     <SelectContent align="start">
                                         <SelectItem value={NO_SERVICE_VALUE}>
-                                            Pilih layanan
+                                            {t('Pilih layanan')}
                                         </SelectItem>
                                         {services.map((s) => (
                                             <SelectItem key={s.id} value={String(s.id)}>
@@ -526,32 +530,32 @@ export default function OrderPage() {
                                     </SelectContent>
                                 </Select>
                                 <div className="text-xs text-muted-foreground">
-                                    Jika layanan tidak muncul, gunakan kolom pencarian.
+                                    {t('Jika layanan tidak muncul, gunakan kolom pencarian.')}
                                 </div>
                             </div>
 
                             <div className="grid gap-3 md:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="target">Target</Label>
+                                    <Label htmlFor="target">{t('Target')}</Label>
                                     <Input
                                         id="target"
                                         value={target}
                                         onChange={(e) => setTarget(e.target.value)}
-                                        placeholder="Link / Username"
+                                        placeholder={t('Link / Username')}
                                     />
                                     <div className="text-xs text-muted-foreground">
-                                        Bingung pengisian target?{' '}
+                                        {t('Bingung pengisian target?')}{' '}
                                         <Link
                                             href="/panduan-target"
                                             className="underline underline-offset-4 hover:decoration-current"
                                         >
-                                            klik disini
+                                            {t('klik disini')}
                                         </Link>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="quantity">Quantity</Label>
+                                    <Label htmlFor="quantity">{t('Quantity')}</Label>
                                     <Input
                                         id="quantity"
                                         type="number"
@@ -564,7 +568,7 @@ export default function OrderPage() {
                                     />
                                     {selectedService && (
                                         <div className="text-xs text-muted-foreground">
-                                            Min {selectedService.min} • Maks {selectedService.max}
+                                            {t('Min')} {selectedService.min} • {t('Maks')} {selectedService.max}
                                         </div>
                                     )}
                                 </div>
@@ -572,30 +576,30 @@ export default function OrderPage() {
 
                             {needsComments && (
                                 <div className="space-y-2">
-                                    <Label htmlFor="comments">Comments (1 baris = 1 quantity)</Label>
+                                    <Label htmlFor="comments">{t('Comments (1 baris = 1 quantity)')}</Label>
                                     <textarea
                                         id="comments"
                                         value={comments}
                                         onChange={(e) => setComments(e.target.value)}
                                         rows={7}
                                         className="border-input placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex w-full min-w-0 rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive md:text-sm"
-                                        placeholder="Tulis 1 komentar per baris"
+                                        placeholder={t('Tulis 1 komentar per baris')}
                                     />
                                     <div className="text-xs text-muted-foreground">
-                                        Baris terisi: {countNonEmptyLines(comments)}
+                                        {t('Baris terisi')}: {countNonEmptyLines(comments)}
                                     </div>
                                 </div>
                             )}
 
                             <div className="grid gap-3 md:grid-cols-2">
                                 <div className="rounded-lg border bg-muted/20 p-3">
-                                    <div className="text-xs font-semibold text-muted-foreground">Harga / 1000</div>
+                                    <div className="text-xs font-semibold text-muted-foreground">{t('Harga / 1000')}</div>
                                     <div className="mt-1 font-semibold text-emerald-600 dark:text-emerald-500">
                                         {selectedService?.price_formatted ?? '—'}
                                     </div>
                                 </div>
                                 <div className="rounded-lg border bg-muted/20 p-3">
-                                    <div className="text-xs font-semibold text-muted-foreground">Total</div>
+                                    <div className="text-xs font-semibold text-muted-foreground">{t('Total')}</div>
                                     <div className="mt-1 font-semibold text-foreground">
                                         {selectedService && Number.isFinite(qtyNum)
                                             ? formatRupiah(totalPrice)
@@ -606,13 +610,13 @@ export default function OrderPage() {
 
                             {selectedService && (
                                 <div className="rounded-lg border p-3">
-                                    <div className="text-xs font-semibold text-muted-foreground">Deskripsi</div>
+                                    <div className="text-xs font-semibold text-muted-foreground">{t('Deskripsi')}</div>
                                     <div className="mt-2 whitespace-pre-wrap wrap-break-word text-sm text-muted-foreground">
                                         {normalizeDescription(selectedService.description)}
                                     </div>
                                     {selectedService.average_time && (
                                         <div className="mt-2 text-xs font-medium text-muted-foreground">
-                                            Estimasi: {selectedService.average_time}
+                                            {t('Estimasi')}: {selectedService.average_time}
                                         </div>
                                     )}
                                 </div>
@@ -624,24 +628,24 @@ export default function OrderPage() {
                                     disabled={isSubmitting}
                                     onClick={async () => {
                                         if (!selectedService) {
-                                            toast.error('Pilih layanan terlebih dahulu.');
+                                            toast.error(t('Pilih layanan terlebih dahulu.'));
                                             return;
                                         }
 
                                         const qty = Number(quantity);
                                         if (!target.trim()) {
-                                            toast.error('Target wajib diisi.');
+                                            toast.error(t('Target wajib diisi.'));
                                             return;
                                         }
                                         if (!Number.isFinite(qty) || qty <= 0) {
-                                            toast.error('Quantity tidak valid.');
+                                            toast.error(t('Quantity tidak valid.'));
                                             return;
                                         }
 
                                         if (needsComments) {
                                             const lineCount = countNonEmptyLines(comments);
                                             if (lineCount !== qty) {
-                                                toast.error('Jumlah baris komentar harus sama dengan quantity.');
+                                                toast.error(t('Jumlah baris komentar harus sama dengan quantity.'));
                                                 return;
                                             }
                                         }
@@ -667,21 +671,26 @@ export default function OrderPage() {
                                             });
 
                                             if (res.status === 419) {
-                                                toast.error('Sesi habis. Silakan refresh dan login lagi.');
+                                                toast.error(t('Sesi habis. Silakan refresh dan login lagi.'));
                                                 return;
                                             }
 
                                             const json = (await res.json()) as any;
 
                                             if (!res.ok || !json?.success) {
-                                                const msg =
+                                                const rawMsg =
                                                     json?.message ||
                                                     (json?.code === 'INSUFFICIENT_BALANCE'
                                                         ? 'Saldo tidak cukup.'
                                                         : 'Gagal membuat order.');
+                                                const msg = t(rawMsg);
 
                                                 if (json?.code === 'INSUFFICIENT_BALANCE' && json?.formatted) {
-                                                    toast.error(`${msg} Kurang ${json.formatted.shortfall}.`);
+                                                    toast.error(
+                                                        locale === 'en'
+                                                            ? `${msg} Short by ${json.formatted.shortfall}.`
+                                                            : `${msg} Kurang ${json.formatted.shortfall}.`
+                                                    );
                                                 } else {
                                                     toast.error(msg);
                                                 }
@@ -689,7 +698,7 @@ export default function OrderPage() {
                                                 return;
                                             }
 
-                                            toast.success('Order berhasil dibuat.');
+                                            toast.success(t('Order berhasil dibuat.'));
                                             router.get(
                                                 '/history/transaction',
                                                 {
@@ -704,7 +713,9 @@ export default function OrderPage() {
                                             );
                                             return;
                                         } catch (e) {
-                                            toast.error(e instanceof Error ? e.message : 'Kesalahan tidak diketahui.');
+                                            toast.error(
+                                                e instanceof Error ? e.message : t('Kesalahan tidak diketahui.')
+                                            );
                                         } finally {
                                             setIsSubmitting(false);
                                         }
@@ -713,10 +724,10 @@ export default function OrderPage() {
                                     {isSubmitting ? (
                                         <span className="inline-flex items-center gap-2">
                                             <Spinner className="size-4" />
-                                            Memproses...
+                                            {t('Memproses...')}
                                         </span>
                                     ) : (
-                                        'Buat Pesanan'
+                                        t('Buat Pesanan')
                                     )}
                                 </Button>
                             </div>
@@ -725,45 +736,45 @@ export default function OrderPage() {
 
                     <Card className="lg:col-span-4 lg:sticky lg:top-20">
                         <CardHeader>
-                            <CardTitle>Informasi</CardTitle>
+                            <CardTitle>{t('Informasi')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4 text-sm">
                             <div className="rounded-lg border bg-muted/20 p-3">
-                                <div className="text-xs font-semibold text-muted-foreground">Saldo</div>
+                                <div className="text-xs font-semibold text-muted-foreground">{t('Saldo')}</div>
                                 <div className="mt-1 font-semibold text-foreground">{formatRupiah(balance)}</div>
                             </div>
 
                             <div>
                                 <div className="text-xs font-semibold text-muted-foreground">Instagram</div>
                                 <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-                                    <li>Pastikan akun tidak private saat order diproses.</li>
-                                    <li>Jangan ubah username/tautan selama pesanan berjalan.</li>
-                                    <li>Jika order untuk postingan, pastikan post tidak dihapus.</li>
+                                    <li>{t('Pastikan akun tidak private saat order diproses.')}</li>
+                                    <li>{t('Jangan ubah username/tautan selama pesanan berjalan.')}</li>
+                                    <li>{t('Jika order untuk postingan, pastikan post tidak dihapus.')}</li>
                                 </ul>
                             </div>
 
                             <div>
-                                <div className="text-xs font-semibold text-muted-foreground">Langkah Order</div>
+                                <div className="text-xs font-semibold text-muted-foreground">{t('Langkah Order')}</div>
                                 <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
-                                    <li>Pilih kategori dan layanan.</li>
-                                    <li>Masukkan target (link/username).</li>
-                                    <li>Isi quantity sesuai batas min/maks.</li>
-                                    <li>Jika layanan butuh comments, isi 1 baris per quantity.</li>
-                                    <li>Klik “Buat Pesanan”. Status akan update otomatis.</li>
+                                    <li>{t('Pilih kategori dan layanan.')}</li>
+                                    <li>{t('Masukkan target (link/username).')}</li>
+                                    <li>{t('Isi quantity sesuai batas min/maks.')}</li>
+                                    <li>{t('Jika layanan butuh comments, isi 1 baris per quantity.')}</li>
+                                    <li>{t('Klik “Buat Pesanan”. Status akan update otomatis.')}</li>
                                 </ol>
                             </div>
 
                             <div>
-                                <div className="text-xs font-semibold text-muted-foreground">Aturan</div>
+                                <div className="text-xs font-semibold text-muted-foreground">{t('Aturan')}</div>
                                 <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-                                    <li>Pastikan target benar, pesanan tidak bisa dibatalkan setelah diproses.</li>
-                                    <li>Jangan buat pesanan ganda untuk target yang sama secara bersamaan.</li>
-                                    <li>Jika ada kendala, cek status beberapa menit kemudian.</li>
+                                    <li>{t('Pastikan target benar, pesanan tidak bisa dibatalkan setelah diproses.')}</li>
+                                    <li>{t('Jangan buat pesanan ganda untuk target yang sama secara bersamaan.')}</li>
+                                    <li>{t('Jika ada kendala, cek status beberapa menit kemudian.')}</li>
                                 </ul>
                             </div>
 
                             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
-                                Gunakan layanan dengan bijak. Kesalahan input target/quantity bisa menyebabkan hasil tidak sesuai.
+                                {t('Gunakan layanan dengan bijak. Kesalahan input target/quantity bisa menyebabkan hasil tidak sesuai.')}
                             </div>
                         </CardContent>
                     </Card>

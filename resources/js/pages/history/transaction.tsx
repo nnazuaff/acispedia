@@ -6,6 +6,7 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useI18n } from '@/i18n/i18n-provider';
 import {
     Dialog,
     DialogContent,
@@ -75,12 +76,12 @@ function formatRupiah(value: number): string {
 function statusLabel(status: string): string {
     const s = (status ?? '').toLowerCase();
     if (s === 'success') return 'Selesai';
-    if (s === 'pending') return 'Pending';
-    if (s === 'processing' || s === 'in progress') return 'Proses';
-    if (s === 'partial') return 'Partial';
-    if (s === 'canceled' || s === 'cancelled') return 'Batal';
+    if (s === 'pending') return 'Menunggu';
+    if (s === 'processing' || s === 'in progress') return 'Diproses';
+    if (s === 'partial') return 'Parsial';
+    if (s === 'canceled' || s === 'cancelled') return 'Dibatalkan';
     if (s === 'error' || s === 'failed') return 'Gagal';
-    if (s === 'submitting') return 'Submitting';
+    if (s === 'submitting') return 'Mengirim';
     return status;
 }
 
@@ -143,6 +144,7 @@ function badgeClassNameForStatus(status: string): string {
 }
 
 export default function HistoryTransactionPage() {
+    const { t, locale } = useI18n();
     const { auth, orders: ordersProp, filters: filtersProp } = usePage().props as any as {
         auth: { user?: { id?: number } };
         orders: OrdersPaginator;
@@ -307,43 +309,47 @@ export default function HistoryTransactionPage() {
 
     return (
         <>
-            <Head title="Riwayat transaksi" />
+            <Head title={t('Riwayat Transaksi')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="space-y-1">
-                    <Heading variant="small" title="Riwayat transaksi" description="Riwayat transaksi order Anda." />
+                    <Heading
+                        variant="small"
+                        title={t('Riwayat Transaksi')}
+                        description={t('Riwayat transaksi order Anda.')}
+                    />
                 </div>
 
                 <Card className="py-4">
                     <CardHeader>
                         <div className="grid gap-3 sm:grid-cols-3">
                             <div className="sm:col-span-2">
-                                <Label htmlFor="q">Pencarian</Label>
+                                <Label htmlFor="q">{t('Pencarian')}</Label>
                                 <Input
                                     id="q"
                                     className="mt-1"
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
-                                    placeholder="Cari layanan, target, atau provider id..."
+                                    placeholder={t('Cari layanan, target, atau provider id...')}
                                 />
                             </div>
 
                             <div>
-                                <Label>Status</Label>
+                                <Label>{t('Status')}</Label>
                                 <Select value={status} onValueChange={(v) => setStatus(v)}>
                                     <SelectTrigger className="mt-1 h-9 w-full">
-                                        <SelectValue placeholder="Semua" />
+                                        <SelectValue placeholder={t('Semua')} />
                                     </SelectTrigger>
                                     <SelectContent align="end">
-                                        <SelectItem value="all">Semua</SelectItem>
-                                        <SelectItem value="Submitting">Submitting</SelectItem>
-                                        <SelectItem value="Pending">Pending</SelectItem>
-                                        <SelectItem value="Processing">Processing</SelectItem>
-                                        <SelectItem value="In progress">In progress</SelectItem>
-                                        <SelectItem value="Success">Success</SelectItem>
-                                        <SelectItem value="Partial">Partial</SelectItem>
-                                        <SelectItem value="Canceled">Canceled</SelectItem>
-                                        <SelectItem value="Error">Error</SelectItem>
+                                        <SelectItem value="all">{t('Semua')}</SelectItem>
+                                        <SelectItem value="Submitting">{t('Mengirim')}</SelectItem>
+                                        <SelectItem value="Pending">{t('Menunggu')}</SelectItem>
+                                        <SelectItem value="Processing">{t('Diproses')}</SelectItem>
+                                        <SelectItem value="In progress">{t('Diproses')}</SelectItem>
+                                        <SelectItem value="Success">{t('Selesai')}</SelectItem>
+                                        <SelectItem value="Partial">{t('Parsial')}</SelectItem>
+                                        <SelectItem value="Canceled">{t('Dibatalkan')}</SelectItem>
+                                        <SelectItem value="Error">{t('Gagal')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -352,7 +358,7 @@ export default function HistoryTransactionPage() {
                         <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                             <div className="flex flex-wrap items-center gap-2">
                                 <Button type="button" onClick={() => applyFilters({})}>
-                                    Terapkan
+                                    {t('Terapkan')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -364,17 +370,16 @@ export default function HistoryTransactionPage() {
                                         applyFilters({ q: '', status: 'all', per_page: 25 });
                                     }}
                                 >
-                                    Reset
+                                    {t('Reset')}
                                 </Button>
                             </div>
                         </div>
 
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm text-muted-foreground">
                             <div>
-                                Menampilkan {from}-{to} dari {total}
-                                {ordersProp?.last_page
-                                    ? ` (Halaman ${ordersProp.current_page} / ${ordersProp.last_page})`
-                                    : ''}
+                                {locale === 'en'
+                                    ? `Showing ${from}-${to} of ${total}${ordersProp?.last_page ? ` (Page ${ordersProp.current_page} / ${ordersProp.last_page})` : ''}`
+                                    : `Menampilkan ${from}-${to} dari ${total}${ordersProp?.last_page ? ` (Halaman ${ordersProp.current_page} / ${ordersProp.last_page})` : ''}`}
                             </div>
                         </div>
                     </CardHeader>
@@ -386,28 +391,28 @@ export default function HistoryTransactionPage() {
                                     <thead className="bg-muted/30">
                                         <tr className="text-left">
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Tanggal
+                                                {t('Tanggal')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Layanan
+                                                {t('Layanan')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Target
+                                                {t('Target')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Qty
+                                                {t('Jumlah')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Total
+                                                {t('Total')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Status
+                                                {t('Status')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Provider ID
+                                                {t('Provider ID')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Aksi
+                                                {t('Aksi')}
                                             </th>
                                         </tr>
                                     </thead>
@@ -415,7 +420,7 @@ export default function HistoryTransactionPage() {
                                         {rows.length === 0 ? (
                                             <tr>
                                                 <td className="px-4 py-6 text-center text-muted-foreground" colSpan={8}>
-                                                    Belum ada transaksi.
+                                                    {t('Belum ada transaksi.')}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -435,7 +440,7 @@ export default function HistoryTransactionPage() {
                                                             variant={badgeVariantForStatus(row.status)}
                                                             className={badgeClassNameForStatus(row.status)}
                                                         >
-                                                            {statusLabel(row.status).toUpperCase()}
+                                                            {t(statusLabel(row.status)).toUpperCase()}
                                                         </Badge>
                                                     </td>
                                                     <td className="px-4 py-3 whitespace-nowrap">
@@ -450,7 +455,7 @@ export default function HistoryTransactionPage() {
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
                                                                 <DropdownMenuItem onClick={() => openDetailById(row.id)}>
-                                                                    Detail
+                                                                    {t('Detail')}
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
@@ -466,7 +471,7 @@ export default function HistoryTransactionPage() {
                         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                             <div className="text-sm text-muted-foreground">
                                 <div className="flex items-center gap-2">
-                                    <span>Data</span>
+                                    <span>{t('Data')}</span>
                                     <Select
                                         value={String(perPage)}
                                         onValueChange={(v) => {
@@ -495,11 +500,11 @@ export default function HistoryTransactionPage() {
                                         variant="outline"
                                         onClick={() => applyFilters({ page: Number(ordersProp?.current_page ?? 1) - 1 })}
                                     >
-                                        Prev
+                                        {t('Sebelumnya')}
                                     </Button>
                                 ) : (
                                     <Button variant="outline" disabled>
-                                        Prev
+                                        {t('Sebelumnya')}
                                     </Button>
                                 )}
 
@@ -508,11 +513,11 @@ export default function HistoryTransactionPage() {
                                         variant="outline"
                                         onClick={() => applyFilters({ page: Number(ordersProp?.current_page ?? 1) + 1 })}
                                     >
-                                        Next
+                                        {t('Berikutnya')}
                                     </Button>
                                 ) : (
                                     <Button variant="outline" disabled>
-                                        Next
+                                        {t('Berikutnya')}
                                     </Button>
                                 )}
                             </div>
@@ -529,7 +534,7 @@ export default function HistoryTransactionPage() {
                 >
                     <DialogContent className="max-h-[calc(100vh-2rem)] overflow-auto sm:max-w-lg">
                         <DialogHeader>
-                            <DialogTitle>Detail Pesanan</DialogTitle>
+                            <DialogTitle>{t('Detail Pesanan')}</DialogTitle>
                         </DialogHeader>
 
                         {selectedOrder ? (
@@ -537,7 +542,7 @@ export default function HistoryTransactionPage() {
                                 <div className="grid gap-3">
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            ID Pesanan
+                                            {t('ID Pesanan')}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="text-sm font-semibold">#{selectedOrder.id}</div>
@@ -552,7 +557,7 @@ export default function HistoryTransactionPage() {
                                                         // ignore
                                                     }
                                                 }}
-                                                aria-label="Copy ID"
+                                                aria-label={t('Salin ID')}
                                             >
                                                 <Copy className="size-4" />
                                             </Button>
@@ -561,21 +566,21 @@ export default function HistoryTransactionPage() {
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Dibuat
+                                            {t('Dibuat')}
                                         </div>
                                         <div className="text-sm font-medium">{selectedOrder.created_at_wib ?? '-'}</div>
                                     </div>
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Layanan
+                                            {t('Layanan')}
                                         </div>
                                         <div className="text-sm font-medium">{selectedOrder.service_name}</div>
                                     </div>
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Target
+                                            {t('Target')}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="text-sm font-medium break-all">{selectedOrder.target}</div>
@@ -590,7 +595,7 @@ export default function HistoryTransactionPage() {
                                                         // ignore
                                                     }
                                                 }}
-                                                aria-label="Copy target"
+                                                aria-label={t('Salin target')}
                                             >
                                                 <Copy className="size-4" />
                                             </Button>
@@ -599,35 +604,35 @@ export default function HistoryTransactionPage() {
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Jumlah pesan
+                                            {t('Jumlah pesan')}
                                         </div>
                                         <div className="text-sm font-medium">{selectedOrder.quantity}</div>
                                     </div>
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Biaya
+                                            {t('Biaya')}
                                         </div>
                                         <div className="text-sm font-semibold">Rp {formatRupiah(selectedOrder.total_price)}</div>
                                     </div>
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Status
+                                            {t('Status')}
                                         </div>
                                         <div>
                                             <Badge
                                                 variant={badgeVariantForStatus(selectedOrder.status)}
                                                 className={badgeClassNameForStatus(selectedOrder.status)}
                                             >
-                                                {statusLabel(selectedOrder.status).toUpperCase()}
+                                                {t(statusLabel(selectedOrder.status)).toUpperCase()}
                                             </Badge>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         ) : (
-                            <div className="text-sm text-muted-foreground">Data tidak ditemukan.</div>
+                            <div className="text-sm text-muted-foreground">{t('Data tidak ditemukan.')}</div>
                         )}
                     </DialogContent>
                 </Dialog>

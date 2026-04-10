@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { ArrowRight } from 'lucide-react';
 
 import { useConfirm } from '@/components/confirm-dialog-provider';
+import { useI18n } from '@/i18n/i18n-provider';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
@@ -57,6 +58,7 @@ function getXsrfToken(): string | null {
 }
 
 export default function DepositPage() {
+    const { t, locale } = useI18n();
     const confirm = useConfirm();
     const { auth, balance, active_pending: activePendingProp } = usePage().props as any as {
         auth: { user?: { id?: number; phone?: string | null } };
@@ -153,9 +155,9 @@ export default function DepositPage() {
         if (!activePending?.id) return;
 
         const ok = await confirm({
-            title: 'Batalkan deposit pending ini?',
-            confirmText: 'Batalkan',
-            cancelText: 'Kembali',
+            title: t('Batalkan deposit pending ini?'),
+            confirmText: t('Batalkan'),
+            cancelText: t('Kembali'),
             variant: 'destructive',
         });
         if (!ok) return;
@@ -174,14 +176,14 @@ export default function DepositPage() {
 
             const json = (await res.json()) as any;
             if (!res.ok || !json?.success) {
-                toast.error(json?.message ?? 'Gagal membatalkan deposit.');
+                toast.error(json?.message ?? t('Gagal membatalkan deposit.'));
                 return;
             }
 
-            toast.success(json?.message ?? 'Deposit dibatalkan.');
+            toast.success(json?.message ?? t('Deposit dibatalkan.'));
             router.reload({ preserveScroll: true } as any);
         } catch (e) {
-            const msg = e instanceof Error ? e.message : 'Kesalahan tidak diketahui.';
+            const msg = e instanceof Error ? e.message : t('Kesalahan tidak diketahui.');
             toast.error(msg);
         }
     }
@@ -191,12 +193,12 @@ export default function DepositPage() {
 
         const amt = Number(amount);
         if (!Number.isFinite(amt) || amt < 1000) {
-            toast.error('Minimal deposit Rp 1.000');
+            toast.error(t('Minimal deposit Rp 1.000'));
             return;
         }
 
         if (amt > 200000) {
-            toast.error('Maksimal deposit Rp 200.000');
+            toast.error(t('Maksimal deposit Rp 200.000'));
             return;
         }
 
@@ -224,11 +226,11 @@ export default function DepositPage() {
             const json = (await res.json()) as any;
 
             if (!res.ok || !json?.success) {
-                toast.error(json?.message ?? 'Gagal membuat deposit.');
+                toast.error(json?.message ?? t('Gagal membuat deposit.'));
                 return;
             }
 
-            toast.success(json?.message ?? 'Deposit dibuat.');
+            toast.success(json?.message ?? t('Deposit dibuat.'));
 
             const url = String(json?.checkout_url ?? '');
             if (url) {
@@ -249,7 +251,7 @@ export default function DepositPage() {
             );
             return;
         } catch (e) {
-            const msg = e instanceof Error ? e.message : 'Kesalahan tidak diketahui.';
+            const msg = e instanceof Error ? e.message : t('Kesalahan tidak diketahui.');
             toast.error(msg);
         } finally {
             setIsSubmitting(false);
@@ -258,14 +260,14 @@ export default function DepositPage() {
 
     return (
         <>
-            <Head title="Deposit Saldo" />
+            <Head title={t('Deposit Saldo')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="space-y-1">
                     <Heading
                         variant="small"
-                        title="Deposit Saldo"
-                        description="Isi saldo dengan metode pembayaran yang tersedia."
+                        title={t('Deposit Saldo')}
+                        description={t('Isi saldo dengan metode pembayaran yang tersedia.')}
                     />
                 </div>
 
@@ -273,35 +275,36 @@ export default function DepositPage() {
                     <CardHeader>
                         {activePending ? (
                             <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm">
-                                <div className="font-semibold">Ada deposit pending</div>
+                                <div className="font-semibold">{t('Ada deposit pending')}</div>
                                 <div className="mt-1 text-muted-foreground">
-                                    Deposit #{activePending.id}
-                                    {activePending.expired_at ? ` • Expired: ${fmtWib(activePending.expired_at)}` : ''}
+                                    {locale === 'en'
+                                        ? `Deposit #${activePending.id}${activePending.expired_at ? ` • Expires: ${fmtWib(activePending.expired_at)}` : ''}`
+                                        : `Deposit #${activePending.id}${activePending.expired_at ? ` • Kadaluarsa: ${fmtWib(activePending.expired_at)}` : ''}`}
                                 </div>
 
                                 <div className="mt-3 flex flex-wrap gap-2">
                                     {activePending.tripay_checkout_url ? (
                                         <Button asChild size="sm" variant="outline">
                                             <a href={activePending.tripay_checkout_url} target="_blank" rel="noopener noreferrer">
-                                                Bayar
+                                                {t('Bayar')}
                                             </a>
                                         </Button>
                                     ) : null}
 
                                     <Button size="sm" variant="destructive" type="button" onClick={cancelActivePending}>
-                                        Batalkan
+                                        {t('Batalkan')}
                                     </Button>
                                 </div>
                             </div>
                         ) : null}
 
                         <div className={`${activePending ? 'mt-1' : ''} text-sm text-muted-foreground`}>
-                            Saldo saat ini: <span className="font-medium">Rp {formatRupiah(balanceState)}</span>
+                            {t('Saldo saat ini')}: <span className="font-medium">Rp {formatRupiah(balanceState)}</span>
                         </div>
 
                         <div className="mt-4 grid gap-6">
                             <div className="space-y-3">
-                                <div className="flex items-center gap-2 text-sm font-semibold">Pilih Metode Pembayaran</div>
+                                <div className="flex items-center gap-2 text-sm font-semibold">{t('Pilih Metode Pembayaran')}</div>
 
                                 <div className="space-y-3">
                                     <button
@@ -324,7 +327,7 @@ export default function DepositPage() {
                                         </span>
                                         <div className="flex-1">
                                             <div className="text-sm font-semibold">QRIS</div>
-                                            <div className="text-xs text-muted-foreground">Pembayaran QRIS otomatis</div>
+                                            <div className="text-xs text-muted-foreground">{t('Pembayaran QRIS otomatis')}</div>
                                         </div>
                                         <span
                                             className={
@@ -361,7 +364,7 @@ export default function DepositPage() {
                                         </span>
                                         <div className="flex-1">
                                             <div className="text-sm font-semibold">E-Wallet</div>
-                                            <div className="text-xs text-muted-foreground">Pilih OVO / DANA / ShopeePay</div>
+                                            <div className="text-xs text-muted-foreground">{t('Pilih OVO / DANA / ShopeePay')}</div>
                                         </div>
                                         <span
                                             className={
@@ -380,13 +383,13 @@ export default function DepositPage() {
 
                                     {methodCategory === 'ewallet' ? (
                                         <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
-                                            <Label className="text-sm font-semibold">Pilih E-Wallet</Label>
+                                            <Label className="text-sm font-semibold">{t('Pilih E-Wallet')}</Label>
                                             <Select
                                                 value={ewalletCode}
                                                 onValueChange={(v) => setEwalletCode(v as any)}
                                             >
                                                 <SelectTrigger className="mt-2 h-10">
-                                                    <SelectValue placeholder="Pilih" />
+                                                    <SelectValue placeholder={t('Pilih')} />
                                                 </SelectTrigger>
                                                 <SelectContent align="end">
                                                     <SelectItem value="OVO">OVO</SelectItem>
@@ -401,7 +404,7 @@ export default function DepositPage() {
                             </div>
 
                             <div className="space-y-3">
-                                <div className="text-sm font-semibold">Pilih Nominal</div>
+                                <div className="text-sm font-semibold">{t('Pilih Nominal')}</div>
 
                                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                                     {quickAmounts.map((v) => {
@@ -428,11 +431,11 @@ export default function DepositPage() {
                                     <span className="inline-flex h-5 items-center rounded-md bg-muted px-1.5 text-[10px] text-foreground">
                                         RP
                                     </span>
-                                    <span>ATAU MASUKKAN NOMINAL MANUAL</span>
+                                    <span>{t('ATAU MASUKKAN NOMINAL MANUAL')}</span>
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="amount">Nominal</Label>
+                                    <Label htmlFor="amount">{t('Nominal')}</Label>
                                     <Input
                                         id="amount"
                                         className="mt-1"
@@ -442,11 +445,11 @@ export default function DepositPage() {
                                         max={200000}
                                         value={String(amount)}
                                         onChange={(e) => setAmount(Number(e.target.value))}
-                                        placeholder="0"
+                                        placeholder={t('0')}
                                     />
                                     <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                                        <span>Minimal: Rp 1.000</span>
-                                        <span>Maksimal: Rp 200.000</span>
+                                        <span>{t('Minimal')}: Rp 1.000</span>
+                                        <span>{t('Maksimal')}: Rp 200.000</span>
                                     </div>
                                 </div>
                             </div>
@@ -455,13 +458,13 @@ export default function DepositPage() {
                         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                             <Button asChild variant="outline">
                                 <Link href="/history/deposit" prefetch>
-                                    Riwayat
+                                    {t('Riwayat')}
                                 </Link>
                             </Button>
 
                             <Button type="button" onClick={createDeposit} disabled={isSubmitting}>
                                 <ArrowRight className="mr-2 h-4 w-4" />
-                                {isSubmitting ? 'Memproses...' : 'Lanjutkan'}
+                                {isSubmitting ? t('Memproses...') : t('Lanjutkan')}
                             </Button>
                         </div>
                     </CardHeader>

@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Copy, MoreHorizontal } from 'lucide-react';
 
 import { useConfirm } from '@/components/confirm-dialog-provider';
+import { useI18n } from '@/i18n/i18n-provider';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -213,6 +214,7 @@ async function cancelDeposit(id: number) {
 }
 
 export default function HistoryDepositPage() {
+    const { t, locale } = useI18n();
     const confirm = useConfirm();
     const { auth, deposits: depositsProp, filters: filtersProp } = usePage().props as any as {
         auth: { user?: { id?: number } };
@@ -399,14 +401,18 @@ export default function HistoryDepositPage() {
 
     return (
         <>
-            <Head title="Riwayat Deposit" />
+            <Head title={t('Riwayat Deposit')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                    <Heading variant="small" title="Riwayat Deposit" description="Daftar deposit saldo Anda." />
+                    <Heading
+                        variant="small"
+                        title={t('Riwayat Deposit')}
+                        description={t('Daftar deposit saldo Anda.')}
+                    />
                     <Button asChild>
                         <Link href="/deposit" prefetch>
-                            Isi Saldo
+                            {t('Isi Saldo')}
                         </Link>
                     </Button>
                 </div>
@@ -415,40 +421,40 @@ export default function HistoryDepositPage() {
                     <CardHeader>
                         <div className={`grid gap-3 ${method === 'ewallet' ? 'sm:grid-cols-5' : 'sm:grid-cols-4'}`}>
                             <div className="sm:col-span-2">
-                                <Label htmlFor="q">Pencarian</Label>
+                                <Label htmlFor="q">{t('Pencarian')}</Label>
                                 <Input
                                     id="q"
                                     className="mt-1"
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
-                                    placeholder="Cari reference, pay code, atau metode..."
+                                    placeholder={t('Cari reference, pay code, atau metode...')}
                                 />
                             </div>
 
                             <div>
-                                <Label>Status</Label>
+                                <Label>{t('Status')}</Label>
                                 <Select value={status} onValueChange={(v) => setStatus(v)}>
                                     <SelectTrigger className="mt-1 h-9 w-full">
-                                        <SelectValue placeholder="Semua" />
+                                        <SelectValue placeholder={t('Semua')} />
                                     </SelectTrigger>
                                     <SelectContent align="end">
-                                        <SelectItem value="all">Semua</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="success">Success</SelectItem>
-                                        <SelectItem value="failed">Failed</SelectItem>
-                                        <SelectItem value="expired">Expired</SelectItem>
+                                        <SelectItem value="all">{t('Semua')}</SelectItem>
+                                        <SelectItem value="pending">{t('Menunggu')}</SelectItem>
+                                        <SelectItem value="success">{t('Berhasil')}</SelectItem>
+                                        <SelectItem value="failed">{t('Gagal')}</SelectItem>
+                                        <SelectItem value="expired">{t('Kadaluarsa')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div>
-                                <Label>Metode</Label>
+                                <Label>{t('Metode')}</Label>
                                 <Select value={method} onValueChange={(v) => setMethod(v)}>
                                     <SelectTrigger className="mt-1 h-9 w-full">
-                                        <SelectValue placeholder="Semua" />
+                                        <SelectValue placeholder={t('Semua')} />
                                     </SelectTrigger>
                                     <SelectContent align="end">
-                                        <SelectItem value="all">Semua</SelectItem>
+                                        <SelectItem value="all">{t('Semua')}</SelectItem>
                                         <SelectItem value="qris">QRIS</SelectItem>
                                         <SelectItem value="ewallet">E-Wallet</SelectItem>
                                     </SelectContent>
@@ -460,10 +466,10 @@ export default function HistoryDepositPage() {
                                     <Label>E-Wallet</Label>
                                     <Select value={ewalletCode} onValueChange={(v) => setEwalletCode(v)}>
                                         <SelectTrigger className="mt-1 h-9 w-full">
-                                            <SelectValue placeholder="Semua" />
+                                            <SelectValue placeholder={t('Semua')} />
                                         </SelectTrigger>
                                         <SelectContent align="end">
-                                            <SelectItem value="all">Semua</SelectItem>
+                                            <SelectItem value="all">{t('Semua')}</SelectItem>
                                             <SelectItem value="OVO">OVO</SelectItem>
                                             <SelectItem value="DANA">DANA</SelectItem>
                                             <SelectItem value="SHOPEEPAY">ShopeePay</SelectItem>
@@ -475,7 +481,7 @@ export default function HistoryDepositPage() {
 
                         <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                             <Button type="button" onClick={() => applyFilters({})}>
-                                Terapkan
+                                {t('Terapkan')}
                             </Button>
                             <Button
                                 type="button"
@@ -490,16 +496,15 @@ export default function HistoryDepositPage() {
                                     applyFilters({ q: '', status: 'all', method: 'all', ewallet_code: 'all', year: currentYear, per_page: 25 });
                                 }}
                             >
-                                Reset
+                                {t('Reset')}
                             </Button>
                         </div>
 
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm text-muted-foreground">
                             <div>
-                                Menampilkan {from}-{to} dari {total}
-                                {depositsProp?.last_page
-                                    ? ` (Halaman ${depositsProp.current_page} / ${depositsProp.last_page})`
-                                    : ''}
+                                {locale === 'en'
+                                    ? `Showing ${from}-${to} of ${total}${depositsProp?.last_page ? ` (Page ${depositsProp.current_page} / ${depositsProp.last_page})` : ''}`
+                                    : `Menampilkan ${from}-${to} dari ${total}${depositsProp?.last_page ? ` (Halaman ${depositsProp.current_page} / ${depositsProp.last_page})` : ''}`}
                             </div>
                         </div>
                     </CardHeader>
@@ -510,21 +515,21 @@ export default function HistoryDepositPage() {
                                 <table className="min-w-full text-sm">
                                     <thead className="bg-muted/30">
                                         <tr className="text-left">
-                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tanggal</th>
+                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Tanggal')}</th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Nominal
+                                                {t('Nominal')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Biaya admin
+                                                {t('Biaya admin')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Total bayar
+                                                {t('Total bayar')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Saldo masuk
+                                                {t('Saldo masuk')}
                                             </th>
-                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Metode</th>
-                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Metode')}</th>
+                                            <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Status')}</th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"></th>
                                         </tr>
                                     </thead>
@@ -532,14 +537,14 @@ export default function HistoryDepositPage() {
                                         {rows.length === 0 ? (
                                             <tr>
                                                 <td className="px-4 py-6 text-center text-muted-foreground" colSpan={8}>
-                                                    Belum ada deposit.
+                                                    {t('Belum ada deposit.')}
                                                 </td>
                                             </tr>
                                         ) : (
                                             rows.map((row) => {
                                                 const dateText = row.created_at_wib ?? '-';
                                                 const methodText = methodLabel(row);
-                                                const statusText = statusLabel(row.status);
+                                                const statusText = t(statusLabel(row.status));
 
                                                 const fee = adminFee(row.amount, row.final_amount);
                                                 const totalPay = row.final_amount ?? row.amount;
@@ -576,7 +581,7 @@ export default function HistoryDepositPage() {
                                                                     <DropdownMenuItem
                                                                         onClick={() => openDetailById(row.id)}
                                                                     >
-                                                                        Detail
+                                                                        {t('Detail')}
                                                                     </DropdownMenuItem>
                                                                     {row.status === 'pending' && row.tripay_checkout_url ? (
                                                                         <>
@@ -587,7 +592,7 @@ export default function HistoryDepositPage() {
                                                                                     target="_blank"
                                                                                     rel="noopener noreferrer"
                                                                                 >
-                                                                                    Bayar
+                                                                                    {t('Bayar')}
                                                                                 </a>
                                                                             </DropdownMenuItem>
                                                                         </>
@@ -600,9 +605,9 @@ export default function HistoryDepositPage() {
                                                                                 className="text-destructive"
                                                                                 onClick={async () => {
                                                                                     const ok = await confirm({
-                                                                                        title: 'Batalkan deposit ini?',
-                                                                                        confirmText: 'Batalkan',
-                                                                                        cancelText: 'Kembali',
+                                                                                        title: t('Batalkan deposit ini?'),
+                                                                                        confirmText: t('Batalkan'),
+                                                                                        cancelText: t('Kembali'),
                                                                                         variant: 'destructive',
                                                                                     });
                                                                                     if (!ok) return;
@@ -613,7 +618,7 @@ export default function HistoryDepositPage() {
                                                                                         });
                                                                                 }}
                                                                             >
-                                                                                Batalkan
+                                                                                {t('Batalkan')}
                                                                             </DropdownMenuItem>
                                                                         </>
                                                                     ) : null}
@@ -632,7 +637,7 @@ export default function HistoryDepositPage() {
                         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                             <div className="text-sm text-muted-foreground">
                                 <div className="flex items-center gap-2">
-                                    <span>Data</span>
+                                    <span>{t('Data')}</span>
                                     <Select
                                         value={String(perPage)}
                                         onValueChange={(v) => {
@@ -681,11 +686,11 @@ export default function HistoryDepositPage() {
                                         variant="outline"
                                         onClick={() => applyFilters({ page: Number(depositsProp?.current_page ?? 1) - 1 })}
                                     >
-                                        Prev
+                                        {t('Sebelumnya')}
                                     </Button>
                                 ) : (
                                     <Button variant="outline" disabled>
-                                        Prev
+                                        {t('Sebelumnya')}
                                     </Button>
                                 )}
 
@@ -694,11 +699,11 @@ export default function HistoryDepositPage() {
                                         variant="outline"
                                         onClick={() => applyFilters({ page: Number(depositsProp?.current_page ?? 1) + 1 })}
                                     >
-                                        Next
+                                        {t('Berikutnya')}
                                     </Button>
                                 ) : (
                                     <Button variant="outline" disabled>
-                                        Next
+                                        {t('Berikutnya')}
                                     </Button>
                                 )}
                             </div>
@@ -715,7 +720,7 @@ export default function HistoryDepositPage() {
                 >
                     <DialogContent className="max-h-[calc(100vh-2rem)] overflow-auto sm:max-w-lg">
                         <DialogHeader>
-                            <DialogTitle>Detail Deposit</DialogTitle>
+                            <DialogTitle>{t('Detail Deposit')}</DialogTitle>
                         </DialogHeader>
 
                         {selectedDeposit ? (
@@ -723,16 +728,16 @@ export default function HistoryDepositPage() {
                                 <div className="grid gap-3">
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            ID Deposit
+                                                {t('ID Deposit')}
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <div className="text-sm font-semibold">#{selectedDeposit.id}</div>
+                                                <div className="text-sm font-semibold">#{selectedDeposit.id}</div>
                                             <Button
                                                 type="button"
                                                 size="icon"
                                                 variant="outline"
                                                 onClick={() => copy(String(selectedDeposit.id))}
-                                                aria-label="Copy ID"
+                                                aria-label={t('Salin ID')}
                                             >
                                                 <Copy className="size-4" />
                                             </Button>
@@ -741,7 +746,7 @@ export default function HistoryDepositPage() {
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Tanggal
+                                                {t('Tanggal')}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="text-sm font-medium">{selectedDeposit.created_at_wib ?? '-'}</div>
@@ -751,7 +756,7 @@ export default function HistoryDepositPage() {
                                                     size="icon"
                                                     variant="outline"
                                                     onClick={() => copy(String(selectedDeposit.created_at_wib))}
-                                                    aria-label="Copy tanggal"
+                                                        aria-label={t('Salin tanggal')}
                                                 >
                                                     <Copy className="size-4" />
                                                 </Button>
@@ -761,14 +766,14 @@ export default function HistoryDepositPage() {
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Nominal
+                                                {t('Nominal')}
                                         </div>
                                         <div className="text-sm font-semibold">Rp {formatRupiah(selectedDeposit.amount)}</div>
                                     </div>
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Biaya admin
+                                                {t('Biaya admin')}
                                         </div>
                                         <div className="text-sm font-medium">
                                             Rp {formatRupiah(adminFee(selectedDeposit.amount, selectedDeposit.final_amount))}
@@ -777,7 +782,7 @@ export default function HistoryDepositPage() {
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Total bayar
+                                                {t('Total bayar')}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="text-sm font-semibold">
@@ -790,7 +795,7 @@ export default function HistoryDepositPage() {
                                                 onClick={() =>
                                                     copy(String(selectedDeposit.final_amount ?? selectedDeposit.amount))
                                                 }
-                                                aria-label="Copy total"
+                                                aria-label={t('Salin total')}
                                             >
                                                 <Copy className="size-4" />
                                             </Button>
@@ -799,37 +804,37 @@ export default function HistoryDepositPage() {
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Saldo masuk
+                                                {t('Saldo masuk')}
                                         </div>
                                         <div className="text-sm font-semibold">Rp {formatRupiah(selectedDeposit.amount)}</div>
                                     </div>
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Metode
+                                                {t('Metode')}
                                         </div>
                                         <div className="text-sm font-medium">
-                                            {methodLabel(selectedDeposit)}
+                                                {methodLabel(selectedDeposit)}
                                         </div>
                                     </div>
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Status
+                                                {t('Status')}
                                         </div>
                                         <div>
                                             <Badge
                                                 variant={badgeVariantForStatus(selectedDeposit.status)}
                                                 className={badgeClassNameForStatus(selectedDeposit.status)}
                                             >
-                                                {statusLabel(selectedDeposit.status).toUpperCase()}
+                                                    {t(statusLabel(selectedDeposit.status)).toUpperCase()}
                                             </Badge>
                                         </div>
                                     </div>
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Expired at
+                                                {t('Kadaluarsa pada')}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <div className="text-sm font-medium">{selectedDeposit.expired_at_wib ?? '-'}</div>
@@ -839,7 +844,7 @@ export default function HistoryDepositPage() {
                                                     size="icon"
                                                     variant="outline"
                                                     onClick={() => copy(String(selectedDeposit.expired_at_wib))}
-                                                    aria-label="Copy expired"
+                                                        aria-label={t('Salin kadaluarsa')}
                                                 >
                                                     <Copy className="size-4" />
                                                 </Button>
@@ -856,7 +861,7 @@ export default function HistoryDepositPage() {
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
-                                                Bayar
+                                                {t('Bayar')}
                                             </a>
                                         </Button>
                                         <Button
@@ -864,15 +869,15 @@ export default function HistoryDepositPage() {
                                             variant="destructive"
                                             onClick={async () => {
                                                 const ok = await confirm({
-                                                    title: 'Batalkan deposit ini?',
-                                                    confirmText: 'Batalkan',
-                                                    cancelText: 'Kembali',
+                                                    title: t('Batalkan deposit ini?'),
+                                                    confirmText: t('Batalkan'),
+                                                    cancelText: t('Kembali'),
                                                     variant: 'destructive',
                                                 });
                                                 if (ok) cancelDeposit(selectedDeposit.id);
                                             }}
                                         >
-                                            Batalkan
+                                            {t('Batalkan')}
                                         </Button>
                                     </div>
                                 ) : selectedDeposit.status === 'pending' ? (
@@ -882,22 +887,22 @@ export default function HistoryDepositPage() {
                                             variant="destructive"
                                             onClick={async () => {
                                                 const ok = await confirm({
-                                                    title: 'Batalkan deposit ini?',
-                                                    confirmText: 'Batalkan',
-                                                    cancelText: 'Kembali',
+                                                    title: t('Batalkan deposit ini?'),
+                                                    confirmText: t('Batalkan'),
+                                                    cancelText: t('Kembali'),
                                                     variant: 'destructive',
                                                 });
                                                 if (ok) cancelDeposit(selectedDeposit.id);
                                             }}
                                         >
-                                            Batalkan
+                                            {t('Batalkan')}
                                         </Button>
                                     </div>
                                 ) : null}
 
                             </div>
                         ) : (
-                            <div className="text-sm text-muted-foreground">Data tidak ditemukan.</div>
+                            <div className="text-sm text-muted-foreground">{t('Data tidak ditemukan.')}</div>
                         )}
                     </DialogContent>
                 </Dialog>
