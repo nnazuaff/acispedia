@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, setLayoutProps } from '@inertiajs/react';
 import * as React from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import TextLink from '@/components/text-link';
+import { useI18n } from '@/i18n/i18n-provider';
 import { login } from '@/routes';
 
 type Props = {
@@ -14,23 +15,31 @@ type Props = {
 };
 
 export default function VerifyEmailGuest({ status, hasEmail = false }: Props) {
+    const { t } = useI18n();
     const [value, setValue] = React.useState('');
+
+    setLayoutProps({
+        title: t('Verifikasi Email'),
+        description: t(
+            'Klik link verifikasi yang dikirim ke email untuk mengaktifkan akun.',
+        ),
+    });
 
     return (
         <>
-            <Head title="Verifikasi Email" />
+            <Head title={t('Verifikasi Email')} />
 
             {status === 'email-already-verified' ? (
                 <div className="rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
-                    Email sudah terverifikasi. Silakan login.
+                    {t('Email sudah terverifikasi. Silakan login.')}
                 </div>
             ) : status === 'verify-rate-limited' ? (
                 <div className="rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
-                    Terlalu banyak permintaan. Coba lagi beberapa saat.
+                    {t('Terlalu banyak permintaan. Coba lagi beberapa saat.')}
                 </div>
             ) : (
                 <div className="rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
-                    Link verifikasi sudah dikirim. Silakan cek inbox / spam.
+                    {t('Link verifikasi sudah dikirim. Silakan cek inbox / spam.')}
                 </div>
             )}
 
@@ -43,7 +52,7 @@ export default function VerifyEmailGuest({ status, hasEmail = false }: Props) {
                     <>
                         {!hasEmail && (
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email</Label>
+                                <Label htmlFor="email">{t('Email')}</Label>
                                 <Input
                                     id="email"
                                     name="email"
@@ -60,11 +69,13 @@ export default function VerifyEmailGuest({ status, hasEmail = false }: Props) {
 
                         <Button type="submit" className="w-full" disabled={processing}>
                             {processing && <Spinner />}
-                            Kirim ulang link verifikasi
+                            {t('Kirim ulang link verifikasi')}
                         </Button>
 
                         <div className="text-center text-sm text-muted-foreground">
-                            <TextLink href={login()}>Kembali ke login</TextLink>
+                            <TextLink href={login()}>
+                                {t('Kembali ke login')}
+                            </TextLink>
                         </div>
                     </>
                 )}
@@ -72,8 +83,3 @@ export default function VerifyEmailGuest({ status, hasEmail = false }: Props) {
         </>
     );
 }
-
-VerifyEmailGuest.layout = {
-    title: 'Verifikasi Email',
-    description: 'Klik link verifikasi yang dikirim ke email untuk mengaktifkan akun.',
-};

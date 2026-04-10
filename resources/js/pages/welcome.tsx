@@ -1,5 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 
+import { useI18n } from '@/i18n/i18n-provider';
+
 import LandingFeatures from '@/components/landing/landing-features';
 import LandingFooter from '@/components/landing/landing-footer';
 import LandingHero from '@/components/landing/landing-hero';
@@ -12,12 +14,13 @@ export default function Welcome({
 }: {
     canRegister?: boolean;
 }) {
+    const { t } = useI18n();
     const page = usePage();
     const authUser = (page.props as any)?.auth?.user;
 
     return (
         <>
-            <Head title="Beranda" />
+            <Head title={t('Beranda')} />
             <div className="min-h-screen bg-background text-foreground">
                 <LandingNavbar authUser={authUser} canRegister={canRegister} />
 

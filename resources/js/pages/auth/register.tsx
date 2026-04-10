@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, setLayoutProps } from '@inertiajs/react';
 import { Mail, Phone, RefreshCcw, ShieldCheck, User } from 'lucide-react';
 import * as React from 'react';
 import InputError from '@/components/input-error';
@@ -8,12 +8,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/i18n/i18n-provider';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
 export default function Register() {
+    const { t } = useI18n();
     const [captchaKey, setCaptchaKey] = React.useState(() => String(Date.now()));
     const [captchaObjectUrl, setCaptchaObjectUrl] = React.useState<string | null>(null);
+
+    setLayoutProps({
+        title: t('Buat akun'),
+        description: t(
+            'Gunakan email dan nomor WhatsApp aktif untuk membuat akun AcisPedia.',
+        ),
+    });
 
     React.useEffect(() => {
         let cancelled = false;
@@ -63,7 +72,7 @@ export default function Register() {
 
     return (
         <>
-            <Head title="Daftar" />
+            <Head title={t('Daftar')} />
             <Form
                 {...store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}
@@ -74,7 +83,7 @@ export default function Register() {
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Nama</Label>
+                                <Label htmlFor="name">{t('Nama')}</Label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
                                         <User className="size-4" />
@@ -87,7 +96,7 @@ export default function Register() {
                                         tabIndex={1}
                                         autoComplete="name"
                                         name="name"
-                                        placeholder="Nama lengkap"
+                                        placeholder={t('Nama lengkap')}
                                         className="pl-10"
                                     />
                                 </div>
@@ -98,7 +107,7 @@ export default function Register() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email</Label>
+                                <Label htmlFor="email">{t('Email')}</Label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
                                         <Mail className="size-4" />
@@ -118,7 +127,9 @@ export default function Register() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="phone">Nomor HP / WhatsApp</Label>
+                                <Label htmlFor="phone">
+                                    {t('Nomor HP / WhatsApp')}
+                                </Label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
                                         <Phone className="size-4" />
@@ -139,14 +150,16 @@ export default function Register() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password">Kata sandi</Label>
+                                <Label htmlFor="password">{t('Kata sandi')}</Label>
                                 <PasswordInput
                                     id="password"
                                     required
                                     tabIndex={4}
                                     autoComplete="new-password"
                                     name="password"
-                                    placeholder="Minimal 8 karakter (angka & simbol)"
+                                    placeholder={t(
+                                        'Minimal 8 karakter (angka & simbol)',
+                                    )}
                                     leftIcon={<ShieldCheck className="size-4" />}
                                 />
                                 <InputError message={errors.password} />
@@ -154,7 +167,7 @@ export default function Register() {
 
                             <div className="grid gap-2">
                                 <Label htmlFor="password_confirmation">
-                                    Konfirmasi kata sandi
+                                    {t('Konfirmasi kata sandi')}
                                 </Label>
                                 <PasswordInput
                                     id="password_confirmation"
@@ -162,7 +175,7 @@ export default function Register() {
                                     tabIndex={5}
                                     autoComplete="new-password"
                                     name="password_confirmation"
-                                    placeholder="Ulangi kata sandi"
+                                    placeholder={t('Ulangi kata sandi')}
                                     leftIcon={<ShieldCheck className="size-4" />}
                                 />
                                 <InputError
@@ -171,7 +184,9 @@ export default function Register() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="security_check">Security Check</Label>
+                                <Label htmlFor="security_check">
+                                    {t('Cek Keamanan')}
+                                </Label>
                                 <div className="flex items-center gap-2">
                                     <div
                                         className="flex h-10 w-35 items-center justify-center overflow-hidden rounded-md border bg-background"
@@ -192,7 +207,7 @@ export default function Register() {
                                         variant="outline"
                                         size="icon"
                                         onClick={() => setCaptchaKey(String(Date.now()))}
-                                        aria-label="Refresh security check"
+                                        aria-label={t('Muat ulang cek keamanan')}
                                     >
                                         <RefreshCcw className="size-4" />
                                     </Button>
@@ -208,7 +223,7 @@ export default function Register() {
                                         tabIndex={6}
                                         name="security_check"
                                         autoComplete="off"
-                                        placeholder="Masukkan kode di atas"
+                                        placeholder={t('Masukkan kode di atas')}
                                         className="pl-10"
                                     />
                                 </div>
@@ -222,14 +237,14 @@ export default function Register() {
                                 data-test="register-user-button"
                             >
                                 {processing && <Spinner />}
-                                Buat akun
+                                {t('Buat akun')}
                             </Button>
                         </div>
 
                         <div className="text-center text-sm text-muted-foreground">
-                            Sudah punya akun?{' '}
+                            {t('Sudah punya akun?')}{' '}
                             <TextLink href={login()} tabIndex={8}>
-                                Masuk
+                                {t('Masuk')}
                             </TextLink>
                         </div>
                     </>

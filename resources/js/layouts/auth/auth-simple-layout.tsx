@@ -3,6 +3,7 @@ import { CreditCard, ShieldCheck, UserPlus } from 'lucide-react';
 import { BrandLogoMark } from '@/components/brand-logo';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { Card, CardContent } from '@/components/ui/card';
+import { useI18n } from '@/i18n/i18n-provider';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
@@ -11,6 +12,7 @@ export default function AuthSimpleLayout({
     title,
     description,
 }: AuthLayoutProps) {
+    const { t } = useI18n();
     const page = usePage();
     const component = (page as any)?.component as string | undefined;
     const isSplitAuth =
@@ -35,10 +37,12 @@ export default function AuthSimpleLayout({
 
                             <div className="space-y-2">
                                 <h2 className="text-2xl font-semibold tracking-tight acis-fade-up acis-delay-1">
-                                    Solusi Terpadu Untuk SMM Panel
+                                    {t('Solusi Terpadu Untuk SMM Panel')}
                                 </h2>
                                 <p className="text-sm text-muted-foreground acis-fade-up acis-delay-2">
-                                    Kelola layanan, deposit, dan order dalam satu dashboard.
+                                    {t(
+                                        'Kelola layanan, deposit, dan order dalam satu dashboard.',
+                                    )}
                                 </p>
                             </div>
 
@@ -47,9 +51,13 @@ export default function AuthSimpleLayout({
                                     <CardContent className="flex items-center gap-3 pt-6">
                                         <UserPlus className="size-5 text-primary" />
                                         <div className="leading-tight">
-                                            <div className="text-sm font-medium">Daftar Akun</div>
+                                            <div className="text-sm font-medium">
+                                                {t('Daftar Akun')}
+                                            </div>
                                             <div className="text-xs text-muted-foreground">
-                                                Registrasi cepat menggunakan email & WhatsApp aktif.
+                                                {t(
+                                                    'Registrasi cepat menggunakan email & WhatsApp aktif.',
+                                                )}
                                             </div>
                                         </div>
                                     </CardContent>
@@ -58,9 +66,13 @@ export default function AuthSimpleLayout({
                                     <CardContent className="flex items-center gap-3 pt-6">
                                         <CreditCard className="size-5 text-primary" />
                                         <div className="leading-tight">
-                                            <div className="text-sm font-medium">Deposit Saldo</div>
+                                            <div className="text-sm font-medium">
+                                                {t('Deposit Saldo')}
+                                            </div>
                                             <div className="text-xs text-muted-foreground">
-                                                Isi saldo dan mulai transaksi kapan saja.
+                                                {t(
+                                                    'Isi saldo dan mulai transaksi kapan saja.',
+                                                )}
                                             </div>
                                         </div>
                                     </CardContent>
@@ -69,9 +81,13 @@ export default function AuthSimpleLayout({
                                     <CardContent className="flex items-center gap-3 pt-6">
                                         <ShieldCheck className="size-5 text-primary" />
                                         <div className="leading-tight">
-                                            <div className="text-sm font-medium">Akun Lebih Aman</div>
+                                            <div className="text-sm font-medium">
+                                                {t('Akun Lebih Aman')}
+                                            </div>
                                             <div className="text-xs text-muted-foreground">
-                                                Gunakan kata sandi kuat untuk melindungi akun.
+                                                {t(
+                                                    'Gunakan kata sandi kuat untuk melindungi akun.',
+                                                )}
                                             </div>
                                         </div>
                                     </CardContent>

@@ -10,6 +10,7 @@ import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
+import { useI18n } from '@/i18n/i18n-provider';
 import { edit } from '@/routes/security';
 import { disable, enable } from '@/routes/two-factor';
 
@@ -24,6 +25,7 @@ export default function Security({
     requiresConfirmation = false,
     twoFactorEnabled = false,
 }: Props) {
+    const { t } = useI18n();
     const {
         qrCodeSvg,
         hasSetupData,
@@ -48,15 +50,15 @@ export default function Security({
 
     return (
         <>
-            <Head title="Security settings" />
+            <Head title={t('Pengaturan Keamanan')} />
 
-            <h1 className="sr-only">Security settings</h1>
+            <h1 className="sr-only">{t('Pengaturan Keamanan')}</h1>
 
             <div className="space-y-6">
                 <Heading
                     variant="small"
-                    title="Ubah password"
-                    description="Masukkan password saat ini dan password baru Anda."
+                    title={t('Ubah password')}
+                    description={t('Masukkan password saat ini dan password baru Anda.')}
                 />
 
                 <Form
@@ -75,37 +77,37 @@ export default function Security({
                         <>
                             <div className="grid gap-2">
                                 <Label htmlFor="current_password">
-                                    Password saat ini
+                                    {t('Password saat ini')}
                                 </Label>
                                 <PasswordInput
                                     id="current_password"
                                     name="current_password"
                                     autoComplete="current-password"
-                                    placeholder="Password saat ini"
+                                    placeholder={t('Password saat ini')}
                                 />
                                 <InputError message={errors.current_password} />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="password">Password baru</Label>
+                                <Label htmlFor="password">{t('Password baru')}</Label>
                                 <PasswordInput
                                     id="password"
                                     name="password"
                                     autoComplete="new-password"
-                                    placeholder="Password baru"
+                                    placeholder={t('Password baru')}
                                 />
                                 <InputError message={errors.password} />
                             </div>
 
                             <div className="grid gap-2">
                                 <Label htmlFor="password_confirmation">
-                                    Konfirmasi password baru
+                                    {t('Konfirmasi password baru')}
                                 </Label>
                                 <PasswordInput
                                     id="password_confirmation"
                                     name="password_confirmation"
                                     autoComplete="new-password"
-                                    placeholder="Konfirmasi password baru"
+                                    placeholder={t('Konfirmasi password baru')}
                                 />
                                 <InputError
                                     message={errors.password_confirmation}
@@ -117,7 +119,7 @@ export default function Security({
                                     disabled={processing}
                                     data-test="update-password-button"
                                 >
-                                    Simpan password
+                                    {t('Simpan password')}
                                 </Button>
                             </div>
                         </>
@@ -129,15 +131,15 @@ export default function Security({
                 <div className="space-y-6">
                     <Heading
                         variant="small"
-                        title="Two-factor authentication"
-                        description="Manage your two-factor authentication settings"
+                        title={t('Autentikasi dua faktor')}
+                        description={t('Kelola pengaturan autentikasi dua faktor Anda')}
                     />
                     {twoFactorEnabled ? (
                         <div className="flex flex-col items-start justify-start space-y-4">
                             <p className="text-sm text-muted-foreground">
-                                You will be prompted for a secure, random pin
-                                during login, which you can retrieve from the
-                                TOTP-supported application on your phone.
+                                {t(
+                                    'Anda akan diminta memasukkan PIN aman saat login, yang bisa Anda ambil dari aplikasi authenticator yang mendukung TOTP di ponsel Anda.',
+                                )}
                             </p>
 
                             <div className="relative inline">
@@ -148,7 +150,7 @@ export default function Security({
                                             type="submit"
                                             disabled={processing}
                                         >
-                                            Disable 2FA
+                                            {t('Nonaktifkan 2FA')}
                                         </Button>
                                     )}
                                 </Form>
@@ -163,10 +165,9 @@ export default function Security({
                     ) : (
                         <div className="flex flex-col items-start justify-start space-y-4">
                             <p className="text-sm text-muted-foreground">
-                                When you enable two-factor authentication, you
-                                will be prompted for a secure pin during login.
-                                This pin can be retrieved from a TOTP-supported
-                                application on your phone.
+                                {t(
+                                    'Saat Anda mengaktifkan autentikasi dua faktor, Anda akan diminta memasukkan PIN aman saat login. PIN ini dapat diambil dari aplikasi authenticator yang mendukung TOTP di ponsel Anda.',
+                                )}
                             </p>
 
                             <div>
@@ -175,7 +176,7 @@ export default function Security({
                                         onClick={() => setShowSetupModal(true)}
                                     >
                                         <ShieldCheck />
-                                        Continue setup
+                                        {t('Lanjutkan pengaturan')}
                                     </Button>
                                 ) : (
                                     <Form
@@ -189,7 +190,7 @@ export default function Security({
                                                 type="submit"
                                                 disabled={processing}
                                             >
-                                                Enable 2FA
+                                                {t('Aktifkan 2FA')}
                                             </Button>
                                         )}
                                     </Form>
@@ -218,7 +219,7 @@ export default function Security({
 Security.layout = {
     breadcrumbs: [
         {
-            title: 'Security settings',
+            title: 'Pengaturan Keamanan',
             href: edit(),
         },
     ],

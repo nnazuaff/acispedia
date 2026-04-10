@@ -4,6 +4,7 @@ import { useConfirm } from '@/components/confirm-dialog-provider';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/i18n/i18n-provider';
 
 type DeviceSession = {
     id: string;
@@ -35,13 +36,14 @@ function fmtWib(iso: string | null): string {
 
 export default function DevicesPage({ sessions }: { sessions: DeviceSession[] }) {
     const confirm = useConfirm();
+    const { t } = useI18n();
 
     const logoutAllOther = async () => {
         const ok = await confirm({
-            title: 'Logout perangkat lain',
-            description: 'Logout dari semua perangkat lain?',
-            confirmText: 'Logout',
-            cancelText: 'Batal',
+            title: t('Logout perangkat lain'),
+            description: t('Logout dari semua perangkat lain?'),
+            confirmText: t('Logout'),
+            cancelText: t('Batal'),
             variant: 'destructive',
         });
         if (!ok) return;
@@ -53,10 +55,10 @@ export default function DevicesPage({ sessions }: { sessions: DeviceSession[] })
 
     const logoutSession = async (id: string) => {
         const ok = await confirm({
-            title: 'Logout perangkat',
-            description: 'Logout perangkat ini?',
-            confirmText: 'Logout',
-            cancelText: 'Batal',
+            title: t('Logout perangkat'),
+            description: t('Logout perangkat ini?'),
+            confirmText: t('Logout'),
+            cancelText: t('Batal'),
             variant: 'destructive',
         });
         if (!ok) return;
@@ -68,30 +70,34 @@ export default function DevicesPage({ sessions }: { sessions: DeviceSession[] })
 
     return (
         <>
-            <Head title="Devices" />
+            <Head title={t('Perangkat')} />
 
-            <h1 className="sr-only">Devices</h1>
+            <h1 className="sr-only">{t('Perangkat')}</h1>
 
             <div className="space-y-6">
                 <Heading
                     variant="small"
-                    title="Devices"
-                    description="Perangkat yang sedang login ke akun Anda"
+                    title={t('Perangkat')}
+                    description={t('Perangkat yang sedang login ke akun Anda')}
                 />
 
                 <div className="flex flex-wrap items-center gap-2">
                     <Button type="button" variant="destructive" onClick={logoutAllOther}>
-                        Logout semua perangkat lain
+                        {t('Logout semua perangkat lain')}
                     </Button>
                 </div>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Sesi Login</CardTitle>
+                        <CardTitle className="text-base">
+                            {t('Sesi Login')}
+                        </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         {sessions.length === 0 ? (
-                            <div className="text-sm text-muted-foreground">Tidak ada sesi.</div>
+                            <div className="text-sm text-muted-foreground">
+                                {t('Tidak ada sesi.')}
+                            </div>
                         ) : (
                             sessions.map((s) => (
                                 <div
@@ -100,13 +106,16 @@ export default function DevicesPage({ sessions }: { sessions: DeviceSession[] })
                                 >
                                     <div className="min-w-0">
                                         <div className="text-sm font-medium">
-                                            {s.is_current ? 'Perangkat ini' : 'Perangkat lain'}
+                                            {s.is_current
+                                                ? t('Perangkat ini')
+                                                : t('Perangkat lain')}
                                         </div>
                                         <div className="mt-1 text-xs text-muted-foreground">
                                             IP: {s.ip_address ?? '-'}
                                         </div>
                                         <div className="mt-1 text-xs text-muted-foreground">
-                                            Terakhir aktif: {fmtWib(s.last_activity_at)}
+                                            {t('Terakhir aktif:')}{' '}
+                                            {fmtWib(s.last_activity_at)}
                                         </div>
                                         {s.user_agent ? (
                                             <div className="mt-1 wrap-break-word text-xs text-muted-foreground">
@@ -122,7 +131,7 @@ export default function DevicesPage({ sessions }: { sessions: DeviceSession[] })
                                             disabled={s.is_current}
                                             onClick={() => logoutSession(s.id)}
                                         >
-                                            Logout
+                                            {t('Logout')}
                                         </Button>
                                     </div>
                                 </div>
@@ -138,7 +147,7 @@ export default function DevicesPage({ sessions }: { sessions: DeviceSession[] })
 DevicesPage.layout = {
     breadcrumbs: [
         {
-            title: 'Devices',
+            title: 'Perangkat',
             href: '/settings/devices',
         },
     ],

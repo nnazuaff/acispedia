@@ -22,6 +22,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/i18n/i18n-provider';
 
 type Service = {
     id: number;
@@ -155,6 +156,7 @@ const perPageOptions = ['25', '50', '100', '200'] as const;
 type PerPageValue = (typeof perPageOptions)[number];
 
 export default function PublicServices() {
+    const { t, locale } = useI18n();
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
 
@@ -212,7 +214,7 @@ export default function PublicServices() {
                 const json = unpackApiPayload(raw);
 
                 if (!json.success) {
-                    setError(json.message ?? 'Gagal memuat layanan.');
+                    setError(t(json.message ?? 'Gagal memuat layanan.'));
                     setServices([]);
                     setCategories([]);
                     setMeta({ valid: 0, shown: 0, totalPages: 0 });
@@ -232,13 +234,13 @@ export default function PublicServices() {
                     totalPages: json.total_pages ?? 0,
                 });
             } catch (e) {
-                const msg = e instanceof Error ? e.message : 'Kesalahan tidak diketahui.';
+                const msg = e instanceof Error ? e.message : t('Kesalahan tidak diketahui.');
                 setError(msg);
             } finally {
                 setIsLoading(false);
             }
         },
-        [],
+        [t],
     );
 
     React.useEffect(() => {
@@ -256,18 +258,22 @@ export default function PublicServices() {
 
     return (
         <>
-            <Head title="Layanan" />
+            <Head title={t('Layanan')} />
 
             <div className="flex flex-col gap-4">
                 <div className="space-y-1">
-                    <Heading variant="small" title="Layanan" description="Cari dan lihat daftar layanan." />
+                    <Heading
+                        variant="small"
+                        title={t('Layanan')}
+                        description={t('Cari dan lihat daftar layanan.')}
+                    />
                 </div>
 
                 <Card className="py-4">
                     <CardContent className="space-y-4">
                         <div className="grid gap-3 md:grid-cols-12">
                             <div className="md:col-span-4">
-                                <Label htmlFor="category">Kategori</Label>
+                                <Label htmlFor="category">{t('Kategori')}</Label>
                                 <Select
                                     value={category}
                                     onValueChange={(v) => {
@@ -276,10 +282,10 @@ export default function PublicServices() {
                                     }}
                                 >
                                     <SelectTrigger id="category" className="mt-1 w-full">
-                                        <SelectValue placeholder="Semua kategori" />
+                                        <SelectValue placeholder={t('Semua kategori')} />
                                     </SelectTrigger>
                                     <SelectContent align="start">
-                                        <SelectItem value={ALL_CATEGORIES_VALUE}>Semua kategori</SelectItem>
+                                        <SelectItem value={ALL_CATEGORIES_VALUE}>{t('Semua kategori')}</SelectItem>
                                         {categories.map((c) => (
                                             <SelectItem key={c} value={c}>
                                                 {c}
@@ -290,7 +296,7 @@ export default function PublicServices() {
                             </div>
 
                             <div className="md:col-span-4">
-                                <Label htmlFor="sort">Urutkan</Label>
+                                <Label htmlFor="sort">{t('Urutkan')}</Label>
                                 <Select
                                     value={sort}
                                     onValueChange={(v) => {
@@ -299,12 +305,12 @@ export default function PublicServices() {
                                     }}
                                 >
                                     <SelectTrigger id="sort" className="mt-1 w-full">
-                                        <SelectValue placeholder="Default" />
+                                        <SelectValue placeholder={t('Default')} />
                                     </SelectTrigger>
                                     <SelectContent align="start">
                                         {sortOptions.map((o) => (
                                             <SelectItem key={o.value} value={o.value}>
-                                                {o.label}
+                                                {t(o.label)}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -312,13 +318,13 @@ export default function PublicServices() {
                             </div>
 
                             <div className="md:col-span-4">
-                                <Label htmlFor="q">Pencarian</Label>
+                                <Label htmlFor="q">{t('Pencarian')}</Label>
                                 <Input
                                     id="q"
                                     className="mt-1"
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
-                                    placeholder="Cari layanan atau kategori..."
+                                    placeholder={t('Cari layanan atau kategori...')}
                                 />
                             </div>
                         </div>
@@ -328,16 +334,15 @@ export default function PublicServices() {
                                 {isLoading ? (
                                     <>
                                         <Spinner className="size-4" />
-                                        <span>Memuat layanan...</span>
+                                        <span>{t('Memuat layanan...')}</span>
                                     </>
                                 ) : error ? (
                                     <span className="text-destructive">{error}</span>
                                 ) : (
                                     <span>
-                                        Menampilkan {meta.shown} dari {meta.valid} layanan
-                                        {meta.totalPages > 0
-                                            ? ` (Halaman ${page} / ${meta.totalPages})`
-                                            : ''}
+                                        {locale === 'en'
+                                            ? `Showing ${meta.shown} of ${meta.valid} services${meta.totalPages > 0 ? ` (Page ${page} / ${meta.totalPages})` : ''}`
+                                            : `Menampilkan ${meta.shown} dari ${meta.valid} layanan${meta.totalPages > 0 ? ` (Halaman ${page} / ${meta.totalPages})` : ''}`}
                                     </span>
                                 )}
                             </div>
@@ -352,22 +357,22 @@ export default function PublicServices() {
                                                 ID
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Layanan
+                                                {t('Layanan')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Harga/K
+                                                {t('Harga/K')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Min
+                                                {t('Min')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Maks
+                                                {t('Maks')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Waktu
+                                                {t('Waktu')}
                                             </th>
                                             <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                Aksi
+                                                {t('Aksi')}
                                             </th>
                                         </tr>
                                     </thead>
@@ -396,7 +401,7 @@ export default function PublicServices() {
                                                 <td className="px-4 py-3 align-top">
                                                     <div className="flex flex-wrap justify-center gap-2">
                                                         <Button type="button" onClick={() => setDetail(s)}>
-                                                            Detail
+                                                            {t('Detail')}
                                                         </Button>
                                                     </div>
                                                 </td>
@@ -409,7 +414,7 @@ export default function PublicServices() {
                                                     colSpan={7}
                                                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                                                 >
-                                                    Tidak ada layanan untuk filter saat ini.
+                                                    {t('Tidak ada layanan untuk filter saat ini.')}
                                                 </td>
                                             </tr>
                                         )}
@@ -420,7 +425,11 @@ export default function PublicServices() {
 
                         <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                             <div className="text-xs text-muted-foreground">
-                                {meta.totalPages > 1 ? `Halaman ${page} / ${meta.totalPages}` : ' '}
+                                {meta.totalPages > 1
+                                    ? locale === 'en'
+                                        ? `Page ${page} / ${meta.totalPages}`
+                                        : `Halaman ${page} / ${meta.totalPages}`
+                                    : ' '}
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2">
@@ -432,7 +441,7 @@ export default function PublicServices() {
                                             disabled={page <= 1}
                                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                                         >
-                                            Prev
+                                            {t('Sebelumnya')}
                                         </Button>
                                         <Button
                                             type="button"
@@ -446,13 +455,13 @@ export default function PublicServices() {
                                                 )
                                             }
                                         >
-                                            Next
+                                            {t('Berikutnya')}
                                         </Button>
                                     </>
                                 )}
 
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <span>Data:</span>
+                                    <span>{t('Data')}:</span>
                                     <Select
                                         value={perPage}
                                         onValueChange={(v) => {
@@ -482,7 +491,7 @@ export default function PublicServices() {
                         {detail && (
                             <>
                                 <DialogHeader>
-                                    <DialogTitle>Detail Layanan</DialogTitle>
+                                    <DialogTitle>{t('Detail Layanan')}</DialogTitle>
                                     <DialogDescription>
                                         ID {detail.id} • {detail.category}
                                     </DialogDescription>
@@ -490,33 +499,33 @@ export default function PublicServices() {
 
                                 <div className="grid gap-3 text-sm">
                                     <div>
-                                        <div className="text-xs font-semibold text-muted-foreground">Nama</div>
+                                        <div className="text-xs font-semibold text-muted-foreground">{t('Nama')}</div>
                                         <div className="mt-1 font-medium">{detail.name}</div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <div className="text-xs font-semibold text-muted-foreground">Harga/K</div>
+                                            <div className="text-xs font-semibold text-muted-foreground">{t('Harga/K')}</div>
                                             <div className="mt-1 font-semibold text-emerald-600 dark:text-emerald-500">
                                                 {detail.price_formatted ?? '—'}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-xs font-semibold text-muted-foreground">Waktu</div>
+                                            <div className="text-xs font-semibold text-muted-foreground">{t('Waktu')}</div>
                                             <div className="mt-1 font-medium">{detail.average_time ?? '—'}</div>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <div className="text-xs font-semibold text-muted-foreground">Min</div>
+                                            <div className="text-xs font-semibold text-muted-foreground">{t('Min')}</div>
                                             <div className="mt-1 font-medium">{detail.min}</div>
                                         </div>
                                         <div>
-                                            <div className="text-xs font-semibold text-muted-foreground">Maks</div>
+                                            <div className="text-xs font-semibold text-muted-foreground">{t('Maks')}</div>
                                             <div className="mt-1 font-medium">{detail.max}</div>
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="text-xs font-semibold text-muted-foreground">Deskripsi</div>
+                                        <div className="text-xs font-semibold text-muted-foreground">{t('Deskripsi')}</div>
                                         <div className="mt-1 whitespace-pre-wrap wrap-break-word text-muted-foreground">
                                             {normalizeDescription(detail.description)}
                                         </div>
@@ -525,7 +534,7 @@ export default function PublicServices() {
 
                                 <DialogFooter>
                                     <Button type="button" variant="outline" onClick={() => setDetail(null)}>
-                                        Tutup
+                                        {t('Tutup')}
                                     </Button>
                                 </DialogFooter>
                             </>

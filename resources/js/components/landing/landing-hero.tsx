@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n/i18n-provider';
 import { login, register } from '@/routes';
 
 export default function LandingHero({
@@ -9,8 +10,9 @@ export default function LandingHero({
 }: {
     canRegister?: boolean;
 }) {
+    const { t } = useI18n();
     const primaryCtaHref = canRegister ? register() : login();
-    const primaryCtaLabel = canRegister ? 'Get Started' : 'Login';
+    const primaryCtaLabel = canRegister ? t('auth.getStarted') : t('auth.login');
 
     return (
         <section id="home" className="relative overflow-hidden">
@@ -20,13 +22,13 @@ export default function LandingHero({
             <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
                 <div className="max-w-2xl">
                     <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl acis-fade-up">
-                        <span className="text-primary">SMM Panel</span> modern untuk
-                        pertumbuhan sosial media
+                        <span className="text-primary">SMM Panel</span>{' '}
+                        {t('modern untuk pertumbuhan sosial media')}
                     </h1>
                     <p className="mt-4 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg acis-fade-up acis-delay-1">
-                        Kelola pertumbuhan media sosial Anda dengan cepat, otomatis,
-                        dan terukur. Harga terjangkau, kualitas terjaga, dukungan
-                        siap 24/7.
+                        {t(
+                            'Kelola pertumbuhan media sosial Anda dengan cepat, otomatis, dan terukur. Harga terjangkau, kualitas terjaga, dukungan siap 24/7.'
+                        )}
                     </p>
 
                     <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center acis-fade-up acis-delay-2">
@@ -39,7 +41,7 @@ export default function LandingHero({
                     </div>
 
                     <p className="mt-4 text-sm text-muted-foreground acis-fade-up acis-delay-3">
-                        Cocok untuk agensi, pebisnis, maupun kreator.
+                        {t('Cocok untuk agensi, pebisnis, maupun kreator.')}
                     </p>
                 </div>
             </div>

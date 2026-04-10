@@ -1,20 +1,31 @@
 // Components
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, setLayoutProps } from '@inertiajs/react';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/i18n/i18n-provider';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
 
 export default function VerifyEmail({ status }: { status?: string }) {
+    const { t } = useI18n();
+
+    setLayoutProps({
+        title: t('Verifikasi email'),
+        description: t(
+            'Silakan verifikasi alamat email Anda dengan mengklik link yang baru saja kami kirimkan.',
+        ),
+    });
+
     return (
         <>
-            <Head title="Email verification" />
+            <Head title={t('Verifikasi email')} />
 
             {status === 'verification-link-sent' && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    A new verification link has been sent to the email address
-                    you provided during registration.
+                    {t(
+                        'Link verifikasi baru telah dikirim ke alamat email yang Anda berikan saat registrasi.',
+                    )}
                 </div>
             )}
 
@@ -23,14 +34,14 @@ export default function VerifyEmail({ status }: { status?: string }) {
                     <>
                         <Button disabled={processing} variant="secondary">
                             {processing && <Spinner />}
-                            Resend verification email
+                            {t('Kirim ulang email verifikasi')}
                         </Button>
 
                         <TextLink
                             href={logout()}
                             className="mx-auto block text-sm"
                         >
-                            Log out
+                            {t('Keluar')}
                         </TextLink>
                     </>
                 )}
@@ -38,9 +49,3 @@ export default function VerifyEmail({ status }: { status?: string }) {
         </>
     );
 }
-
-VerifyEmail.layout = {
-    title: 'Verify email',
-    description:
-        'Please verify your email address by clicking on the link we just emailed to you.',
-};

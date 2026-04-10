@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useI18n } from '@/i18n/i18n-provider';
 
 function formatRupiah(value: number): string {
     return new Intl.NumberFormat('id-ID').format(value);
@@ -26,6 +27,7 @@ function getCookie(name: string): string | null {
 }
 
 export default function Topup() {
+    const { t } = useI18n();
     const { auth, balance: balanceProp } = usePage().props as any;
 
     const [amount, setAmount] = React.useState<string>('');
@@ -75,7 +77,7 @@ export default function Topup() {
         const parsed = Number(amount);
 
         if (!Number.isFinite(parsed) || parsed <= 0) {
-            toast.error('Nominal tidak valid.');
+            toast.error(t('Nominal tidak valid.'));
             return;
         }
 
@@ -98,18 +100,18 @@ export default function Topup() {
 
             if (!res.ok || !json?.success) {
                 const msg = json?.message || 'Gagal top up saldo.';
-                toast.error(msg);
+                toast.error(typeof msg === 'string' ? t(msg) : t('Gagal top up saldo.'));
                 return;
             }
 
-            toast.success('Saldo berhasil ditambahkan.');
+            toast.success(t('Saldo berhasil ditambahkan.'));
             setAmount('');
 
             if (json?.balance != null) {
                 setBalance(Number(json.balance));
             }
         } catch {
-            toast.error('Gagal top up saldo.');
+            toast.error(t('Gagal top up saldo.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -117,20 +119,25 @@ export default function Topup() {
 
     return (
         <>
-            <Head title="Top Up Saldo" />
+            <Head title={t('Top Up Saldo')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <Card className="py-4">
                     <CardHeader>
                         <Heading
-                            title="Top Up Saldo"
-                            description="Tambah saldo untuk testing (tanpa payment gateway)."
+                            title={t('Top Up Saldo')}
+                            description={t(
+                                'Tambah saldo untuk testing (tanpa payment gateway).',
+                            )}
                         />
                     </CardHeader>
 
                     <CardContent>
                         <div className="text-sm text-muted-foreground">
-                            Saldo saat ini: <span className="font-semibold text-foreground">Rp {formatRupiah(balance)}</span>
+                            {t('Saldo saat ini')}:{' '}
+                            <span className="font-semibold text-foreground">
+                                Rp {formatRupiah(balance)}
+                            </span>
                         </div>
 
                         <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -142,13 +149,15 @@ export default function Topup() {
                                     inputMode="numeric"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    placeholder="Contoh: 10000"
+                                    placeholder={t('Contoh: 10000')}
                                 />
                             </div>
 
                             <div className="flex items-end">
                                 <Button type="button" onClick={submit} disabled={isSubmitting}>
-                                    {isSubmitting ? 'Memproses...' : 'Tambah Saldo'}
+                                    {isSubmitting
+                                        ? t('Memproses...')
+                                        : t('Tambah Saldo')}
                                 </Button>
                             </div>
                         </div>

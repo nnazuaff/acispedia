@@ -9,6 +9,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { useI18n } from '@/i18n/i18n-provider';
 import { cn } from '@/lib/utils';
 
 type Faq = {
@@ -42,23 +43,30 @@ const faqs: Faq[] = [
 export function ContactContent(
     { headingVariant = 'default' }: { headingVariant?: 'default' | 'small' } = {},
 ) {
+    const { t } = useI18n();
+
     return (
         <div className="mx-auto w-full max-w-5xl space-y-6">
             <Heading
                 variant={headingVariant}
-                title="Hubungi Kami"
-                description="Tim support kami siap membantu Anda. Jangan ragu untuk menghubungi kami kapan saja."
+                title={t('Hubungi Kami')}
+                description={t(
+                    'Tim support kami siap membantu Anda. Jangan ragu untuk menghubungi kami kapan saja.'
+                )}
             />
 
             <div className="grid gap-4 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Informasi Kontak</CardTitle>
+                        <CardTitle className="text-base">
+                            {t('Informasi Kontak')}
+                        </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <p className="text-sm text-muted-foreground">
-                            Kami selalu siap membantu Anda dengan berbagai pertanyaan seputar layanan SMM Panel.
-                            Hubungi kami melalui channel yang tersedia di bawah ini.
+                            {t(
+                                'Kami selalu siap membantu Anda dengan berbagai pertanyaan seputar layanan SMM Panel. Hubungi kami melalui channel yang tersedia di bawah ini.'
+                            )}
                         </p>
 
                         <div className="grid gap-3">
@@ -75,7 +83,9 @@ export function ContactContent(
                                         <div className="text-muted-foreground">@acispediasupport</div>
                                     </div>
                                 </div>
-                                <span className="text-muted-foreground">Customer Service</span>
+                                <span className="text-muted-foreground">
+                                    {t('Layanan Pelanggan')}
+                                </span>
                             </a>
 
                             <a
@@ -87,11 +97,15 @@ export function ContactContent(
                                 <div className="flex items-center gap-3">
                                     <Send className="size-4 text-primary" />
                                     <div className="leading-tight">
-                                        <div className="font-medium text-foreground">Channel Telegram</div>
+                                        <div className="font-medium text-foreground">
+                                            {t('Channel Telegram')}
+                                        </div>
                                         <div className="text-muted-foreground">@acispediasmm</div>
                                     </div>
                                 </div>
-                                <span className="text-muted-foreground">Info & Update</span>
+                                <span className="text-muted-foreground">
+                                    {t('Info & Pembaruan')}
+                                </span>
                             </a>
                         </div>
                     </CardContent>
@@ -99,20 +113,28 @@ export function ContactContent(
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Jam Operasional</CardTitle>
+                        <CardTitle className="text-base">
+                            {t('Jam Operasional')}
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-2 text-sm">
                             <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Senin - Jumat</span>
+                                <span className="text-muted-foreground">
+                                    {t('Senin - Jumat')}
+                                </span>
                                 <span className="font-medium">09:00 - 20:00 WIB</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Sabtu & Minggu</span>
-                                <span className="font-medium">Libur</span>
+                                <span className="text-muted-foreground">
+                                    {t('Sabtu & Minggu')}
+                                </span>
+                                <span className="font-medium">{t('Libur')}</span>
                             </div>
                             <p className="pt-2 text-xs text-muted-foreground">
-                                Jika di luar jam operasional, pesan tetap diterima dan akan dibalas saat jam kerja.
+                                {t(
+                                    'Jika di luar jam operasional, pesan tetap diterima dan akan dibalas saat jam kerja.'
+                                )}
                             </p>
                         </div>
                     </CardContent>
@@ -121,7 +143,9 @@ export function ContactContent(
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-base">Pertanyaan Sering Diajukan</CardTitle>
+                    <CardTitle className="text-base">
+                        {t('Pertanyaan Sering Diajukan')}
+                    </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                     {faqs.map((faq) => (
@@ -134,6 +158,7 @@ export function ContactContent(
 }
 
 function FaqItem({ faq }: { faq: Faq }) {
+    const { t } = useI18n();
     const [open, setOpen] = React.useState(false);
 
     return (
@@ -143,7 +168,7 @@ function FaqItem({ faq }: { faq: Faq }) {
                     type="button"
                     className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-medium hover:bg-accent"
                 >
-                    <span className="text-foreground">{faq.question}</span>
+                    <span className="text-foreground">{t(faq.question)}</span>
                     <ChevronDown
                         className={cn(
                             'size-4 shrink-0 text-muted-foreground transition-transform',
@@ -154,16 +179,18 @@ function FaqItem({ faq }: { faq: Faq }) {
                 </button>
             </CollapsibleTrigger>
             <CollapsibleContent className="px-4 pb-4 text-sm text-muted-foreground">
-                {faq.answer}
+                {t(faq.answer)}
             </CollapsibleContent>
         </Collapsible>
     );
 }
 
 export default function PublicContact() {
+    const { t } = useI18n();
+
     return (
         <>
-            <Head title="Kontak" />
+            <Head title={t('Kontak')} />
             <ContactContent />
         </>
     );

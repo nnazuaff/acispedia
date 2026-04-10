@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, setLayoutProps } from '@inertiajs/react';
 import { LockKeyhole, Mail } from 'lucide-react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/i18n/i18n-provider';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -23,9 +24,16 @@ export default function Login({
     canResetPassword,
     canRegister,
 }: Props) {
+    const { t } = useI18n();
+
+    setLayoutProps({
+        title: t('Masuk'),
+        description: t('Masuk untuk melanjutkan ke dashboard dan transaksi Anda.'),
+    });
+
     return (
         <>
-            <Head title="Masuk" />
+            <Head title={t('Masuk')} />
 
             <Form
                 {...store.form()}
@@ -36,7 +44,7 @@ export default function Login({
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email</Label>
+                                <Label htmlFor="email">{t('Email')}</Label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
                                         <Mail className="size-4" />
@@ -58,14 +66,14 @@ export default function Login({
 
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password">Kata sandi</Label>
+                                    <Label htmlFor="password">{t('Kata sandi')}</Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
                                             className="ml-auto text-sm"
                                             tabIndex={5}
                                         >
-                                            Lupa kata sandi?
+                                            {t('Lupa kata sandi?')}
                                         </TextLink>
                                     )}
                                 </div>
@@ -75,7 +83,7 @@ export default function Login({
                                     required
                                     tabIndex={2}
                                     autoComplete="current-password"
-                                    placeholder="Kata sandi"
+                                    placeholder={t('Kata sandi')}
                                     leftIcon={<LockKeyhole className="size-4" />}
                                 />
                                 <InputError message={errors.password} />
@@ -87,7 +95,7 @@ export default function Login({
                                     name="remember"
                                     tabIndex={3}
                                 />
-                                <Label htmlFor="remember">Ingat saya</Label>
+                                <Label htmlFor="remember">{t('Ingat saya')}</Label>
                             </div>
 
                             <Button
@@ -98,15 +106,15 @@ export default function Login({
                                 data-test="login-button"
                             >
                                 {processing && <Spinner />}
-                                Masuk
+                                {t('Masuk')}
                             </Button>
                         </div>
 
                         {canRegister && (
                             <div className="text-center text-sm text-muted-foreground">
-                                Belum punya akun?{' '}
+                                {t('Belum punya akun?')}{' '}
                                 <TextLink href={register()} tabIndex={5}>
-                                    Daftar
+                                    {t('Daftar')}
                                 </TextLink>
                             </div>
                         )}

@@ -3,28 +3,30 @@ import { ArrowRight, Instagram, PlayCircle, Youtube } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/i18n/i18n-provider';
 import { services as servicesRoute } from '@/routes';
 import type { RouteDefinition } from '@/wayfinder';
 
 const servicePreviews = [
     {
-        title: 'Instagram Followers',
+        title: 'Follower Instagram',
         description: 'Bangun social proof dan tingkatkan kredibilitas profil.',
         icon: Instagram,
     },
     {
-        title: 'TikTok Views',
+        title: 'Views TikTok',
         description: 'Dorong reach video dengan proses cepat dan terukur.',
         icon: PlayCircle,
     },
     {
-        title: 'YouTube Subscribers',
+        title: 'Subscriber YouTube',
         description: 'Tumbuhkan channel dengan paket yang fleksibel.',
         icon: Youtube,
     },
 ] as const;
 
 export default function LandingServicesPreview() {
+    const { t } = useI18n();
     const servicesLink = servicesRoute() as unknown as string | RouteDefinition<any>;
     const servicesHref = typeof servicesLink === 'string' ? servicesLink : servicesLink.url;
 
@@ -34,17 +36,18 @@ export default function LandingServicesPreview() {
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                     <div className="max-w-2xl">
                         <h2 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
-                            Preview layanan populer
+                            {t('Preview layanan populer')}
                         </h2>
                         <p className="mt-3 text-pretty text-muted-foreground">
-                            Pilih layanan yang sesuai kebutuhan promosi kamu. Daftar
-                            lengkap tersedia di halaman layanan setelah login.
+                            {t(
+                                'Pilih layanan yang sesuai kebutuhan promosi kamu. Daftar lengkap tersedia di halaman layanan setelah login.'
+                            )}
                         </p>
                     </div>
 
                     <Button asChild variant="outline" className="sm:self-end">
                         <Link href={servicesHref} className="gap-2">
-                            Lihat layanan
+                            {t('Lihat layanan')}
                             <ArrowRight className="size-4" />
                         </Link>
                     </Button>
@@ -62,13 +65,13 @@ export default function LandingServicesPreview() {
                                             <Icon className="size-5" />
                                         </span>
                                         <CardTitle className="text-base">
-                                            {service.title}
+                                            {t(service.title)}
                                         </CardTitle>
                                     </div>
                                 </CardHeader>
                                 <CardContent>
                                     <p className="text-sm text-muted-foreground">
-                                        {service.description}
+                                        {t(service.description)}
                                     </p>
                                 </CardContent>
                             </Card>

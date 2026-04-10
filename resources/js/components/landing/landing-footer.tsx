@@ -1,4 +1,5 @@
 import { BrandLogoMark } from '@/components/brand-logo';
+import { useI18n } from '@/i18n/i18n-provider';
 
 const menuLinks = [
     { label: 'Beranda', href: '#home' },
@@ -9,10 +10,13 @@ const menuLinks = [
 const legalLinks = [
     { label: 'Syarat & Ketentuan', href: '/terms' },
     { label: 'Panduan Target/Link', href: '/panduan-target' },
-    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Kebijakan Privasi', href: '/privacy' },
 ] as const;
 
 export default function LandingFooter() {
+    const { locale, t } = useI18n();
+    const year = new Date().getFullYear();
+
     return (
         <footer className="border-t bg-muted/20">
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -31,13 +35,14 @@ export default function LandingFooter() {
                         </div>
 
                         <p className="mt-4 max-w-md text-sm text-muted-foreground">
-                            Platform SMM untuk membantu promosi media sosial Anda
-                            secara mudah: cepat, otomatis, dan transparan.
+                            {t(
+                                'Platform SMM untuk membantu promosi media sosial Anda secara mudah: cepat, otomatis, dan transparan.'
+                            )}
                         </p>
                     </div>
 
                     <div>
-                        <h3 className="text-sm font-semibold">Menu</h3>
+                        <h3 className="text-sm font-semibold">{t('Menu')}</h3>
                         <ul className="mt-3 grid gap-2">
                             {menuLinks.map((item) => (
                                 <li key={item.href}>
@@ -45,13 +50,15 @@ export default function LandingFooter() {
                                         href={item.href}
                                         className="text-sm text-muted-foreground hover:text-foreground"
                                     >
-                                        {item.label}
+                                        {t(item.label)}
                                     </a>
                                 </li>
                             ))}
                         </ul>
 
-                        <h3 className="mt-6 text-sm font-semibold">Dokumen</h3>
+                        <h3 className="mt-6 text-sm font-semibold">
+                            {t('Dokumen')}
+                        </h3>
                         <ul className="mt-3 grid gap-2">
                             {legalLinks.map((item) => (
                                 <li key={item.href}>
@@ -59,7 +66,7 @@ export default function LandingFooter() {
                                         href={item.href}
                                         className="text-sm text-muted-foreground hover:text-foreground"
                                     >
-                                        {item.label}
+                                        {t(item.label)}
                                     </a>
                                 </li>
                             ))}
@@ -70,8 +77,9 @@ export default function LandingFooter() {
 
                 <div className="mt-10 flex flex-col gap-2 border-t pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                     <p>
-                        © {new Date().getFullYear()} AcisPedia. All rights
-                        reserved.
+                        {locale === 'en'
+                            ? `© ${year} AcisPedia. All rights reserved.`
+                            : `© ${year} AcisPedia. Hak cipta dilindungi.`}
                     </p>
                 </div>
             </div>

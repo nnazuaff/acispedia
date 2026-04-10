@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 
 import Heading from '@/components/heading';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/i18n/i18n-provider';
 
 type Item = {
     title: string;
@@ -205,12 +206,16 @@ const sections: Section[] = [
 export function TargetGuideContent(
     { headingVariant = 'default' }: { headingVariant?: 'default' | 'small' } = {},
 ) {
+    const { t } = useI18n();
+
     return (
         <div className="mx-auto w-full max-w-5xl space-y-6">
             <Heading
                 variant={headingVariant}
-                title="Panduan Pengisian Target/Link"
-                description="Contoh format target/link untuk membuat pesanan. Pastikan target valid agar pesanan bisa diproses."
+                title={t('Panduan Pengisian Target/Link')}
+                description={t(
+                    'Contoh format target/link untuk membuat pesanan. Pastikan target valid agar pesanan bisa diproses.'
+                )}
             />
 
             <div className="grid gap-4">
@@ -226,10 +231,13 @@ export function TargetGuideContent(
                                         {item.title}
                                     </div>
                                     <div className="text-sm text-muted-foreground">
-                                        <span className="font-medium">Target:</span> {item.target}
+                                        <span className="font-medium">{t('Target:')}</span>{' '}
+                                        {t(item.target)}
                                     </div>
                                     <div className="text-sm text-muted-foreground">
-                                        <span className="font-medium">Contoh:</span>{' '}
+                                        <span className="font-medium">
+                                            {t('Contoh:')}
+                                        </span>{' '}
                                         <span className="break-all">{item.example}</span>
                                     </div>
                                 </div>
@@ -243,9 +251,11 @@ export function TargetGuideContent(
 }
 
 export default function PublicTargetGuide() {
+    const { t } = useI18n();
+
     return (
         <>
-            <Head title="Panduan Pengisian Target/Link" />
+            <Head title={t('Panduan Pengisian Target/Link')} />
             <TargetGuideContent />
         </>
     );

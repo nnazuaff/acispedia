@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, setLayoutProps } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/i18n/i18n-provider';
 import { update } from '@/routes/password';
 import { request } from '@/routes/password';
 
@@ -15,18 +16,26 @@ type Props = {
 };
 
 export default function ResetPassword({ token, email }: Props) {
+    const { t } = useI18n();
     const isValid = !!token && !!email;
+
+    setLayoutProps({
+        title: t('Reset kata sandi'),
+        description: t('Silakan masukkan kata sandi baru Anda di bawah ini'),
+    });
 
     return (
         <>
-            <Head title="Reset password" />
+            <Head title={t('Reset kata sandi')} />
 
             {!isValid && (
                 <div className="mb-4 rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
-                    Link reset password tidak valid atau sudah kedaluwarsa. Silakan minta link baru.
+                    {t(
+                        'Link reset kata sandi tidak valid atau sudah kedaluwarsa. Silakan minta link baru.',
+                    )}
                     <div className="mt-2">
                         <TextLink href={request()} className="text-sm">
-                            Minta link reset password
+                            {t('Minta link reset kata sandi')}
                         </TextLink>
                     </div>
                 </div>
@@ -57,28 +66,28 @@ export default function ResetPassword({ token, email }: Props) {
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">{t('Kata sandi')}</Label>
                             <PasswordInput
                                 id="password"
                                 name="password"
                                 autoComplete="new-password"
                                 className="mt-1 block w-full"
                                 autoFocus
-                                placeholder="Password"
+                                placeholder={t('Kata sandi')}
                             />
                             <InputError message={errors.password} />
                         </div>
 
                         <div className="grid gap-2">
                             <Label htmlFor="password_confirmation">
-                                Confirm password
+                                {t('Konfirmasi kata sandi')}
                             </Label>
                             <PasswordInput
                                 id="password_confirmation"
                                 name="password_confirmation"
                                 autoComplete="new-password"
                                 className="mt-1 block w-full"
-                                placeholder="Confirm password"
+                                placeholder={t('Konfirmasi kata sandi')}
                             />
                             <InputError
                                 message={errors.password_confirmation}
@@ -93,7 +102,7 @@ export default function ResetPassword({ token, email }: Props) {
                             data-test="reset-password-button"
                         >
                             {processing && <Spinner />}
-                            Reset password
+                            {t('Reset kata sandi')}
                         </Button>
                     </div>
                 )}
@@ -101,8 +110,3 @@ export default function ResetPassword({ token, email }: Props) {
         </>
     );
 }
-
-ResetPassword.layout = {
-    title: 'Reset password',
-    description: 'Please enter your new password below',
-};

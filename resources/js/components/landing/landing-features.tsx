@@ -1,28 +1,29 @@
 import { Headphones, LayoutDashboard, ShieldCheck, Zap } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/i18n/i18n-provider';
 
 const features = [
     {
-        title: 'Fast Process',
+        title: 'Proses Cepat',
         description:
             'Pemrosesan cepat dengan sistem otomatis yang stabil dan efisien.',
         icon: Zap,
     },
     {
-        title: 'Secure System',
+        title: 'Sistem Aman',
         description:
             'Keamanan data dan privasi jadi prioritas, dengan praktik yang rapi.',
         icon: ShieldCheck,
     },
     {
-        title: '24/7 Support',
+        title: 'Dukungan 24/7',
         description:
             'Tim support siap membantu saat kamu butuh, kapan pun memungkinkan.',
         icon: Headphones,
     },
     {
-        title: 'Modern Dashboard',
+        title: 'Dashboard Modern',
         description:
             'Dashboard bersih, mudah dipakai, dan nyaman di perangkat mobile.',
         icon: LayoutDashboard,
@@ -30,16 +31,18 @@ const features = [
 ] as const;
 
 export default function LandingFeatures() {
+    const { t } = useI18n();
     return (
         <section className="py-16 sm:py-20">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center">
                     <h2 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
-                        Fitur yang kamu butuhkan untuk scale
+                        {t('Fitur yang kamu butuhkan untuk scale')}
                     </h2>
                     <p className="mt-3 text-pretty text-muted-foreground">
-                        Struktur sederhana, performa terasa, dan siap dipakai untuk
-                        workflow harian.
+                        {t(
+                            'Struktur sederhana, performa terasa, dan siap dipakai untuk workflow harian.'
+                        )}
                     </p>
                 </div>
 
@@ -55,13 +58,13 @@ export default function LandingFeatures() {
                                             <Icon className="size-5" />
                                         </span>
                                         <CardTitle className="text-base">
-                                            {feature.title}
+                                            {t(feature.title)}
                                         </CardTitle>
                                     </div>
                                 </CardHeader>
                                 <CardContent>
                                     <p className="text-sm text-muted-foreground">
-                                        {feature.description}
+                                        {t(feature.description)}
                                     </p>
                                 </CardContent>
                             </Card>
