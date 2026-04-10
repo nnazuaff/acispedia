@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\MailketingClient;
+use App\Support\EmailTemplate;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -100,9 +101,19 @@ class User extends Authenticatable implements MustVerifyEmail
         );
 
         $subject = 'Verifikasi Email';
-        $content = '<p>Silakan klik link berikut untuk verifikasi email:</p>'
-            .'<p><a href="'.$verificationUrl.'">Verifikasi Email</a></p>'
-            .'<p>Jika Anda tidak merasa mendaftar, abaikan email ini.</p>';
+        $content = EmailTemplate::render(
+            title: 'Verifikasi Email',
+            name: (string) $this->name,
+            introLines: [
+                'Terima kasih sudah mendaftar di AcisPedia.',
+                'Silakan klik tombol di bawah untuk memverifikasi email Anda dan mengaktifkan akun.',
+            ],
+            actionText: 'Verifikasi Email',
+            actionUrl: $verificationUrl,
+            outroLines: [
+                'Link verifikasi ini akan kedaluwarsa dalam 60 menit.',
+            ],
+        );
 
         MailketingClient::sendEmail(
             recipient: $this->email,
@@ -153,10 +164,19 @@ class User extends Authenticatable implements MustVerifyEmail
         $resetUrl = URL::to(route('password.reset.link', ['key' => $linkKey], false));
 
         $subject = 'Reset Password';
-        $content = '<p>Kami menerima permintaan reset password.</p>'
-            .'<p>Klik link berikut untuk membuat password baru:</p>'
-            .'<p><a href="'.$resetUrl.'">Buat Password Baru</a></p>'
-            .'<p>Jika Anda tidak meminta reset password, abaikan email ini.</p>';
+        $content = EmailTemplate::render(
+            title: 'Reset Password',
+            name: (string) $this->name,
+            introLines: [
+                'Kami menerima permintaan untuk mengatur ulang password akun Anda.',
+                'Klik tombol di bawah untuk membuat password baru.',
+            ],
+            actionText: 'Reset Password',
+            actionUrl: $resetUrl,
+            outroLines: [
+                'Link reset password ini akan kedaluwarsa dalam 60 menit.',
+            ],
+        );
 
         MailketingClient::sendEmail(
             recipient: $email,
