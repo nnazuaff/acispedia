@@ -153,8 +153,7 @@ export default function DepositPage() {
         if (!activePending?.id) return;
 
         const ok = await confirm({
-            title: 'Batalkan deposit',
-            description: 'Batalkan deposit pending ini?',
+            title: 'Batalkan deposit pending ini?',
             confirmText: 'Batalkan',
             cancelText: 'Kembali',
             variant: 'destructive',

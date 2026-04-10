@@ -599,8 +599,7 @@ export default function HistoryDepositPage() {
                                                                                 className="text-destructive"
                                                                                 onClick={async () => {
                                                                                     const ok = await confirm({
-                                                                                        title: 'Batalkan deposit',
-                                                                                        description: 'Batalkan deposit ini?',
+                                                                                        title: 'Batalkan deposit ini?',
                                                                                         confirmText: 'Batalkan',
                                                                                         cancelText: 'Kembali',
                                                                                         variant: 'destructive',
@@ -864,8 +863,7 @@ export default function HistoryDepositPage() {
                                             variant="destructive"
                                             onClick={async () => {
                                                 const ok = await confirm({
-                                                    title: 'Batalkan deposit',
-                                                    description: 'Batalkan deposit ini?',
+                                                    title: 'Batalkan deposit ini?',
                                                     confirmText: 'Batalkan',
                                                     cancelText: 'Kembali',
                                                     variant: 'destructive',
@@ -883,8 +881,7 @@ export default function HistoryDepositPage() {
                                             variant="destructive"
                                             onClick={async () => {
                                                 const ok = await confirm({
-                                                    title: 'Batalkan deposit',
-                                                    description: 'Batalkan deposit ini?',
+                                                    title: 'Batalkan deposit ini?',
                                                     confirmText: 'Batalkan',
                                                     cancelText: 'Kembali',
                                                     variant: 'destructive',
