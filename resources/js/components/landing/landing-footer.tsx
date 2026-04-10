@@ -9,6 +9,12 @@ const menuLinks = [
     { label: 'Kontak', href: '#contact' },
 ] as const;
 
+const legalLinks = [
+    { label: 'Syarat & Ketentuan', href: '/terms' },
+    { label: 'Panduan Target/Link', href: '/panduan-target' },
+    { label: 'Privacy Policy', href: '/privacy' },
+] as const;
+
 export default function LandingFooter() {
     return (
         <footer id="contact" className="border-t bg-muted/20">
@@ -37,6 +43,20 @@ export default function LandingFooter() {
                         <h3 className="text-sm font-semibold">Menu</h3>
                         <ul className="mt-3 grid gap-2">
                             {menuLinks.map((item) => (
+                                <li key={item.href}>
+                                    <a
+                                        href={item.href}
+                                        className="text-sm text-muted-foreground hover:text-foreground"
+                                    >
+                                        {item.label}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+
+                        <h3 className="mt-6 text-sm font-semibold">Dokumen</h3>
+                        <ul className="mt-3 grid gap-2">
+                            {legalLinks.map((item) => (
                                 <li key={item.href}>
                                     <a
                                         href={item.href}

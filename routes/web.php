@@ -17,6 +17,10 @@ Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
+Route::inertia('terms', 'public/terms')->name('terms');
+Route::inertia('privacy', 'public/privacy')->name('privacy');
+Route::inertia('panduan-target', 'public/target-guide')->name('target.guide');
+
 Route::get('services', function () {
     if (request()->user()) {
         return Inertia::render('services');
