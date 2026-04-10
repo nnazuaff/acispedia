@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'mailketing' => [
+        'base_url' => env('MAILKETING_BASE_URL', 'https://api.mailketing.co.id'),
+        'api_token' => env('MAILKETING_API_TOKEN'),
+        'from_name' => env('MAILKETING_FROM_NAME'),
+        'from_email' => env('MAILKETING_FROM_EMAIL'),
+    ],
+
 ];

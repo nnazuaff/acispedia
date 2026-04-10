@@ -13,6 +13,53 @@ import { store } from '@/routes/register';
 
 export default function Register() {
     const [captchaKey, setCaptchaKey] = React.useState(() => String(Date.now()));
+    const [captchaObjectUrl, setCaptchaObjectUrl] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        let cancelled = false;
+
+        async function load() {
+            try {
+                const res = await fetch(
+                    `/security-check?key=${encodeURIComponent(captchaKey)}`,
+                    {
+                        credentials: 'same-origin',
+                        cache: 'no-store',
+                        headers: {
+                            Accept: 'image/svg+xml',
+                        },
+                    },
+                );
+
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+
+                if (cancelled) {
+                    URL.revokeObjectURL(url);
+                    return;
+                }
+
+                setCaptchaObjectUrl((prev) => {
+                    if (prev) URL.revokeObjectURL(prev);
+                    return url;
+                });
+            } catch {
+                // If it fails, keep previous image (or none).
+            }
+        }
+
+        load();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [captchaKey]);
+
+    React.useEffect(() => {
+        return () => {
+            if (captchaObjectUrl) URL.revokeObjectURL(captchaObjectUrl);
+        };
+    }, [captchaObjectUrl]);
 
     return (
         <>
@@ -126,13 +173,20 @@ export default function Register() {
                             <div className="grid gap-2">
                                 <Label htmlFor="security_check">Security Check</Label>
                                 <div className="flex items-center gap-2">
-                                    <div className="flex h-10 items-center justify-center overflow-hidden rounded-md border bg-background px-2">
-                                        <img
-                                            src={`/security-check?key=${encodeURIComponent(captchaKey)}`}
-                                            alt="Security check"
-                                            className="h-7 w-35"
-                                        />
-                                    </div>
+                                    <div
+                                        className="flex h-10 w-35 items-center justify-center overflow-hidden rounded-md border bg-background"
+                                        style={
+                                            captchaObjectUrl
+                                                ? {
+                                                      backgroundImage: `url(${captchaObjectUrl})`,
+                                                      backgroundRepeat: 'no-repeat',
+                                                      backgroundPosition: 'center',
+                                                  }
+                                                : undefined
+                                        }
+                                        onContextMenu={(e) => e.preventDefault()}
+                                        aria-hidden
+                                    />
                                     <Button
                                         type="button"
                                         variant="outline"
