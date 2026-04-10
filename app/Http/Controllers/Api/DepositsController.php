@@ -20,6 +20,44 @@ use Throwable;
 
 class DepositsController extends Controller
 {
+    private static function normalizeTripayPhone(string $input): string
+    {
+        $raw = trim($input);
+        if ($raw === '') {
+            return '';
+        }
+
+        $raw = preg_replace('/[^0-9+]/', '', $raw) ?? '';
+        $raw = trim($raw);
+
+        // Tripay typically expects digits (no leading '+').
+        if (str_starts_with($raw, '+')) {
+            $raw = ltrim($raw, '+');
+        }
+
+        // Accept common Indonesian formats: 08xxxxxxxxxx or 62xxxxxxxxxxx
+        if (str_starts_with($raw, '8')) {
+            $raw = '0'.$raw;
+        }
+
+        return $raw;
+    }
+
+    private static function isValidTripayPhone(string $phone): bool
+    {
+        $phone = trim($phone);
+        if ($phone === '') {
+            return false;
+        }
+
+        if (! preg_match('/^(0|62)[0-9]{8,15}$/', $phone)) {
+            return false;
+        }
+
+        $len = strlen($phone);
+        return $len >= 10 && $len <= 18;
+    }
+
     public function cancel(Request $request, Deposit $deposit): JsonResponse
     {
         $user = $request->user();
@@ -109,11 +147,23 @@ class DepositsController extends Controller
             ], 422);
         }
 
-        $customerPhone = preg_replace('/[^0-9+]/', '', (string) ($validated['customer_phone'] ?? '')) ?? '';
-        $customerPhone = trim($customerPhone);
+        $customerPhone = self::normalizeTripayPhone((string) ($validated['customer_phone'] ?? ''));
         if ($customerPhone === '') {
-            // Tripay expects a phone in the payload; use a safe placeholder by default.
-            $customerPhone = '0800000000';
+            $customerPhone = self::normalizeTripayPhone((string) ($user->phone ?? ''));
+        }
+
+        // E-Wallet methods are strict about customer phone validity.
+        $isEwallet = in_array($method, ['OVO', 'DANA', 'SHOPEEPAY'], true);
+        if ($isEwallet && ! self::isValidTripayPhone($customerPhone)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nomor HP tidak valid untuk pembayaran E-Wallet. Perbarui nomor HP/WA di Settings → Profile.',
+            ], 422);
+        }
+
+        // For non e-wallet (e.g. QRIS), still try to send a sane phone if available.
+        if (! self::isValidTripayPhone($customerPhone)) {
+            $customerPhone = '';
         }
 
         if (! TripayClient::isConfigured()) {
@@ -162,7 +212,7 @@ class DepositsController extends Controller
                 [
                     'name' => (string) ($user->name ?? 'Customer'),
                     'email' => (string) ($user->email ?? ''),
-                    'phone' => $customerPhone,
+                    'phone' => $customerPhone !== '' ? $customerPhone : '0800000000',
                 ],
                 [[
                     'sku' => 'DEPOSIT',

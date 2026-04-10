@@ -19,6 +19,20 @@ use Throwable;
 
 class OrdersController extends Controller
 {
+    private static function maskThirdPartyName(string $message): string
+    {
+        $message = trim($message);
+        if ($message === '') {
+            return $message;
+        }
+
+        $message = preg_replace('/\b(tripay|medanpedia)\b/i', '', $message) ?? $message;
+        $message = preg_replace('/\s{2,}/', ' ', $message) ?? $message;
+        $message = trim($message, " \t\n\r\0\x0B:-");
+
+        return $message;
+    }
+
     public function store(Request $request, MedanpediaClient $client): JsonResponse
     {
         $user = $request->user();
@@ -45,7 +59,7 @@ class OrdersController extends Controller
         if (! $client->isConfigured()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Medanpedia belum dikonfigurasi.',
+                'message' => 'Penyedia layanan belum dikonfigurasi.',
             ], 503);
         }
 
@@ -232,7 +246,7 @@ class OrdersController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => $providerResp['msg'] ?? 'Gagal membuat order ke Medanpedia.',
+                'message' => self::maskThirdPartyName((string) ($providerResp['msg'] ?? 'Gagal membuat order ke penyedia layanan.')),
             ], 502);
         }
 

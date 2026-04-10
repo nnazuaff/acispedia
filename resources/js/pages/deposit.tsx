@@ -57,7 +57,7 @@ function getXsrfToken(): string | null {
 
 export default function DepositPage() {
     const { auth, balance, active_pending: activePendingProp } = usePage().props as any as {
-        auth: { user?: { id?: number } };
+        auth: { user?: { id?: number; phone?: string | null } };
         balance: number;
         active_pending: {
             id: number;
@@ -197,6 +197,7 @@ export default function DepositPage() {
 
         try {
             const xsrf = getXsrfToken();
+            const phone = typeof auth?.user?.phone === 'string' ? auth.user.phone : null;
 
             const res = await fetch('/api/deposits/tripay', {
                 method: 'POST',
@@ -209,6 +210,7 @@ export default function DepositPage() {
                 body: JSON.stringify({
                     amount: amt,
                     method,
+                    ...(phone ? { customer_phone: phone } : {}),
                 }),
             });
 

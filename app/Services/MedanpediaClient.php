@@ -22,6 +22,20 @@ class MedanpediaClient
 
     private int $maxSafeTotalSeconds;
 
+    private function maskVendorName(string $message): string
+    {
+        $message = trim($message);
+        if ($message === '') {
+            return $message;
+        }
+
+        $message = preg_replace('/\bmedanpedia\b/i', '', $message) ?? $message;
+        $message = preg_replace('/\s{2,}/', ' ', $message) ?? $message;
+        $message = trim($message, " \t\n\r\0\x0B:-");
+
+        return $message;
+    }
+
     public function __construct()
     {
         $this->apiId = config('medanpedia.api_id');
@@ -118,7 +132,7 @@ class MedanpediaClient
         if (! $this->isConfigured()) {
             return [
                 'status' => false,
-                'msg' => 'Medanpedia belum dikonfigurasi. Set MEDANPEDIA_API_ID dan MEDANPEDIA_API_KEY di .env',
+                'msg' => 'Integrasi penyedia layanan belum dikonfigurasi.',
             ];
         }
 
@@ -179,7 +193,7 @@ class MedanpediaClient
                     402 => 'HTTP Error: 402 - Payment Required. Kemungkinan saldo akun API tidak cukup atau parameter order ditolak.',
                     403 => 'HTTP Error: 403 - Forbidden. Kemungkinan IP tidak ter-whitelist atau kredensial salah.',
                     404 => 'HTTP Error: 404 - Not Found. URL endpoint tidak ditemukan.',
-                    500 => 'HTTP Error: 500 - Internal Server Error. Ada masalah di server Medanpedia.',
+                    500 => 'HTTP Error: 500 - Internal Server Error. Ada masalah di server penyedia layanan.',
                     default => 'HTTP Error: '.$response->status(),
                 };
 
@@ -227,6 +241,10 @@ class MedanpediaClient
 
             if ($attempt === 2 && $this->autoIpv4Fallback) {
                 $decoded['fallback_used'] = 'ipv4';
+            }
+
+            if (isset($decoded['msg']) && is_string($decoded['msg'])) {
+                $decoded['msg'] = $this->maskVendorName($decoded['msg']);
             }
 
             return $decoded;

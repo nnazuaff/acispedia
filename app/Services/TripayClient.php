@@ -8,6 +8,21 @@ use RuntimeException;
 
 final class TripayClient
 {
+    private static function maskVendorName(string $message): string
+    {
+        $message = trim($message);
+        if ($message === '') {
+            return $message;
+        }
+
+        // Avoid exposing third-party names in user-facing messages.
+        $message = preg_replace('/\btripay\b/i', '', $message) ?? $message;
+        $message = preg_replace('/\s{2,}/', ' ', $message) ?? $message;
+        $message = trim($message, " \t\n\r\0\x0B:-");
+
+        return $message;
+    }
+
     public static function isProduction(): bool
     {
         return strtolower((string) config('tripay.env', 'sandbox')) === 'production';
@@ -33,7 +48,7 @@ final class TripayClient
         $merchantCode = (string) config('tripay.merchant_code');
 
         if (trim($privateKey) === '' || trim($merchantCode) === '') {
-            throw new RuntimeException('Tripay belum dikonfigurasi.');
+            throw new RuntimeException('Gateway pembayaran belum dikonfigurasi.');
         }
 
         return hash_hmac('sha256', $merchantCode.$merchantRef.$amount, $privateKey);
@@ -44,7 +59,7 @@ final class TripayClient
         $privateKey = (string) config('tripay.private_key');
 
         if (trim($privateKey) === '') {
-            throw new RuntimeException('Tripay belum dikonfigurasi.');
+            throw new RuntimeException('Gateway pembayaran belum dikonfigurasi.');
         }
 
         return hash_hmac('sha256', $rawBody, $privateKey);
@@ -96,12 +111,15 @@ final class TripayClient
 
         $json = $resp->json();
         if (! is_array($json)) {
-            throw new RuntimeException('Respon Tripay tidak valid.');
+            throw new RuntimeException('Respon gateway pembayaran tidak valid.');
         }
 
         if (! $resp->successful()) {
-            $msg = (string) (Arr::get($json, 'message') ?? Arr::get($json, 'error') ?? 'Tripay error');
-            throw new RuntimeException('Tripay error: '.$msg);
+            $msg = (string) (Arr::get($json, 'message') ?? Arr::get($json, 'error') ?? 'Terjadi kesalahan pada gateway pembayaran.');
+            $msg = self::maskVendorName($msg);
+
+            $finalMsg = $msg !== '' ? 'Terjadi kesalahan pada gateway pembayaran: '.$msg : 'Terjadi kesalahan pada gateway pembayaran.';
+            throw new RuntimeException($finalMsg);
         }
 
         return $json;

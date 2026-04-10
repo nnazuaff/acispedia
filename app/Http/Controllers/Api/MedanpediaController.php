@@ -12,6 +12,20 @@ use Illuminate\Support\Facades\Cache;
 
 class MedanpediaController extends Controller
 {
+    private static function maskThirdPartyName(string $message): string
+    {
+        $message = trim($message);
+        if ($message === '') {
+            return $message;
+        }
+
+        $message = preg_replace('/\b(tripay|medanpedia)\b/i', '', $message) ?? $message;
+        $message = preg_replace('/\s{2,}/', ' ', $message) ?? $message;
+        $message = trim($message, " \t\n\r\0\x0B:-");
+
+        return $message;
+    }
+
     public function service(int $id, MedanpediaClient $client): JsonResponse
     {
         $cacheKey = 'medanpedia.services_raw';
@@ -28,7 +42,7 @@ class MedanpediaController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => $api['msg'] ?? 'Gagal memuat layanan dari Medanpedia.',
+                    'message' => self::maskThirdPartyName((string) ($api['msg'] ?? 'Gagal memuat layanan dari penyedia layanan.')),
                 ], 500);
             }
         }
@@ -98,7 +112,7 @@ class MedanpediaController extends Controller
         if (! ($result['status'] ?? false)) {
             return response()->json([
                 'success' => false,
-                'message' => $result['msg'] ?? 'Gagal mengambil profile Medanpedia.',
+                'message' => self::maskThirdPartyName((string) ($result['msg'] ?? 'Gagal mengambil data profil penyedia layanan.')),
             ], 500);
         }
 
@@ -118,7 +132,9 @@ class MedanpediaController extends Controller
                 : 'Rp '.number_format((float) $balanceNum, 0, ',', '.'),
             'raw' => [
                 'status' => (bool) ($result['status'] ?? false),
-                'msg' => $result['msg'] ?? null,
+                'msg' => isset($result['msg']) && is_string($result['msg'])
+                    ? self::maskThirdPartyName($result['msg'])
+                    : ($result['msg'] ?? null),
             ],
         ]);
     }
@@ -171,7 +187,7 @@ class MedanpediaController extends Controller
                 } else {
                     $payload = [
                         'success' => false,
-                        'message' => $api['msg'] ?? 'Gagal memuat layanan dari Medanpedia.',
+                        'message' => self::maskThirdPartyName((string) ($api['msg'] ?? 'Gagal memuat layanan dari penyedia layanan.')),
                     ];
 
                     return $this->maybeObfuscate($payload, $obfuscate, 500);
