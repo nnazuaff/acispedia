@@ -22,7 +22,11 @@ class FortifyRegisterResponse implements RegisterResponseContract
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('verification.notice')
+        if ($user) {
+            $request->session()->put('verify_email', (string) $user->email);
+        }
+
+        return redirect()->route('verify.email.notice')
             ->with('status', 'verification-link-sent');
     }
 }

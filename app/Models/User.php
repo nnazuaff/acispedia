@@ -90,8 +90,8 @@ class User extends Authenticatable implements MustVerifyEmail
         RateLimiter::hit($key, 600);
 
         $verificationUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes((int) config('auth.verification.expire', 60)),
+            'verify.email.link',
+            now()->addMinutes(60),
             [
                 'id' => $this->getKey(),
                 'hash' => sha1($this->getEmailForVerification()),

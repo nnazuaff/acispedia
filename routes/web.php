@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\BalanceController;
 use App\Http\Controllers\Api\DepositsController;
 use App\Http\Controllers\Api\MedanpediaController;
 use App\Http\Controllers\Api\OrdersController;
+use App\Http\Controllers\Auth\GuestEmailVerificationController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\HistoryController;
 use App\Services\DashboardStats;
@@ -55,6 +56,14 @@ Route::get('security-check', function (Request $request) {
         'Pragma' => 'no-cache',
     ]);
 })->name('security.check');
+
+Route::middleware('guest')->group(function () {
+    Route::get('verify-email', [GuestEmailVerificationController::class, 'notice'])->name('verify.email.notice');
+    Route::post('verify-email/resend', [GuestEmailVerificationController::class, 'resend'])->name('verify.email.resend');
+    Route::get('verify-email/{id}/{hash}', [GuestEmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verify.email.link');
+});
 
 Route::get('terms', function () {
     if (request()->user()) {
@@ -109,6 +118,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/service/{id}', [MedanpediaController::class, 'service'])->name('api.medanpedia.service');
     Route::get('api/profile', [MedanpediaController::class, 'profile'])->name('api.medanpedia.profile');
     Route::post('api/orders', [OrdersController::class, 'store'])->name('api.orders.store');
+    Route::inertia('verified', 'auth/verified')->name('verified.success');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
