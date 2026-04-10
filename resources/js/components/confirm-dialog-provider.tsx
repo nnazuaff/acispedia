@@ -20,55 +20,48 @@ export type ConfirmOptions = {
 
 type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>;
 
-type ConfirmState = {
-    open: boolean;
-    options: ConfirmOptions;
-    resolve?: (value: boolean) => void;
-};
-
 const ConfirmContext = React.createContext<ConfirmFn | null>(null);
 
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {
-    const [state, setState] = React.useState<ConfirmState>({
-        open: false,
-        options: {},
-    });
+    const [open, setOpen] = React.useState(false);
+    const [options, setOptions] = React.useState<ConfirmOptions>({});
+    const resolveRef = React.useRef<((value: boolean) => void) | null>(null);
 
     const close = React.useCallback((value: boolean) => {
-        setState((current) => {
-            current.resolve?.(value);
-            return { open: false, options: {}, resolve: undefined };
+        const resolve = resolveRef.current;
+        resolveRef.current = null;
+        setOpen(false);
+        resolve?.(value);
+    }, []);
+
+    const confirm = React.useCallback<ConfirmFn>((nextOptions) => {
+        return new Promise<boolean>((resolve) => {
+            resolveRef.current = resolve;
+            setOptions(nextOptions);
+            setOpen(true);
         });
     }, []);
 
-    const confirm = React.useCallback<ConfirmFn>(
-        (options) =>
-            new Promise<boolean>((resolve) => {
-                setState({ open: true, options, resolve });
-            }),
-        [],
-    );
-
-    const title = state.options.title ?? 'Konfirmasi';
-    const cancelText = state.options.cancelText ?? 'Batal';
-    const confirmText = state.options.confirmText ?? 'Ya, lanjut';
-    const variant = state.options.variant ?? 'default';
+    const title = options.title ?? 'Konfirmasi';
+    const cancelText = options.cancelText ?? 'Batal';
+    const confirmText = options.confirmText ?? 'Ya, lanjut';
+    const variant = options.variant ?? 'default';
 
     return (
         <ConfirmContext.Provider value={confirm}>
             {children}
             <Dialog
-                open={state.open}
-                onOpenChange={(open) => {
-                    if (!open) close(false);
+                open={open}
+                onOpenChange={(nextOpen) => {
+                    if (!nextOpen && open) close(false);
                 }}
             >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>{title}</DialogTitle>
-                        {state.options.description ? (
+                        {options.description ? (
                             <DialogDescription>
-                                {state.options.description}
+                                {options.description}
                             </DialogDescription>
                         ) : null}
                     </DialogHeader>
