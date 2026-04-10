@@ -12,10 +12,49 @@ use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+use Illuminate\Support\Str;
 
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
+
+Route::get('security-check', function (Request $request) {
+    $code = strtoupper(Str::random(5));
+    $request->session()->put('security_check_code', $code);
+
+    $width = 140;
+    $height = 44;
+    $bg = '#ffffff';
+    $fg = '#111827';
+
+    $noise = '';
+    for ($i = 0; $i < 6; $i++) {
+        $x1 = random_int(0, $width);
+        $y1 = random_int(0, $height);
+        $x2 = random_int(0, $width);
+        $y2 = random_int(0, $height);
+        $opacity = random_int(10, 25) / 100;
+        $noise .= "<line x1=\"{$x1}\" y1=\"{$y1}\" x2=\"{$x2}\" y2=\"{$y2}\" stroke=\"#6b7280\" stroke-width=\"1\" opacity=\"{$opacity}\" />";
+    }
+
+    $chars = str_split($code);
+    $text = '';
+    $x = 18;
+    foreach ($chars as $ch) {
+        $rotate = random_int(-18, 18);
+        $y = random_int(28, 34);
+        $text .= "<text x=\"{$x}\" y=\"{$y}\" font-family=\"ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto\" font-size=\"22\" font-weight=\"700\" fill=\"{$fg}\" transform=\"rotate({$rotate} {$x} {$y})\">{$ch}</text>";
+        $x += 22;
+    }
+
+    $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{$width}\" height=\"{$height}\" viewBox=\"0 0 {$width} {$height}\"><rect width=\"100%\" height=\"100%\" rx=\"8\" fill=\"{$bg}\"/><g>{$noise}</g><g>{$text}</g></svg>";
+
+    return response($svg, 200, [
+        'Content-Type' => 'image/svg+xml; charset=UTF-8',
+        'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma' => 'no-cache',
+    ]);
+})->name('security.check');
 
 Route::get('terms', function () {
     if (request()->user()) {

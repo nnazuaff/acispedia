@@ -7,15 +7,24 @@ import { cn } from '@/lib/utils';
 export default function PasswordInput({
     className,
     ref,
+    leftIcon,
     ...props
-}: Omit<ComponentProps<'input'>, 'type'> & { ref?: Ref<HTMLInputElement> }) {
+}: Omit<ComponentProps<'input'>, 'type'> & {
+    ref?: Ref<HTMLInputElement>;
+    leftIcon?: React.ReactNode;
+}) {
     const [showPassword, setShowPassword] = useState(false);
 
     return (
         <div className="relative">
+            {leftIcon && (
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                    {leftIcon}
+                </div>
+            )}
             <Input
                 type={showPassword ? 'text' : 'password'}
-                className={cn('pr-10', className)}
+                className={cn('pr-10', leftIcon ? 'pl-10' : null, className)}
                 ref={ref}
                 {...props}
             />

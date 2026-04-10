@@ -20,11 +20,25 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
-        Validator::make($input, [
+        $validator = Validator::make($input, [
             ...$this->profileRules(),
             'phone' => ['required', 'string', 'max:25', Rule::unique(User::class, 'phone')],
             'password' => $this->passwordRules(),
-        ])->validate();
+            'security_check' => ['required', 'string'],
+        ]);
+
+        $validator->after(function ($validator) use ($input) {
+            $expected = strtoupper((string) session('security_check_code', ''));
+            $provided = strtoupper((string) ($input['security_check'] ?? ''));
+
+            if ($expected === '' || ! hash_equals($expected, $provided)) {
+                $validator->errors()->add('security_check', 'Security check tidak sesuai.');
+            }
+        });
+
+        $validator->validate();
+
+        session()->forget('security_check_code');
 
         return User::create([
             'name' => $input['name'],
