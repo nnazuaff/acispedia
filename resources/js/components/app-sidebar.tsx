@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ChevronDown, CreditCard, History, LayoutGrid, Layers, ShoppingCart } from 'lucide-react';
+import { ChevronDown, CircleHelp, CreditCard, FileText, History, LayoutGrid, Layers, ListChecks, ShoppingCart } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -106,6 +106,38 @@ export function AppSidebar() {
                                 </CollapsibleContent>
                             </SidebarMenuItem>
                         </Collapsible>
+                    </SidebarMenu>
+                </SidebarGroup>
+
+                <SidebarGroup className="px-2 py-0">
+                    <SidebarGroupLabel>Lainnya</SidebarGroupLabel>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip={{ children: 'Bantuan' }}>
+                                <Link href="/kontak" prefetch>
+                                    <CircleHelp />
+                                    <span>Bantuan</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip={{ children: 'Contoh Pengisian Target' }}>
+                                <Link href="/panduan-target" prefetch>
+                                    <ListChecks />
+                                    <span>Contoh Pengisian Target</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild tooltip={{ children: 'Ketentuan Layanan (S&K)' }}>
+                                <Link href="/terms" prefetch>
+                                    <FileText />
+                                    <span>Ketentuan Layanan (S&K)</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroup>
             </SidebarContent>
