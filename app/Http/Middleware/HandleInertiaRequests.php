@@ -39,6 +39,9 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        $adminDomain = (string) config('admin.domain', '');
+        $isAdminArea = $adminDomain !== '' && strcasecmp($request->getHost(), $adminDomain) === 0;
+
         if ($user) {
             try {
                 if (Schema::hasTable('user_balance')) {
@@ -55,6 +58,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
             ],
+            'isAdminArea' => $isAdminArea,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

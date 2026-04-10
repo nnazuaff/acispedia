@@ -1,5 +1,17 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ChevronDown, CircleHelp, CreditCard, FileText, History, LayoutGrid, Layers, ListChecks, ShoppingCart } from 'lucide-react';
+import {
+    Activity,
+    ChevronDown,
+    CircleHelp,
+    CreditCard,
+    FileText,
+    History,
+    LayoutGrid,
+    Layers,
+    ListChecks,
+    ShoppingCart,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -20,7 +32,7 @@ import { useI18n } from '@/i18n/i18n-provider';
 import { dashboard, home } from '@/routes';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
+const userMainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
@@ -33,10 +45,39 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const adminMainNavItems: NavItem[] = [
+    {
+        title: 'Dashboard Admin',
+        href: '/dashboard',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Pesanan',
+        href: '/orders',
+        icon: ShoppingCart,
+    },
+    {
+        title: 'Deposit',
+        href: '/deposits',
+        icon: CreditCard,
+    },
+    {
+        title: 'Pengguna',
+        href: '/users',
+        icon: Users,
+    },
+    {
+        title: 'Layanan',
+        href: '/services',
+        icon: Layers,
+    },
+];
+
 export function AppSidebar() {
     const page = usePage();
     const url = (page as any)?.url as string | undefined;
     const isHistoryActive = (url ?? '').startsWith('/history');
+    const isAdminArea = Boolean((page.props as any)?.isAdminArea);
     const { t } = useI18n();
 
     return (
@@ -54,7 +95,48 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={isAdminArea ? adminMainNavItems : userMainNavItems} />
+
+                {isAdminArea ? (
+                    <SidebarGroup className="px-2 py-0">
+                        <SidebarGroupLabel>{t('Sistem')}</SidebarGroupLabel>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    tooltip={{ children: t('Laporan Keuangan') }}
+                                >
+                                    <Link href="/financial-report" prefetch>
+                                        <FileText />
+                                        <span>{t('Laporan Keuangan')}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip={{ children: t('Koneksi') }}>
+                                    <Link href="/connections" prefetch>
+                                        <Layers />
+                                        <span>{t('Koneksi')}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    tooltip={{ children: t('Log Aktivitas') }}
+                                >
+                                    <Link href="/activity-logs" prefetch>
+                                        <Activity />
+                                        <span>{t('Log Aktivitas')}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroup>
+                ) : (
+                    <>
 
                 <SidebarGroup className="px-2 py-0">
                     <SidebarGroupLabel>{t('Transaksi')}</SidebarGroupLabel>
@@ -151,6 +233,8 @@ export function AppSidebar() {
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroup>
+                    </>
+                )}
             </SidebarContent>
         </Sidebar>
     );

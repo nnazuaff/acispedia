@@ -9,6 +9,9 @@ use App\Http\Controllers\Auth\GuestEmailVerificationController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\HistoryController;
 use App\Services\DashboardStats;
+use App\Models\Deposit;
+use App\Models\Order;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +22,63 @@ use Laravel\Fortify\Features;
 Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
+
+$adminDomain = (string) config('admin.domain', '');
+
+if ($adminDomain !== '') {
+    Route::domain($adminDomain)
+        ->middleware(['auth', 'verified', 'admin'])
+        ->group(function (): void {
+            Route::redirect('/', 'dashboard');
+
+            Route::get('dashboard', function () {
+                $start = now()->startOfDay();
+                $end = now()->endOfDay();
+
+                $stats = [
+                    'users_today' => User::query()->whereBetween('created_at', [$start, $end])->count(),
+                    'orders_today' => Order::query()->whereBetween('created_at', [$start, $end])->count(),
+                    'deposit_success_count_today' => Deposit::query()
+                        ->where('status', 'success')
+                        ->whereBetween('created_at', [$start, $end])
+                        ->count(),
+                    'deposit_success_sum_today' => (int) Deposit::query()
+                        ->where('status', 'success')
+                        ->whereBetween('created_at', [$start, $end])
+                        ->sum('amount'),
+                ];
+
+                $recentOrders = Order::query()
+                    ->with(['user:id,name,email'])
+                    ->whereBetween('created_at', [$start, $end])
+                    ->orderByDesc('id')
+                    ->limit(10)
+                    ->get([
+                        'id',
+                        'user_id',
+                        'service_name',
+                        'quantity',
+                        'total_price',
+                        'status',
+                        'created_at',
+                    ]);
+
+                return Inertia::render('admin/dashboard', [
+                    'stats' => $stats,
+                    'recentOrders' => $recentOrders,
+                ]);
+            })->name('admin.dashboard');
+
+            Route::inertia('financial-report', 'admin/financial-report')->name('admin.financial-report');
+            Route::inertia('orders', 'admin/orders')->name('admin.orders');
+            Route::inertia('deposits', 'admin/deposits')->name('admin.deposits');
+            Route::inertia('users', 'admin/users')->name('admin.users');
+            Route::inertia('services', 'admin/services')->name('admin.services');
+            Route::inertia('connections', 'admin/connections')->name('admin.connections');
+            Route::inertia('activity-logs', 'admin/activity-logs')->name('admin.activity-logs');
+            Route::inertia('admin-users', 'admin/admin-users')->name('admin.admin-users');
+        });
+}
 
 Route::get('security-check', function (Request $request) {
     $code = strtoupper(Str::random(5));

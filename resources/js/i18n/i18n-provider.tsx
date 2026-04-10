@@ -70,6 +70,16 @@ const dictionaries: Record<Locale, Dict> = {
         'Terang': 'Light',
         'Gelap': 'Dark',
         'Sistem': 'System',
+        'Dashboard Admin': 'Admin Dashboard',
+        'Ringkasan aktivitas hari ini': "Today's activity summary",
+        'Pengguna Baru Hari Ini': 'New users today',
+        'Pesanan Hari Ini': "Today's orders",
+        'Deposit Berhasil Hari Ini': 'Successful deposits today',
+        'ID': 'ID',
+        'Belum ada data.': 'No data yet.',
+        'Laporan Keuangan': 'Financial report',
+        'Koneksi': 'Connections',
+        'Log Aktivitas': 'Activity logs',
 
         // Landing
         'modern untuk pertumbuhan sosial media': 'modern for social media growth',
