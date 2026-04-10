@@ -68,10 +68,14 @@ export default function Profile({
                                     className="mt-1 block w-full"
                                     defaultValue={auth.user.email}
                                     name="email"
-                                    required
+                                    disabled
                                     autoComplete="username"
                                     placeholder="Email address"
                                 />
+
+                                <p className="text-sm text-muted-foreground">
+                                    Hubungi CS untuk ubah email.
+                                </p>
 
                                 <InputError
                                     className="mt-2"
@@ -102,22 +106,22 @@ export default function Profile({
                                 auth.user.email_verified_at === null && (
                                     <div>
                                         <p className="-mt-4 text-sm text-muted-foreground">
-                                            Your email address is unverified.{' '}
+                                            Email Anda belum terverifikasi.{' '}
                                             <Link
                                                 href={send()}
                                                 as="button"
                                                 className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                                             >
-                                                Click here to resend the
-                                                verification email.
+                                                Klik di sini untuk kirim ulang
+                                                link verifikasi.
                                             </Link>
                                         </p>
 
                                         {status ===
                                             'verification-link-sent' && (
                                             <div className="mt-2 text-sm font-medium text-green-600">
-                                                A new verification link has been
-                                                sent to your email address.
+                                                Link verifikasi baru sudah
+                                                dikirim ke email Anda.
                                             </div>
                                         )}
                                     </div>

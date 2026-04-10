@@ -3,9 +3,12 @@ import { ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
+import PasswordInput from '@/components/password-input';
 import TwoFactorRecoveryCodes from '@/components/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/two-factor-setup-modal';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import { edit } from '@/routes/security';
 import { disable, enable } from '@/routes/two-factor';
@@ -53,7 +56,7 @@ export default function Security({
                 <Heading
                     variant="small"
                     title="Ubah password"
-                    description="Untuk keamanan, penggantian password dilakukan via link yang dikirim ke email."
+                    description="Masukkan password saat ini dan password baru Anda."
                 />
 
                 <Form
@@ -61,16 +64,60 @@ export default function Security({
                     options={{
                         preserveScroll: true,
                     }}
+                    resetOnSuccess={[
+                        'current_password',
+                        'password',
+                        'password_confirmation',
+                    ]}
                     className="space-y-6"
                 >
-                    {({ processing }) => (
+                    {({ processing, errors }) => (
                         <>
+                            <div className="grid gap-2">
+                                <Label htmlFor="current_password">
+                                    Password saat ini
+                                </Label>
+                                <PasswordInput
+                                    id="current_password"
+                                    name="current_password"
+                                    autoComplete="current-password"
+                                    placeholder="Password saat ini"
+                                />
+                                <InputError message={errors.current_password} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="password">Password baru</Label>
+                                <PasswordInput
+                                    id="password"
+                                    name="password"
+                                    autoComplete="new-password"
+                                    placeholder="Password baru"
+                                />
+                                <InputError message={errors.password} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="password_confirmation">
+                                    Konfirmasi password baru
+                                </Label>
+                                <PasswordInput
+                                    id="password_confirmation"
+                                    name="password_confirmation"
+                                    autoComplete="new-password"
+                                    placeholder="Konfirmasi password baru"
+                                />
+                                <InputError
+                                    message={errors.password_confirmation}
+                                />
+                            </div>
+
                             <div className="flex items-center gap-4">
                                 <Button
                                     disabled={processing}
                                     data-test="update-password-button"
                                 >
-                                    Kirim link ubah password
+                                    Simpan password
                                 </Button>
                             </div>
                         </>

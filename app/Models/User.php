@@ -131,7 +131,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $resetUrl = URL::to(route('password.reset', [
             'token' => $token,
-            'email' => $email,
         ], false));
 
         $subject = 'Reset Password';
