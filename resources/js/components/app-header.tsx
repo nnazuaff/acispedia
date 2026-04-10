@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Layers, Menu, Search, ShoppingCart } from 'lucide-react';
+import { ChevronDown, LayoutGrid, Layers, Mail, Menu, Search, ShoppingCart } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { AppearanceDropdown } from '@/components/appearance-dropdown';
 import { BrandLogoMark } from '@/components/brand-logo';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -51,6 +52,17 @@ const mainNavItems: NavItem[] = [
         href: '/order',
         icon: ShoppingCart,
     },
+    {
+        title: 'Kontak',
+        href: '/kontak',
+        icon: Mail,
+    },
+];
+
+const otherLinks: Array<{ label: string; href: string }> = [
+    { label: 'Bantuan', href: '/kontak' },
+    { label: 'Contoh Pengisian Target', href: '/panduan-target' },
+    { label: 'Ketentuan Layanan (S&K)', href: '/terms' },
 ];
 
 const activeItemStyles =
@@ -106,6 +118,19 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                                     <span>{item.title}</span>
                                                 </Link>
                                             ))}
+
+                                            <div className="pt-2 text-xs font-semibold text-muted-foreground">
+                                                Lainnya
+                                            </div>
+                                            {otherLinks.map((item) => (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    className="flex items-center space-x-2 font-medium"
+                                                >
+                                                    <span>{item.label}</span>
+                                                </Link>
+                                            ))}
                                         </div>
 
                                         <div />
@@ -153,6 +178,30 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                         )}
                                     </NavigationMenuItem>
                                 ))}
+
+                                <NavigationMenuItem className="relative flex h-full items-center">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <button
+                                                type="button"
+                                                className={cn(
+                                                    navigationMenuTriggerStyle(),
+                                                    'h-9 cursor-pointer px-3',
+                                                )}
+                                            >
+                                                Lainnya
+                                                <ChevronDown className="ml-1 h-4 w-4" aria-hidden="true" />
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="start">
+                                            {otherLinks.map((item) => (
+                                                <DropdownMenuItem key={item.href} asChild>
+                                                    <Link href={item.href}>{item.label}</Link>
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </NavigationMenuItem>
                             </NavigationMenuList>
                         </NavigationMenu>
                     </div>

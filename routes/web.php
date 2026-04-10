@@ -31,6 +31,16 @@ Route::get('services', function () {
     ]);
 })->name('services');
 
+Route::get('kontak', function () {
+    if (request()->user()) {
+        return Inertia::render('contact');
+    }
+
+    return Inertia::render('public/contact', [
+        'canRegister' => Features::enabled(Features::registration()),
+    ]);
+})->name('contact');
+
 Route::get('api/services', [MedanpediaController::class, 'services'])->name('api.medanpedia.services');
 
 // Tripay callback (no auth; CSRF excluded in bootstrap/app.php)

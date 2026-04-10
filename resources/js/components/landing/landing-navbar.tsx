@@ -1,11 +1,17 @@
 import { Link } from '@inertiajs/react';
-import { Menu } from 'lucide-react';
+import { ChevronDown, Menu } from 'lucide-react';
 import * as React from 'react';
 
 import { AppearanceDropdown } from '@/components/appearance-dropdown';
 import AppearanceToggleTab from '@/components/appearance-tabs';
 import { BrandLogoMark } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     Sheet,
     SheetClose,
@@ -27,7 +33,13 @@ const navItemsDefault: NavItem[] = [
     { label: 'Beranda', href: '#home' },
     { label: 'Layanan', href: '#services' },
     { label: 'Tentang', href: '#about' },
-    { label: 'Kontak', href: '#contact' },
+    { label: 'Kontak', href: '/kontak' },
+];
+
+const otherLinks: { label: string; href: string }[] = [
+    { label: 'Bantuan', href: '/kontak' },
+    { label: 'Contoh Pengisian Target', href: '/panduan-target' },
+    { label: 'Ketentuan Layanan (S&K)', href: '/terms' },
 ];
 
 export default function LandingNavbar({
@@ -78,6 +90,25 @@ export default function LandingNavbar({
                             </Link>
                         ),
                     )}
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                type="button"
+                                className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                Lainnya
+                                <ChevronDown className="ml-1 size-4" aria-hidden="true" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                            {otherLinks.map((item) => (
+                                <DropdownMenuItem key={item.href} asChild>
+                                    <Link href={item.href}>{item.label}</Link>
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </nav>
 
                 <div className="ml-auto hidden items-center gap-2 md:flex">
@@ -146,6 +177,28 @@ export default function LandingNavbar({
                                         </SheetClose>
                                     ),
                                 )}
+
+                                <div className="mt-2 border-t pt-3">
+                                    <div className="px-3 pb-1 text-xs font-semibold text-muted-foreground">
+                                        Lainnya
+                                    </div>
+                                    <div className="grid gap-1">
+                                        {otherLinks.map((item) => (
+                                            <SheetClose asChild key={item.href}>
+                                                <Link
+                                                    href={item.href}
+                                                    className={cn(
+                                                        'rounded-md px-3 py-2 text-sm font-medium',
+                                                        'text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+                                                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                                                    )}
+                                                >
+                                                    {item.label}
+                                                </Link>
+                                            </SheetClose>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="border-t p-4">

@@ -1,12 +1,9 @@
-import { Send } from 'lucide-react';
-
 import { BrandLogoMark } from '@/components/brand-logo';
 
 const menuLinks = [
     { label: 'Beranda', href: '#home' },
     { label: 'Layanan', href: '#services' },
     { label: 'Tentang', href: '#about' },
-    { label: 'Kontak', href: '#contact' },
 ] as const;
 
 const legalLinks = [
@@ -17,10 +14,10 @@ const legalLinks = [
 
 export default function LandingFooter() {
     return (
-        <footer id="contact" className="border-t bg-muted/20">
+        <footer className="border-t bg-muted/20">
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
-                    <div className="md:col-span-2">
+                <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
+                    <div>
                         <div className="flex items-center gap-2">
                             <BrandLogoMark className="size-9" />
                             <div className="leading-tight">
@@ -69,29 +66,6 @@ export default function LandingFooter() {
                         </ul>
                     </div>
 
-                    <div>
-                        <h3 className="text-sm font-semibold">Kontak</h3>
-                        <div className="mt-3 grid gap-3">
-                            <a
-                                href="https://t.me/acispediasupport"
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                            >
-                                <Send className="size-4 text-primary" />
-                                <span>@acispediasupport</span>
-                            </a>
-                            <a
-                                href="https://t.me/acispediasmm"
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                            >
-                                <Send className="size-4 text-primary" />
-                                <span>@acispediasmm</span>
-                            </a>
-                        </div>
-                    </div>
                 </div>
 
                 <div className="mt-10 flex flex-col gap-2 border-t pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
