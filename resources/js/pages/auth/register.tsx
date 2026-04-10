@@ -118,6 +118,26 @@ export default function Register() {
                             </div>
 
                             <div className="grid gap-2">
+                                <Label htmlFor="otp_code">Kode OTP (Email)</Label>
+                                <div className="relative">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                                        <ShieldCheck className="size-4" />
+                                    </div>
+                                    <Input
+                                        id="otp_code"
+                                        type="text"
+                                        tabIndex={3}
+                                        name="otp_code"
+                                        autoComplete="one-time-code"
+                                        inputMode="numeric"
+                                        placeholder="6 digit (akan dikirim saat submit)"
+                                        className="pl-10"
+                                    />
+                                </div>
+                                <InputError message={(errors as any).otp_code} />
+                            </div>
+
+                            <div className="grid gap-2">
                                 <Label htmlFor="phone">Nomor HP / WhatsApp</Label>
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
@@ -127,7 +147,7 @@ export default function Register() {
                                         id="phone"
                                         type="tel"
                                         required
-                                        tabIndex={3}
+                                        tabIndex={4}
                                         autoComplete="tel"
                                         name="phone"
                                         inputMode="tel"
@@ -143,7 +163,7 @@ export default function Register() {
                                 <PasswordInput
                                     id="password"
                                     required
-                                    tabIndex={4}
+                                    tabIndex={5}
                                     autoComplete="new-password"
                                     name="password"
                                     placeholder="Minimal 8 karakter (angka & simbol)"
@@ -159,7 +179,7 @@ export default function Register() {
                                 <PasswordInput
                                     id="password_confirmation"
                                     required
-                                    tabIndex={5}
+                                    tabIndex={6}
                                     autoComplete="new-password"
                                     name="password_confirmation"
                                     placeholder="Ulangi kata sandi"
@@ -205,7 +225,7 @@ export default function Register() {
                                         id="security_check"
                                         type="text"
                                         required
-                                        tabIndex={6}
+                                        tabIndex={7}
                                         name="security_check"
                                         autoComplete="off"
                                         placeholder="Masukkan kode di atas"
@@ -218,7 +238,7 @@ export default function Register() {
                             <Button
                                 type="submit"
                                 className="mt-2 w-full"
-                                tabIndex={7}
+                                tabIndex={8}
                                 data-test="register-user-button"
                             >
                                 {processing && <Spinner />}
@@ -228,7 +248,7 @@ export default function Register() {
 
                         <div className="text-center text-sm text-muted-foreground">
                             Sudah punya akun?{' '}
-                            <TextLink href={login()} tabIndex={8}>
+                            <TextLink href={login()} tabIndex={9}>
                                 Masuk
                             </TextLink>
                         </div>

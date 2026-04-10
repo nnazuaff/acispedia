@@ -71,6 +71,23 @@ export default function ResetPassword({ token, email }: Props) {
                             />
                         </div>
 
+                        <div className="grid gap-2">
+                            <Label htmlFor="otp_code">Kode OTP (Email)</Label>
+                            <Input
+                                id="otp_code"
+                                type="text"
+                                name="otp_code"
+                                inputMode="numeric"
+                                autoComplete="one-time-code"
+                                placeholder="6 digit (akan dikirim saat submit)"
+                                className="mt-1 block w-full"
+                            />
+                            <InputError
+                                message={(errors as any).otp_code}
+                                className="mt-2"
+                            />
+                        </div>
+
                         <Button
                             type="submit"
                             className="mt-4 w-full"
