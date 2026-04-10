@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
@@ -43,13 +44,15 @@ class SecurityController extends Controller implements HasMiddleware
     /**
      * Update the user's password.
      */
-    public function update(PasswordUpdateRequest $request): RedirectResponse
+    public function update(Request $request): RedirectResponse
     {
-        $request->user()->update([
-            'password' => $request->password,
-        ]);
+        $user = $request->user();
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Password updated.')]);
+        if ($user) {
+            Password::sendResetLink(['email' => (string) $user->email]);
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Link ubah password sudah dikirim ke email.']);
 
         return back();
     }

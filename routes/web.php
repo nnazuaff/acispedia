@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\MedanpediaController;
 use App\Http\Controllers\Api\OrdersController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\HistoryController;
-use App\Http\Controllers\Auth\LoginOtpController;
 use App\Services\DashboardStats;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
@@ -56,12 +55,6 @@ Route::get('security-check', function (Request $request) {
         'Pragma' => 'no-cache',
     ]);
 })->name('security.check');
-
-Route::middleware('guest')->group(function () {
-    Route::get('otp/login', [LoginOtpController::class, 'show'])->name('otp.login');
-    Route::post('otp/login', [LoginOtpController::class, 'verify'])->name('otp.login.verify');
-    Route::post('otp/login/resend', [LoginOtpController::class, 'resend'])->name('otp.login.resend');
-});
 
 Route::get('terms', function () {
     if (request()->user()) {
