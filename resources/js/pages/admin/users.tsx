@@ -139,7 +139,7 @@ export default function AdminUsers() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                             <div className="lg:col-span-2">
                                 <Label htmlFor="q">{t('Cari')}</Label>
-                                <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nama / email / id')} />
+                                <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nama / email / no. hp / id')} />
                             </div>
 
                             <div className="flex items-end gap-2">

@@ -4,6 +4,7 @@ import * as React from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -40,6 +41,16 @@ type DepositDetail = {
 
 function formatNumber(value: number): string {
     return new Intl.NumberFormat('id-ID').format(value);
+}
+
+function depositStatusMeta(status: string, t: (key: string) => string): { label: string; className: string } {
+    const key = String(status ?? '').toLowerCase();
+    if (key === 'success') return { label: t('Sukses'), className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' };
+    if (key === 'pending') return { label: t('Pending'), className: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300' };
+    if (key === 'failed') return { label: t('Gagal'), className: 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300' };
+    if (key === 'expired') return { label: t('Expired'), className: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300' };
+    if (key === 'canceled' || key === 'cancelled') return { label: t('Canceled'), className: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300' };
+    return { label: status || '-', className: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300' };
 }
 
 export default function AdminDepositDetail() {
@@ -143,7 +154,16 @@ export default function AdminDepositDetail() {
                                     </tr>
                                     <tr className="border-t">
                                         <td className="px-4 py-3">{t('Status')}</td>
-                                        <td className="px-4 py-3">{deposit.status || '-'}</td>
+                                        <td className="px-4 py-3">
+                                            {(() => {
+                                                const meta = depositStatusMeta(deposit.status, t);
+                                                return (
+                                                    <Badge variant="outline" className={meta.className}>
+                                                        {meta.label}
+                                                    </Badge>
+                                                );
+                                            })()}
+                                        </td>
                                     </tr>
                                     <tr className="border-t">
                                         <td className="px-4 py-3">{t('Metode')}</td>

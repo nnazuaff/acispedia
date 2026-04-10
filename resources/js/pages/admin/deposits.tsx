@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
     Select,
     SelectContent,
@@ -69,6 +70,16 @@ type Filters = {
 
 function formatNumber(value: number): string {
     return new Intl.NumberFormat('id-ID').format(value);
+}
+
+function depositStatusMeta(status: string, t: (key: string) => string): { label: string; className: string } {
+    const key = String(status ?? '').toLowerCase();
+    if (key === 'success') return { label: t('Sukses'), className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' };
+    if (key === 'pending') return { label: t('Pending'), className: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300' };
+    if (key === 'failed') return { label: t('Gagal'), className: 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300' };
+    if (key === 'expired') return { label: t('Expired'), className: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300' };
+    if (key === 'canceled' || key === 'cancelled') return { label: t('Canceled'), className: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300' };
+    return { label: status || '-', className: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300' };
 }
 
 export default function AdminDeposits() {
@@ -203,7 +214,7 @@ export default function AdminDeposits() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                             <div className="lg:col-span-2">
                                 <Label htmlFor="q">{t('Cari')}</Label>
-                                <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nama / email')} />
+                                <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nama / email / ID deposit / nominal')} />
                             </div>
 
                             <div>
@@ -288,7 +299,16 @@ export default function AdminDeposits() {
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.user?.name || row.user?.email || '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(row.amount ?? 0))}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.tripay_method || row.payment_method || '-'}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.status || '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    {(() => {
+                                                        const meta = depositStatusMeta(row.status, t);
+                                                        return (
+                                                            <Badge variant="outline" className={meta.className}>
+                                                                {meta.label}
+                                                            </Badge>
+                                                        );
+                                                    })()}
+                                                </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     <Button asChild variant="outline" size="sm">
                                                         <Link href={`/deposits/${row.id}`} prefetch>

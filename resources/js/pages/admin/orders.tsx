@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
     Select,
     SelectContent,
@@ -61,6 +62,17 @@ type Filters = {
 
 function formatNumber(value: number): string {
     return new Intl.NumberFormat('id-ID').format(value);
+}
+
+function orderStatusMeta(status: string, t: (key: string) => string): { label: string; className: string } {
+    const key = String(status ?? '').toLowerCase();
+    if (key === 'success') return { label: t('Sukses'), className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' };
+    if (key === 'pending') return { label: t('Pending'), className: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300' };
+    if (key === 'processing' || key === 'submitting') return { label: t('Proses'), className: 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300' };
+    if (key === 'partial') return { label: t('Partial'), className: 'border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300' };
+    if (key === 'failed' || key === 'error') return { label: t('Gagal'), className: 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300' };
+    if (key === 'canceled' || key === 'cancelled') return { label: t('Canceled'), className: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300' };
+    return { label: status || '-', className: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300' };
 }
 
 export default function AdminOrders() {
@@ -336,7 +348,14 @@ export default function AdminOrders() {
                                                     Rp {formatNumber(Number(row.total_price ?? 0))}
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
-                                                    {row.status || '-'}
+                                                    {(() => {
+                                                        const meta = orderStatusMeta(row.status, t);
+                                                        return (
+                                                            <Badge variant="outline" className={meta.className}>
+                                                                {meta.label}
+                                                            </Badge>
+                                                        );
+                                                    })()}
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     <Button asChild variant="outline" size="sm">

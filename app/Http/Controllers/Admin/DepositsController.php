@@ -51,9 +51,22 @@ class DepositsController extends Controller
         $query->whereBetween('created_at', [$rangeStart, $rangeEnd]);
 
         if ($q !== '') {
-            $query->whereHas('user', function ($uq) use ($q) {
-                $uq->where('name', 'like', "%{$q}%")
-                    ->orWhere('email', 'like', "%{$q}%");
+            $qInt = null;
+            if (ctype_digit($q)) {
+                $qInt = (int) $q;
+            }
+
+            $query->where(function ($sub) use ($q, $qInt) {
+                $sub->whereHas('user', function ($uq) use ($q) {
+                    $uq->where('name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%");
+                });
+
+                if ($qInt !== null) {
+                    $sub->orWhere('id', $qInt)
+                        ->orWhere('amount', $qInt)
+                        ->orWhere('final_amount', $qInt);
+                }
             });
         }
 

@@ -66,11 +66,6 @@ const adminMainNavItems: NavItem[] = [
         href: '/users',
         icon: Users,
     },
-    {
-        title: 'Layanan',
-        href: '/services',
-        icon: Layers,
-    },
 ];
 
 export function AppSidebar() {

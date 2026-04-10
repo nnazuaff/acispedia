@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -35,6 +36,7 @@ class UsersController extends Controller
             $query->where(function ($uq) use ($q) {
                 $uq->where('name', 'like', "%{$q}%")
                     ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhere('phone', 'like', "%{$q}%")
                     ->orWhere('id', $q);
             });
         }
@@ -252,11 +254,13 @@ class UsersController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore((int) $user->id)],
             'phone' => ['nullable', 'string', 'max:32'],
         ]);
 
         $before = [
             'name' => (string) ($user->name ?? ''),
+            'email' => (string) ($user->email ?? ''),
             'phone' => $user->phone !== null ? (string) $user->phone : null,
         ];
 
@@ -268,6 +272,10 @@ class UsersController extends Controller
                 }
 
                 $row->name = $validated['name'];
+                if ((string) $row->email !== (string) $validated['email']) {
+                    $row->email = (string) $validated['email'];
+                    $row->email_verified_at = now();
+                }
                 $row->phone = $validated['phone'] ?? null;
                 $row->save();
             });
@@ -288,6 +296,7 @@ class UsersController extends Controller
                 'before' => $before,
                 'after' => [
                     'name' => (string) ($user->name ?? ''),
+                    'email' => (string) ($user->email ?? ''),
                     'phone' => $user->phone !== null ? (string) $user->phone : null,
                 ],
             ]

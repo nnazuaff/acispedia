@@ -40,7 +40,7 @@ export default function AdminUserEdit() {
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="email">{t('Email')}</Label>
-                                        <Input id="email" value={user?.email ?? ''} readOnly disabled />
+                                        <Input id="email" name="email" defaultValue={user?.email ?? ''} required />
                                     </div>
 
                                     <div className="grid gap-2">
