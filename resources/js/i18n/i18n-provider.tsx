@@ -355,7 +355,7 @@ const dictionaries: Record<Locale, Dict> = {
         'Lainnya': 'Others',
         'Bantuan': 'Help',
         'Contoh Pengisian Target': 'Target filling example',
-        'Ketentuan Layanan (S&K)': 'Terms of Service (T&C)',
+        'Ketentuan Layanan': 'Terms of Service',
         'Cari layanan, target, atau provider id...': 'Search service, target, or provider ID...',
         'Target': 'Target',
         'Jumlah': 'Qty',

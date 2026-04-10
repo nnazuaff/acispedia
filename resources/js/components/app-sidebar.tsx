@@ -141,11 +141,11 @@ export function AppSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
-                                tooltip={{ children: t('Ketentuan Layanan (S&K)') }}
+                                tooltip={{ children: t('Ketentuan Layanan') }}
                             >
                                 <Link href="/terms" prefetch>
                                     <FileText />
-                                    <span>{t('Ketentuan Layanan (S&K)')}</span>
+                                    <span>{t('Ketentuan Layanan')}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
