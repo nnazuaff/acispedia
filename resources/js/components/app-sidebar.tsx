@@ -123,6 +123,15 @@ export function AppSidebar() {
                             </SidebarMenuItem>
 
                             <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip={{ children: t('Status Sistem') }}>
+                                    <Link href="/system-status" prefetch>
+                                        <ListChecks />
+                                        <span>{t('Status Sistem')}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+
+                            <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
                                     tooltip={{ children: t('Log Aktivitas') }}

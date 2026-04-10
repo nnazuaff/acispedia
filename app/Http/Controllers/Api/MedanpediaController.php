@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Services\ServicePolicy;
 use App\Services\MedanpediaClient;
 use Illuminate\Http\JsonResponse;
@@ -74,7 +75,7 @@ class MedanpediaController extends Controller
             ], 404);
         }
 
-        $markup = (int) config('medanpedia.markup_amount', 200);
+        $markup = AppSetting::getInt('smm_markup_amount', (int) config('medanpedia.markup_amount', 200));
 
         $category = isset($found['category']) && trim((string) $found['category']) !== ''
             ? (string) $found['category']
@@ -148,11 +149,8 @@ class MedanpediaController extends Controller
         $obfuscate = $request->boolean('obf');
 
         $perPage = (int) $request->query('per_page', 25);
-        if ($perPage < 1) {
+        if (!in_array($perPage, [25, 50, 100, 200], true)) {
             $perPage = 25;
-        }
-        if ($perPage > 200) {
-            $perPage = 200;
         }
 
         $page = (int) $request->query('page', 1);
@@ -285,7 +283,7 @@ class MedanpediaController extends Controller
             $categories[$key] = (string) $s['category'];
         }
 
-        $markup = (int) config('medanpedia.markup_amount', 200);
+        $markup = AppSetting::getInt('smm_markup_amount', (int) config('medanpedia.markup_amount', 200));
 
         $groupedServices = [];
         foreach ($paged as $service) {

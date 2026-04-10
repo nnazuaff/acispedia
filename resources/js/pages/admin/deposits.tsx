@@ -85,7 +85,7 @@ export default function AdminDeposits() {
     const [method, setMethod] = React.useState(filters?.method ?? '');
     const [dateFrom, setDateFrom] = React.useState(filters?.date_from ?? '');
     const [dateTo, setDateTo] = React.useState(filters?.date_to ?? '');
-    const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 20));
+    const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 25));
 
     React.useEffect(() => {
         setQ(filters?.q ?? '');
@@ -93,7 +93,7 @@ export default function AdminDeposits() {
         setMethod(filters?.method ?? '');
         setDateFrom(filters?.date_from ?? '');
         setDateTo(filters?.date_to ?? '');
-        setPerPage(Number(filters?.per_page ?? 20));
+        setPerPage(Number(filters?.per_page ?? 25));
     }, [filters?.q, filters?.status, filters?.method, filters?.date_from, filters?.date_to, filters?.per_page]);
 
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
@@ -121,7 +121,7 @@ export default function AdminDeposits() {
         const today = new Date().toISOString().slice(0, 10);
         setDateFrom(today);
         setDateTo(today);
-        setPerPage(20);
+        setPerPage(25);
 
         router.get(
             '/deposits',
@@ -131,7 +131,7 @@ export default function AdminDeposits() {
                 method: '',
                 date_from: today,
                 date_to: today,
-                per_page: 20,
+                per_page: 25,
             } as any,
             {
                 preserveScroll: true,
@@ -248,22 +248,6 @@ export default function AdminDeposits() {
                                 <Input id="date_to" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
                             </div>
 
-                            <div>
-                                <Label>{t('Per Halaman')}</Label>
-                                <Select value={String(perPage)} onValueChange={(v) => setPerPage(Number(v))}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {[10, 20, 25, 50, 100].map((n) => (
-                                            <SelectItem key={n} value={String(n)}>
-                                                {n}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
                             <div className="flex items-end gap-2">
                                 <Button onClick={() => applyFilters({ page: 1 })}>{t('Filter')}</Button>
                                 <Button variant="outline" onClick={resetFilters}>
@@ -324,7 +308,7 @@ export default function AdminDeposits() {
                                 {t('Menampilkan')} {deposits?.from ?? 0}–{deposits?.to ?? rows.length} {t('dari')} {deposits?.total ?? rows.length}
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap items-center justify-end gap-2">
                                 <Button
                                     variant="outline"
                                     disabled={!deposits?.prev_page_url}
@@ -343,6 +327,29 @@ export default function AdminDeposits() {
                                 >
                                     {t('Berikutnya')}
                                 </Button>
+
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>{t('Data')}:</span>
+                                    <Select
+                                        value={String(perPage)}
+                                        onValueChange={(v) => {
+                                            const next = Number(v);
+                                            setPerPage(next);
+                                            applyFilters({ per_page: next, page: 1 });
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-9 w-24">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent align="end">
+                                            {[25, 50, 100, 200].map((n) => (
+                                                <SelectItem key={n} value={String(n)}>
+                                                    {n}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

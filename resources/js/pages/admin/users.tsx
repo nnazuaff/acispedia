@@ -24,6 +24,7 @@ type UserRow = {
     balance: number;
     total_spent: number;
     total_deposit: number;
+    is_admin_protected: boolean;
 };
 
 type UsersPaginator = {
@@ -61,11 +62,11 @@ export default function AdminUsers() {
     };
 
     const [q, setQ] = React.useState(filters?.q ?? '');
-    const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 20));
+    const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 25));
 
     React.useEffect(() => {
         setQ(filters?.q ?? '');
-        setPerPage(Number(filters?.per_page ?? 20));
+        setPerPage(Number(filters?.per_page ?? 25));
     }, [filters?.q, filters?.per_page]);
 
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
@@ -84,15 +85,25 @@ export default function AdminUsers() {
 
     function resetFilters() {
         setQ('');
-        setPerPage(20);
-        router.get(
-            '/users',
-            { q: '', per_page: 20 } as any,
-            { preserveScroll: true, preserveState: true, replace: true }
-        );
+        setPerPage(25);
+        router.get('/users', { q: '', per_page: 25 } as any, {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        });
     }
 
     const rows = Array.isArray(users?.data) ? users.data : [];
+
+    function destroyUser(row: UserRow) {
+        if (row.is_admin_protected) return;
+        const ok = window.confirm(t('Hapus user ini? Data terkait (order/deposit) ikut terhapus.'));
+        if (!ok) return;
+
+        router.delete(`/users/${row.id}`, {
+            preserveScroll: true,
+        });
+    }
 
     return (
         <>
@@ -121,22 +132,6 @@ export default function AdminUsers() {
                             <div className="lg:col-span-2">
                                 <Label htmlFor="q">{t('Cari')}</Label>
                                 <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nama / email / id')} />
-                            </div>
-
-                            <div>
-                                <Label>{t('Per Halaman')}</Label>
-                                <Select value={String(perPage)} onValueChange={(v) => setPerPage(Number(v))}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {[10, 20, 25, 50, 100].map((n) => (
-                                            <SelectItem key={n} value={String(n)}>
-                                                {n}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
                             </div>
 
                             <div className="flex items-end gap-2">
@@ -196,6 +191,15 @@ export default function AdminUsers() {
                                                                 {t('Edit')}
                                                             </Link>
                                                         </Button>
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            type="button"
+                                                            disabled={row.is_admin_protected}
+                                                            onClick={() => destroyUser(row)}
+                                                        >
+                                                            {t('Hapus')}
+                                                        </Button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -210,7 +214,7 @@ export default function AdminUsers() {
                                 {t('Menampilkan')} {users?.from ?? 0}–{users?.to ?? rows.length} {t('dari')} {users?.total ?? rows.length}
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap items-center justify-end gap-2">
                                 <Button
                                     variant="outline"
                                     disabled={!users?.prev_page_url}
@@ -229,6 +233,29 @@ export default function AdminUsers() {
                                 >
                                     {t('Berikutnya')}
                                 </Button>
+
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>{t('Data')}:</span>
+                                    <Select
+                                        value={String(perPage)}
+                                        onValueChange={(v) => {
+                                            const next = Number(v);
+                                            setPerPage(next);
+                                            applyFilters({ per_page: next, page: 1 });
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-9 w-24">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent align="end">
+                                            {[25, 50, 100, 200].map((n) => (
+                                                <SelectItem key={n} value={String(n)}>
+                                                    {n}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

@@ -55,17 +55,17 @@ export default function AdminServices() {
     };
 
     const rows = Array.isArray(services?.data) ? services.data : [];
-    const meta = services?.meta ?? { total: rows.length, per_page: 20, current_page: 1, last_page: 1 };
+    const meta = services?.meta ?? { total: rows.length, per_page: 25, current_page: 1, last_page: 1 };
 
     const [q, setQ] = React.useState(filters?.q ?? '');
     const [category, setCategory] = React.useState(filters?.category ?? '');
-    const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? meta.per_page ?? 20));
+    const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 25));
 
     React.useEffect(() => {
         setQ(filters?.q ?? '');
         setCategory(filters?.category ?? '');
-        setPerPage(Number(filters?.per_page ?? meta.per_page ?? 20));
-    }, [filters?.q, filters?.category, filters?.per_page, meta.per_page]);
+        setPerPage(Number(filters?.per_page ?? 25));
+    }, [filters?.q, filters?.category, filters?.per_page]);
 
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
         const merged = {
@@ -85,11 +85,11 @@ export default function AdminServices() {
     function resetFilters() {
         setQ('');
         setCategory('');
-        setPerPage(20);
+        setPerPage(25);
 
         router.get(
             '/services',
-            { q: '', category: '', per_page: 20 } as any,
+            { q: '', category: '', per_page: 25 } as any,
             { preserveScroll: true, preserveState: true, replace: true }
         );
     }
@@ -130,22 +130,6 @@ export default function AdminServices() {
                                         {(categories ?? []).map((c) => (
                                             <SelectItem key={c} value={c}>
                                                 {c}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div>
-                                <Label>{t('Per Halaman')}</Label>
-                                <Select value={String(perPage)} onValueChange={(v) => setPerPage(Number(v))}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {[10, 20, 25, 50, 100].map((n) => (
-                                            <SelectItem key={n} value={String(n)}>
-                                                {n}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -206,13 +190,36 @@ export default function AdminServices() {
                                 {t('Total')}: {formatNumber(Number(meta?.total ?? rows.length))}
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap items-center justify-end gap-2">
                                 <Button variant="outline" disabled={!canPrev} onClick={() => applyFilters({ page: Number(meta.current_page ?? 1) - 1 })}>
                                     {t('Sebelumnya')}
                                 </Button>
                                 <Button variant="outline" disabled={!canNext} onClick={() => applyFilters({ page: Number(meta.current_page ?? 1) + 1 })}>
                                     {t('Berikutnya')}
                                 </Button>
+
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>{t('Data')}:</span>
+                                    <Select
+                                        value={String(perPage)}
+                                        onValueChange={(v) => {
+                                            const next = Number(v);
+                                            setPerPage(next);
+                                            applyFilters({ per_page: next, page: 1 });
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-9 w-24">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent align="end">
+                                            {[25, 50, 100, 200].map((n) => (
+                                                <SelectItem key={n} value={String(n)}>
+                                                    {n}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

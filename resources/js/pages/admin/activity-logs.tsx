@@ -58,12 +58,12 @@ export default function AdminActivityLogs() {
 
     const [q, setQ] = React.useState(filters?.q ?? '');
     const [action, setAction] = React.useState(filters?.action ?? '');
-    const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 20));
+    const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 25));
 
     React.useEffect(() => {
         setQ(filters?.q ?? '');
         setAction(filters?.action ?? '');
-        setPerPage(Number(filters?.per_page ?? 20));
+        setPerPage(Number(filters?.per_page ?? 25));
     }, [filters?.q, filters?.action, filters?.per_page]);
 
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
@@ -84,10 +84,10 @@ export default function AdminActivityLogs() {
     function resetFilters() {
         setQ('');
         setAction('');
-        setPerPage(20);
+        setPerPage(25);
         router.get(
             '/activity-logs',
-            { q: '', action: '', per_page: 20 } as any,
+            { q: '', action: '', per_page: 25 } as any,
             { preserveScroll: true, preserveState: true, replace: true }
         );
     }
@@ -119,22 +119,6 @@ export default function AdminActivityLogs() {
                                         {(known_actions ?? []).map((a) => (
                                             <SelectItem key={a} value={a}>
                                                 {a}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div>
-                                <Label>{t('Per Halaman')}</Label>
-                                <Select value={String(perPage)} onValueChange={(v) => setPerPage(Number(v))}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {[10, 20, 25, 50, 100].map((n) => (
-                                            <SelectItem key={n} value={String(n)}>
-                                                {n}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -193,7 +177,7 @@ export default function AdminActivityLogs() {
                                 {t('Menampilkan')} {logs?.from ?? 0}–{logs?.to ?? rows.length} {t('dari')} {logs?.total ?? rows.length}
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap items-center justify-end gap-2">
                                 <Button
                                     variant="outline"
                                     disabled={!logs?.prev_page_url}
@@ -212,6 +196,29 @@ export default function AdminActivityLogs() {
                                 >
                                     {t('Berikutnya')}
                                 </Button>
+
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>{t('Data')}:</span>
+                                    <Select
+                                        value={String(perPage)}
+                                        onValueChange={(v) => {
+                                            const next = Number(v);
+                                            setPerPage(next);
+                                            applyFilters({ per_page: next, page: 1 });
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-9 w-24">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent align="end">
+                                            {[25, 50, 100, 200].map((n) => (
+                                                <SelectItem key={n} value={String(n)}>
+                                                    {n}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

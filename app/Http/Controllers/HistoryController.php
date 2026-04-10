@@ -89,6 +89,9 @@ class HistoryController extends Controller
         $q = trim((string) $request->query('q', ''));
         $status = trim((string) $request->query('status', ''));
         $perPage = (int) $request->query('per_page', 25);
+        if (!in_array($perPage, [25, 50, 100, 200], true)) {
+            $perPage = 25;
+        }
 
         if ($perPage < 5) {
             $perPage = 5;
@@ -167,6 +170,9 @@ class HistoryController extends Controller
         $ewalletCode = trim((string) $request->query('ewallet_code', ''));
         $year = (int) $request->query('year', (int) now()->format('Y'));
         $perPage = (int) $request->query('per_page', 25);
+        if (!in_array($perPage, [25, 50, 100, 200], true)) {
+            $perPage = 25;
+        }
 
         if ($perPage < 5) {
             $perPage = 5;

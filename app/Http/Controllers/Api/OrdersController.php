@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Events\DashboardStatsUpdated;
 use App\Events\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\Order;
 use App\Models\UserBalance;
 use App\Services\DashboardStats;
@@ -124,7 +125,7 @@ class OrdersController extends Controller
         $basePrice = is_numeric($service['price'] ?? null) ? (float) $service['price'] : 0.0;
         $basePriceInt = (int) round($basePrice, 0);
 
-        $markup = (int) config('medanpedia.markup_amount', 200);
+        $markup = AppSetting::getInt('smm_markup_amount', (int) config('medanpedia.markup_amount', 200));
         $pricePer1000Int = (int) round($basePriceInt + $markup, 0);
 
         $totalPrice = (int) round(($pricePer1000Int / 1000) * $quantity, 0);

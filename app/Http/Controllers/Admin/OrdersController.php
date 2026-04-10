@@ -34,12 +34,9 @@ class OrdersController extends Controller
         $dateFrom = trim((string) $request->query('date_from', now()->toDateString()));
         $dateTo = trim((string) $request->query('date_to', now()->toDateString()));
 
-        $perPage = (int) $request->query('per_page', 20);
-        if ($perPage < 1) {
-            $perPage = 20;
-        }
-        if ($perPage > 200) {
-            $perPage = 200;
+        $perPage = (int) $request->query('per_page', 25);
+        if (!in_array($perPage, [25, 50, 100, 200], true)) {
+            $perPage = 25;
         }
 
         $rangeStart = Carbon::parse($dateFrom)->startOfDay();

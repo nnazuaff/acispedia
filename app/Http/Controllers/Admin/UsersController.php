@@ -20,12 +20,9 @@ class UsersController extends Controller
     public function index(Request $request): Response
     {
         $q = trim((string) $request->query('q', ''));
-        $perPage = (int) $request->query('per_page', 20);
-        if ($perPage < 1) {
-            $perPage = 20;
-        }
-        if ($perPage > 200) {
-            $perPage = 200;
+        $perPage = (int) $request->query('per_page', 25);
+        if (!in_array($perPage, [25, 50, 100, 200], true)) {
+            $perPage = 25;
         }
 
         $query = User::query()->with(['balanceRow:user_id,balance,total_spent,total_deposit']);
@@ -38,21 +35,27 @@ class UsersController extends Controller
             });
         }
 
+        $protectedEmails = array_map('strtolower', (array) config('admin.emails', []));
+
         $paginator = $query
             ->orderByDesc('id')
             ->paginate($perPage)
             ->withQueryString();
 
-        $rows = $paginator->getCollection()->map(function (User $user) {
+        $rows = $paginator->getCollection()->map(function (User $user) use ($protectedEmails) {
+            $email = (string) ($user->email ?? '');
+            $isProtectedAdmin = $email !== '' && in_array(strtolower($email), $protectedEmails, true);
+
             return [
                 'id' => (int) $user->id,
                 'name' => (string) ($user->name ?? ''),
-                'email' => (string) ($user->email ?? ''),
+                'email' => $email,
                 'phone' => $user->phone !== null ? (string) $user->phone : null,
                 'created_at_wib' => $user->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'balance' => (int) ($user->balanceRow?->balance ?? 0),
                 'total_spent' => (int) ($user->balanceRow?->total_spent ?? 0),
                 'total_deposit' => (int) ($user->balanceRow?->total_deposit ?? 0),
+                'is_admin_protected' => $isProtectedAdmin,
             ];
         })->all();
 
@@ -179,5 +182,46 @@ class UsersController extends Controller
         );
 
         return redirect()->route('admin.users.show', ['user' => $user->id])->with('success', 'User diperbarui.');
+    }
+
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        $protectedEmails = array_map('strtolower', (array) config('admin.emails', []));
+        $email = (string) ($user->email ?? '');
+
+        if ($email !== '' && in_array(strtolower($email), $protectedEmails, true)) {
+            return back()->with('error', 'Akun admin yang di-allowlist tidak bisa dihapus.');
+        }
+
+        if ((int) $request->user()?->id === (int) $user->id) {
+            return back()->with('error', 'Tidak bisa menghapus akun sendiri.');
+        }
+
+        $id = (int) $user->id;
+        $name = (string) ($user->name ?? '');
+
+        try {
+            $user->delete();
+        } catch (Throwable $e) {
+            report($e);
+            return back()->with('error', 'Gagal menghapus user.');
+        }
+
+        AdminActivity::log(
+            $request,
+            'user_delete',
+            'user',
+            (string) $id,
+            'Delete user',
+            [
+                'user' => [
+                    'id' => $id,
+                    'email' => $email,
+                    'name' => $name,
+                ],
+            ]
+        );
+
+        return redirect()->route('admin.users')->with('success', 'User dihapus.');
     }
 }

@@ -1,7 +1,11 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
+import * as React from 'react';
 
 import Heading from '@/components/heading';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useI18n } from '@/i18n/i18n-provider';
 
 type ConnectionsPayload = {
@@ -15,11 +19,32 @@ type ConnectionsPayload = {
             channels: unknown;
         };
     };
+    markup_amount: number;
 };
 
 export default function AdminConnections() {
     const { t } = useI18n();
-    const { connections } = usePage().props as any as ConnectionsPayload;
+    const { connections, markup_amount } = usePage().props as any as ConnectionsPayload;
+
+    const [markupAmount, setMarkupAmount] = React.useState<string>(String(markup_amount ?? 0));
+
+    React.useEffect(() => {
+        setMarkupAmount(String(markup_amount ?? 0));
+    }, [markup_amount]);
+
+    function saveMarkup() {
+        const n = Math.max(0, Math.round(Number(markupAmount || 0)));
+        router.post(
+            '/connections/markup',
+            { markup_amount: n } as any,
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setMarkupAmount(String(n));
+                },
+            },
+        );
+    }
 
     return (
         <>
@@ -28,6 +53,30 @@ export default function AdminConnections() {
                 <Heading variant="small" title={t('Koneksi')} description={t('Status koneksi & integrasi.')} />
 
                 <div className="grid gap-4 lg:grid-cols-2">
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-sm font-semibold">{t('Markup Harga')}</div>
+                            <div className="mt-2 text-xs text-muted-foreground">
+                                {t('Nilai ini akan ditambahkan ke harga layanan (per 1000).')}
+                            </div>
+
+                            <div className="mt-4 space-y-2">
+                                <Label htmlFor="markup_amount">{t('Markup (Rp)')}</Label>
+                                <Input
+                                    id="markup_amount"
+                                    inputMode="numeric"
+                                    value={markupAmount}
+                                    onChange={(e) => setMarkupAmount(e.target.value)}
+                                />
+                                <div className="flex justify-end">
+                                    <Button type="button" onClick={saveMarkup}>
+                                        {t('Simpan')}
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <Card>
                         <CardContent className="pt-6">
                             <div className="text-sm font-semibold">Medanpedia</div>

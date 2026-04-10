@@ -17,12 +17,9 @@ class ServicesController extends Controller
         $q = trim((string) $request->query('q', ''));
         $category = trim((string) $request->query('category', ''));
 
-        $perPage = (int) $request->query('per_page', 20);
-        if ($perPage < 1) {
-            $perPage = 20;
-        }
-        if ($perPage > 200) {
-            $perPage = 200;
+        $perPage = (int) $request->query('per_page', 25);
+        if (!in_array($perPage, [25, 50, 100, 200], true)) {
+            $perPage = 25;
         }
 
         $page = (int) $request->query('page', 1);

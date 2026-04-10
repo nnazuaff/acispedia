@@ -468,33 +468,8 @@ export default function HistoryTransactionPage() {
                             </div>
                         </div>
 
-                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                            <div className="text-sm text-muted-foreground">
-                                <div className="flex items-center gap-2">
-                                    <span>{t('Data')}</span>
-                                    <Select
-                                        value={String(perPage)}
-                                        onValueChange={(v) => {
-                                            const next = Number(v);
-                                            setPerPage(next);
-                                            applyFilters({ per_page: next });
-                                        }}
-                                    >
-                                        <SelectTrigger className="h-9 w-27.5">
-                                            <SelectValue placeholder="25" />
-                                        </SelectTrigger>
-                                        <SelectContent align="end">
-                                            <SelectItem value="5">5</SelectItem>
-                                            <SelectItem value="10">10</SelectItem>
-                                            <SelectItem value="25">25</SelectItem>
-                                            <SelectItem value="50">50</SelectItem>
-                                            <SelectItem value="100">100</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
+                        <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+                            <div className="flex flex-wrap items-center justify-end gap-2">
                                 {Number(ordersProp?.current_page ?? 1) > 1 ? (
                                     <Button
                                         variant="outline"
@@ -520,6 +495,29 @@ export default function HistoryTransactionPage() {
                                         {t('Berikutnya')}
                                     </Button>
                                 )}
+
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>{t('Data')}:</span>
+                                    <Select
+                                        value={String(perPage)}
+                                        onValueChange={(v) => {
+                                            const next = Number(v);
+                                            setPerPage(next);
+                                            applyFilters({ per_page: next, page: 1 });
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-9 w-24">
+                                            <SelectValue placeholder="25" />
+                                        </SelectTrigger>
+                                        <SelectContent align="end">
+                                            {[25, 50, 100, 200].map((n) => (
+                                                <SelectItem key={n} value={String(n)}>
+                                                    {n}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </CardContent>

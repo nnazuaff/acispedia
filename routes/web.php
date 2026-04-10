@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\DepositsController as AdminDepositsController;
 use App\Http\Controllers\Admin\FinancialReportController as AdminFinancialReportController;
 use App\Http\Controllers\Admin\OrdersController as AdminOrdersController;
 use App\Http\Controllers\Admin\ServicesController as AdminServicesController;
+use App\Http\Controllers\Admin\SystemStatusController as AdminSystemStatusController;
 use App\Http\Controllers\Admin\UsersController as AdminUsersController;
 use App\Http\Controllers\Auth\CleanPasswordResetController;
 use App\Http\Controllers\Auth\GuestEmailVerificationController;
@@ -74,6 +75,9 @@ if ($adminDomain !== '') {
             })->name('admin.dashboard');
 
             Route::get('financial-report', [AdminFinancialReportController::class, 'index'])->name('admin.financial-report');
+            Route::post('financial-report', [AdminFinancialReportController::class, 'store'])->name('admin.financial-report.store');
+            Route::put('financial-report/{financialReport}', [AdminFinancialReportController::class, 'update'])->name('admin.financial-report.update');
+            Route::delete('financial-report/{financialReport}', [AdminFinancialReportController::class, 'destroy'])->name('admin.financial-report.destroy');
 
             Route::get('orders', [AdminOrdersController::class, 'index'])->name('admin.orders');
             Route::get('orders/{order}', [AdminOrdersController::class, 'show'])->name('admin.orders.show');
@@ -87,9 +91,12 @@ if ($adminDomain !== '') {
             Route::get('users/{user}', [AdminUsersController::class, 'show'])->name('admin.users.show');
             Route::get('users/{user}/edit', [AdminUsersController::class, 'edit'])->name('admin.users.edit');
             Route::put('users/{user}', [AdminUsersController::class, 'update'])->name('admin.users.update');
+            Route::delete('users/{user}', [AdminUsersController::class, 'destroy'])->name('admin.users.destroy');
 
             Route::get('services', [AdminServicesController::class, 'index'])->name('admin.services');
             Route::get('connections', [AdminConnectionsController::class, 'index'])->name('admin.connections');
+            Route::post('connections/markup', [AdminConnectionsController::class, 'updateMarkup'])->name('admin.connections.markup');
+            Route::get('system-status', [AdminSystemStatusController::class, 'index'])->name('admin.system-status');
             Route::get('activity-logs', [AdminActivityLogsController::class, 'index'])->name('admin.activity-logs');
             Route::get('admin-users', [AdminAdminUsersController::class, 'index'])->name('admin.admin-users');
         });

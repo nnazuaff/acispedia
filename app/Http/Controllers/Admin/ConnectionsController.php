@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Services\MedanpediaClient;
 use App\Services\TripayClient;
+use App\Support\AdminActivity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,6 +18,8 @@ class ConnectionsController extends Controller
     {
         $medanpediaConfigured = $medanpedia->isConfigured();
         $tripayConfigured = TripayClient::isConfigured();
+
+        $markupAmount = AppSetting::getInt('smm_markup_amount', (int) config('medanpedia.markup_amount', 200));
 
         $medanpediaProfile = null;
         $tripayChannels = null;
@@ -43,6 +47,23 @@ class ConnectionsController extends Controller
                     'channels' => $tripayChannels,
                 ],
             ],
+            'markup_amount' => $markupAmount,
         ]);
+    }
+
+    public function updateMarkup(Request $request)
+    {
+        $validated = $request->validate([
+            'markup_amount' => ['required', 'integer', 'min:0', 'max:1000000'],
+        ]);
+
+        $value = (int) $validated['markup_amount'];
+        AppSetting::putInt('smm_markup_amount', $value);
+
+        AdminActivity::log($request, 'connections_markup_update', 'setting', 'smm_markup_amount', 'Update markup amount', [
+            'markup_amount' => $value,
+        ]);
+
+        return back();
     }
 }
