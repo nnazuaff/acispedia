@@ -1,13 +1,13 @@
 import { Head } from '@inertiajs/react';
 
-import { ContactContent } from '@/pages/public/contact';
+import { TermsContent } from '@/pages/public/terms';
 
-export default function Contact() {
+export default function Terms() {
     return (
         <>
-            <Head title="Kontak" />
+            <Head title="Syarat & Ketentuan" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <ContactContent headingVariant="small" />
+                <TermsContent headingVariant="small" />
             </div>
         </>
     );

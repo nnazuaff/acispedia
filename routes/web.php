@@ -17,9 +17,27 @@ Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
-Route::inertia('terms', 'public/terms')->name('terms');
+Route::get('terms', function () {
+    if (request()->user()) {
+        return Inertia::render('terms');
+    }
+
+    return Inertia::render('public/terms', [
+        'canRegister' => Features::enabled(Features::registration()),
+    ]);
+})->name('terms');
+
 Route::inertia('privacy', 'public/privacy')->name('privacy');
-Route::inertia('panduan-target', 'public/target-guide')->name('target.guide');
+
+Route::get('panduan-target', function () {
+    if (request()->user()) {
+        return Inertia::render('target_guide');
+    }
+
+    return Inertia::render('public/target-guide', [
+        'canRegister' => Features::enabled(Features::registration()),
+    ]);
+})->name('target.guide');
 
 Route::get('services', function () {
     if (request()->user()) {

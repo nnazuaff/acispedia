@@ -3,19 +3,19 @@ import { Head } from '@inertiajs/react';
 import Heading from '@/components/heading';
 import { Card, CardContent } from '@/components/ui/card';
 
-export default function PublicTerms() {
+export function TermsContent(
+    { headingVariant = 'default' }: { headingVariant?: 'default' | 'small' } = {},
+) {
     return (
-        <>
-            <Head title="Syarat & Ketentuan" />
+        <div className="mx-auto w-full max-w-5xl space-y-6">
+            <Heading
+                variant={headingVariant}
+                title="Syarat & Ketentuan"
+                description="Terakhir diperbarui: 5 Januari 2026"
+            />
 
-            <div className="space-y-6">
-                <Heading
-                    title="Syarat & Ketentuan"
-                    description="Terakhir diperbarui: 5 Januari 2026"
-                />
-
-                <Card>
-                    <CardContent className="space-y-6 pt-6">
+            <Card>
+                <CardContent className="space-y-6 pt-6">
                         <p className="text-sm text-muted-foreground">
                             Dokumen ini mengatur penggunaan layanan AcisPedia - SMM
                             Panel (selanjutnya disebut “Layanan”). Dengan mengakses
@@ -249,9 +249,17 @@ export default function PublicTerms() {
                                 support resmi yang tersedia.
                             </p>
                         </section>
-                    </CardContent>
-                </Card>
-            </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+export default function PublicTerms() {
+    return (
+        <>
+            <Head title="Syarat & Ketentuan" />
+            <TermsContent />
         </>
     );
 }

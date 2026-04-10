@@ -39,15 +39,18 @@ const faqs: Faq[] = [
     },
 ];
 
-export function ContactContent() {
+export function ContactContent(
+    { headingVariant = 'default' }: { headingVariant?: 'default' | 'small' } = {},
+) {
     return (
-        <div className="space-y-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
             <Heading
+                variant={headingVariant}
                 title="Hubungi Kami"
                 description="Tim support kami siap membantu Anda. Jangan ragu untuk menghubungi kami kapan saja."
             />
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Informasi Kontak</CardTitle>

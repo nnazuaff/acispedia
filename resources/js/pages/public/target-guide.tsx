@@ -202,43 +202,51 @@ const sections: Section[] = [
     },
 ];
 
+export function TargetGuideContent(
+    { headingVariant = 'default' }: { headingVariant?: 'default' | 'small' } = {},
+) {
+    return (
+        <div className="mx-auto w-full max-w-5xl space-y-6">
+            <Heading
+                variant={headingVariant}
+                title="Panduan Pengisian Target/Link"
+                description="Contoh format target/link untuk membuat pesanan. Pastikan target valid agar pesanan bisa diproses."
+            />
+
+            <div className="grid gap-4">
+                {sections.map((section) => (
+                    <Card key={section.name}>
+                        <CardHeader>
+                            <CardTitle className="text-base">{section.name}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {section.items.map((item) => (
+                                <div key={item.title} className="space-y-1">
+                                    <div className="text-sm font-medium text-foreground">
+                                        {item.title}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        <span className="font-medium">Target:</span> {item.target}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        <span className="font-medium">Contoh:</span>{' '}
+                                        <span className="break-all">{item.example}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export default function PublicTargetGuide() {
     return (
         <>
             <Head title="Panduan Pengisian Target/Link" />
-
-            <div className="space-y-6">
-                <Heading
-                    title="Panduan Pengisian Target/Link"
-                    description="Contoh format target/link untuk membuat pesanan. Pastikan target valid agar pesanan bisa diproses."
-                />
-
-                <div className="grid gap-4">
-                    {sections.map((section) => (
-                        <Card key={section.name}>
-                            <CardHeader>
-                                <CardTitle className="text-base">{section.name}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {section.items.map((item) => (
-                                    <div key={item.title} className="space-y-1">
-                                        <div className="text-sm font-medium text-foreground">
-                                            {item.title}
-                                        </div>
-                                        <div className="text-sm text-muted-foreground">
-                                            <span className="font-medium">Target:</span> {item.target}
-                                        </div>
-                                        <div className="text-sm text-muted-foreground">
-                                            <span className="font-medium">Contoh:</span>{' '}
-                                            <span className="break-all">{item.example}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            </div>
+            <TargetGuideContent />
         </>
     );
 }
