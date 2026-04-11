@@ -43,7 +43,69 @@
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.tsx'])
     <x-inertia::head>
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        @php
+            $appName = (string) config('app.name', 'Laravel');
+            $appUrl = (string) config('app.url', '');
+            $canonical = url()->current();
+            $defaultTitle = $appName;
+            $defaultDescription = (string) config(
+                'seo.description',
+                'Panel SMM untuk order layanan sosial media, deposit saldo, dan monitoring status pesanan.',
+            );
+            $ogImage = (string) config('seo.og_image', '');
+            if ($ogImage === '') {
+                $ogImage = asset('favicon.png');
+            }
+
+            $adminDomain = (string) config('admin.domain', '');
+            $shouldNoIndex = $adminDomain !== '' && request()->getHost() === $adminDomain;
+        @endphp
+
+        <title>{{ $defaultTitle }}</title>
+        <meta name="description" content="{{ $defaultDescription }}">
+        <link rel="canonical" href="{{ $canonical }}">
+
+        <meta name="robots" content="{{ $shouldNoIndex ? 'noindex,nofollow' : 'index,follow' }}">
+
+        <meta property="og:locale" content="id_ID">
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="{{ $appName }}">
+        <meta property="og:title" content="{{ $defaultTitle }}">
+        <meta property="og:description" content="{{ $defaultDescription }}">
+        <meta property="og:url" content="{{ $canonical }}">
+        <meta property="og:image" content="{{ $ogImage }}">
+
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $defaultTitle }}">
+        <meta name="twitter:description" content="{{ $defaultDescription }}">
+        <meta name="twitter:image" content="{{ $ogImage }}">
+
+        <script type="application/ld+json">
+            {!! json_encode([
+                '@context' => 'https://schema.org',
+                '@graph' => [
+                    [
+                        '@type' => 'Organization',
+                        '@id' => ($appUrl !== '' ? rtrim($appUrl, '/') : url('/')).'#organization',
+                        'name' => $appName,
+                        'url' => $appUrl !== '' ? rtrim($appUrl, '/') : url('/'),
+                        'logo' => [
+                            '@type' => 'ImageObject',
+                            'url' => $ogImage,
+                        ],
+                    ],
+                    [
+                        '@type' => 'WebSite',
+                        '@id' => ($appUrl !== '' ? rtrim($appUrl, '/') : url('/')).'#website',
+                        'name' => $appName,
+                        'url' => $appUrl !== '' ? rtrim($appUrl, '/') : url('/'),
+                        'publisher' => [
+                            '@id' => ($appUrl !== '' ? rtrim($appUrl, '/') : url('/')).'#organization',
+                        ],
+                    ],
+                ],
+            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+        </script>
     </x-inertia::head>
 </head>
 

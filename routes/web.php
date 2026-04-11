@@ -40,6 +40,35 @@ Route::get('apple-touch-icon.png', function () {
     return redirect('/favicon.png?v='.$v);
 });
 
+Route::get('sitemap.xml', function () {
+    $urls = [
+        url('/'),
+        url('/services'),
+        url('/terms'),
+        url('/privacy'),
+        url('/contact'),
+        url('/target-guide'),
+        url('/penjelasan-status-layanan'),
+    ];
+
+    $lastmod = now()->toAtomString();
+    $escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_XML1, 'UTF-8');
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>'
+        .'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+
+    foreach ($urls as $loc) {
+        $xml .= '<url>'
+            .'<loc>'.$escape($loc).'</loc>'
+            .'<lastmod>'.$escape($lastmod).'</lastmod>'
+            .'</url>';
+    }
+
+    $xml .= '</urlset>';
+
+    return response($xml, 200)->header('Content-Type', 'application/xml');
+})->name('sitemap');
+
 if ($adminDomain !== '') {
     Route::domain($adminDomain)
         ->middleware(['auth', 'verified', 'admin'])
