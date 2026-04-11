@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 
 import Heading from '@/components/heading';
@@ -160,7 +160,23 @@ export default function AdminActivityLogs() {
                                         rows.map((row) => (
                                             <tr key={row.id} className="border-t">
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.created_at_wib ?? '-'}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.admin_user?.name || row.admin_user?.email || '-'}</td>
+                                                <td className="px-4 py-3">
+                                                    {row.admin_user?.id ? (
+                                                        <Link href={`/users/${row.admin_user.id}`} className="flex flex-col hover:underline" prefetch>
+                                                            <span className="font-medium">{row.admin_user?.name || row.admin_user?.email || '-'}</span>
+                                                            {row.admin_user?.email ? (
+                                                                <span className="text-xs text-muted-foreground">{row.admin_user.email}</span>
+                                                            ) : null}
+                                                        </Link>
+                                                    ) : (
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium">{row.admin_user?.name || row.admin_user?.email || '-'}</span>
+                                                            {row.admin_user?.email ? (
+                                                                <span className="text-xs text-muted-foreground">{row.admin_user.email}</span>
+                                                            ) : null}
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.action || '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.entity_type ? `${row.entity_type}:${row.entity_id ?? '-'}` : '-'}</td>
                                                 <td className="px-4 py-3">{row.message || '-'}</td>
