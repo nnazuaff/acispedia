@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\UserBalance;
 use App\Services\DashboardStats;
+use App\Services\TelegramNotifier;
 use App\Services\TripayClient;
 use App\Support\UserActivity;
 use App\Support\WalletLedgerWriter;
@@ -84,6 +85,28 @@ class DepositsController extends Controller
                         'method' => 'konversi_saldo',
                     ]
                 );
+            }
+
+            // Best-effort Telegram notify (manual review needed by admin).
+            try {
+                $userLabel = trim((string) ($user?->name ?? ''));
+                if ($userLabel === '') {
+                    $userLabel = trim((string) ($user?->email ?? ''));
+                }
+                if ($userLabel === '') {
+                    $userLabel = 'User #'.(string) ($user?->id ?? '-');
+                }
+
+                TelegramNotifier::sendMessage(
+                    "[Konversi Saldo] Deposit baru (PENDING)\n".
+                    "ID: #{$depositId}\n".
+                    "User: {$userLabel}\n".
+                    "Nominal: {$amount}\n".
+                    "AcisPay Phone: {$acispayPhone}\n".
+                    "AcisPay Username: {$acispayUsername}"
+                );
+            } catch (Throwable) {
+                // best-effort
             }
 
             try {
