@@ -32,7 +32,10 @@
         }
     </style>
 
-    @php($faviconV = @filemtime(public_path('favicon.png')) ?: '1')
+    @php
+        $faviconPath = public_path('favicon.png');
+        $faviconV = is_file($faviconPath) ? filemtime($faviconPath) : 1;
+    @endphp
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v={{ $faviconV }}">
     <link rel="shortcut icon" href="{{ asset('favicon.png') }}?v={{ $faviconV }}">
     <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}?v={{ $faviconV }}">
@@ -48,11 +51,13 @@
             $appUrl = (string) config('app.url', '');
             $canonical = url()->current();
             $defaultTitle = $appName;
+
             $defaultDescription = (string) config('seo.description');
             if ($defaultDescription === '') {
                 $defaultDescription =
                     'Panel SMM untuk order layanan sosial media, deposit saldo, dan monitoring status pesanan.';
             }
+
             $ogImage = (string) config('seo.og_image', '');
             if ($ogImage === '') {
                 $ogImage = asset('favicon.png');
@@ -60,6 +65,32 @@
 
             $adminDomain = (string) config('admin.domain', '');
             $shouldNoIndex = $adminDomain !== '' && request()->getHost() === $adminDomain;
+
+            $schemaBaseUrl = $appUrl !== '' ? rtrim($appUrl, '/') : url('/');
+            $schema = [
+                '@context' => 'https://schema.org',
+                '@graph' => [
+                    [
+                        '@type' => 'Organization',
+                        '@id' => $schemaBaseUrl . '#organization',
+                        'name' => $appName,
+                        'url' => $schemaBaseUrl,
+                        'logo' => [
+                            '@type' => 'ImageObject',
+                            'url' => $ogImage,
+                        ],
+                    ],
+                    [
+                        '@type' => 'WebSite',
+                        '@id' => $schemaBaseUrl . '#website',
+                        'name' => $appName,
+                        'url' => $schemaBaseUrl,
+                        'publisher' => [
+                            '@id' => $schemaBaseUrl . '#organization',
+                        ],
+                    ],
+                ],
+            ];
         @endphp
 
         <title>{{ $defaultTitle }}</title>
@@ -81,32 +112,7 @@
         <meta name="twitter:description" content="{{ $defaultDescription }}">
         <meta name="twitter:image" content="{{ $ogImage }}">
 
-        <script type="application/ld+json">
-            {!! json_encode([
-                '@context' => 'https://schema.org',
-                '@graph' => [
-                    [
-                        '@type' => 'Organization',
-                        '@id' => ($appUrl !== '' ? rtrim($appUrl, '/') : url('/')).'#organization',
-                        'name' => $appName,
-                        'url' => $appUrl !== '' ? rtrim($appUrl, '/') : url('/'),
-                        'logo' => [
-                            '@type' => 'ImageObject',
-                            'url' => $ogImage,
-                        ],
-                    ],
-                    [
-                        '@type' => 'WebSite',
-                        '@id' => ($appUrl !== '' ? rtrim($appUrl, '/') : url('/')).'#website',
-                        'name' => $appName,
-                        'url' => $appUrl !== '' ? rtrim($appUrl, '/') : url('/'),
-                        'publisher' => [
-                            '@id' => ($appUrl !== '' ? rtrim($appUrl, '/') : url('/')).'#organization',
-                        ],
-                    ],
-                ],
-            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
-        </script>
+        <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
     </x-inertia::head>
 </head>
 
