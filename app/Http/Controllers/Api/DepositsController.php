@@ -7,7 +7,6 @@ use App\Events\DepositStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\UserBalance;
-use App\Services\AcispayClient;
 use App\Services\DashboardStats;
 use App\Services\TripayClient;
 use App\Support\UserActivity;
@@ -38,34 +37,10 @@ class DepositsController extends Controller
         $acispayPhone = trim((string) $validated['acispay_phone']);
         $acispayUsername = trim((string) $validated['acispay_username']);
 
-        if (! AcispayClient::isConfigured()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Metode konversi saldo belum dikonfigurasi.',
-            ], 422);
-        }
-
-        try {
-            $check = AcispayClient::checkBalance($acispayPhone, $acispayUsername);
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage() !== '' ? $e->getMessage() : 'Gagal memeriksa saldo.',
-            ], 422);
-        }
-
-        $available = (int) ($check['balance'] ?? 0);
-        if ($available < $amount) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Saldo AcisPay tidak mencukupi.',
-            ], 422);
-        }
-
         $depositId = null;
 
         try {
-            $depositId = DB::transaction(function () use ($user, $amount, $acispayPhone, $acispayUsername, $available, $check) {
+            $depositId = DB::transaction(function () use ($user, $amount, $acispayPhone, $acispayUsername) {
                 $activePending = Deposit::query()
                     ->where('user_id', (int) $user->id)
                     ->where('status', 'pending')
@@ -82,9 +57,8 @@ class DepositsController extends Controller
                     'type' => 'konversi_saldo',
                     'acispay_phone' => $acispayPhone,
                     'acispay_username' => $acispayUsername,
-                    'acispay_available_balance' => $available,
-                    'acispay_checked_at' => now()->toISOString(),
-                    'acispay_check_raw' => $check['raw'] ?? null,
+                    'manual' => true,
+                    'submitted_at' => now()->toISOString(),
                 ];
 
                 $deposit = Deposit::query()->create([
