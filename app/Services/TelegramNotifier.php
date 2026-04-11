@@ -7,6 +7,30 @@ use Throwable;
 
 final class TelegramNotifier
 {
+    /**
+     * @return list<string>
+     */
+    private static function chatIds(): array
+    {
+        $raw = config('telegram.chat_id');
+
+        if (is_array($raw)) {
+            $items = $raw;
+        } else {
+            $items = explode(',', (string) ($raw ?? ''));
+        }
+
+        $out = [];
+        foreach ($items as $item) {
+            $id = trim((string) $item);
+            if ($id !== '') {
+                $out[] = $id;
+            }
+        }
+
+        return $out;
+    }
+
     public static function isConfigured(): bool
     {
         if (! (bool) config('telegram.enabled')) {
@@ -14,8 +38,7 @@ final class TelegramNotifier
         }
 
         return trim((string) config('telegram.bot_token')) !== ''
-            && config('telegram.chat_id') !== null
-            && trim((string) config('telegram.chat_id')) !== '';
+            && count(self::chatIds()) > 0;
     }
 
     /**
@@ -28,27 +51,35 @@ final class TelegramNotifier
         }
 
         $token = (string) config('telegram.bot_token');
-        $chatId = (string) config('telegram.chat_id');
+        $chatIds = self::chatIds();
         $timeout = (int) config('telegram.timeout', 10);
         if ($timeout < 1) {
             $timeout = 10;
         }
 
         try {
-            $resp = Http::asForm()
-                ->timeout($timeout)
-                ->post("https://api.telegram.org/bot{$token}/sendMessage", [
-                    'chat_id' => $chatId,
-                    'text' => $text,
-                    'disable_web_page_preview' => true,
-                ]);
+            $anySuccess = false;
 
-            if (! $resp->successful()) {
-                return false;
+            foreach ($chatIds as $chatId) {
+                $resp = Http::asForm()
+                    ->timeout($timeout)
+                    ->post("https://api.telegram.org/bot{$token}/sendMessage", [
+                        'chat_id' => $chatId,
+                        'text' => $text,
+                        'disable_web_page_preview' => true,
+                    ]);
+
+                if (! $resp->successful()) {
+                    continue;
+                }
+
+                $json = $resp->json();
+                if (is_array($json) && ($json['ok'] ?? false) === true) {
+                    $anySuccess = true;
+                }
             }
 
-            $json = $resp->json();
-            return is_array($json) && ($json['ok'] ?? false) === true;
+            return $anySuccess;
         } catch (Throwable) {
             return false;
         }

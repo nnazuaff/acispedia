@@ -7,6 +7,7 @@ return [
     'bot_token' => (string) env('TELEGRAM_BOT_TOKEN', ''),
 
     // Chat ID can be a user ID or group/channel chat id.
+    // You can send to multiple recipients using comma-separated IDs, e.g. "123,456".
     'chat_id' => env('TELEGRAM_CHAT_ID', null),
 
     'timeout' => (int) env('TELEGRAM_TIMEOUT', 10),

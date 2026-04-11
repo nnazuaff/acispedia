@@ -30,7 +30,7 @@ class DepositsController extends Controller
 
         $validated = $request->validate([
             'amount' => ['required', 'integer', 'min:1000', 'max:200000000'],
-            'acispay_phone' => ['required', 'string', 'min:8', 'max:32'],
+            'acispay_phone' => ['required', 'string', 'min:8', 'max:32', 'regex:/^[0-9]+$/'],
             'acispay_username' => ['required', 'string', 'min:3', 'max:64'],
         ]);
 
@@ -102,8 +102,8 @@ class DepositsController extends Controller
                     "ID: #{$depositId}\n".
                     "User: {$userLabel}\n".
                     "Nominal: {$amount}\n".
-                    "AcisPay Phone: {$acispayPhone}\n".
-                    "AcisPay Username: {$acispayUsername}"
+                    "Acispay Phone: {$acispayPhone}\n".
+                    "Acispay Username: {$acispayUsername}"
                 );
             } catch (Throwable) {
                 // best-effort

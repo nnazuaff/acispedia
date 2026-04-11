@@ -214,11 +214,11 @@ export default function DepositPage() {
             const username = acispayUsername.trim();
 
             if (!phone) {
-                toast.error(t('Nomor HP AcisPay wajib diisi'));
+                toast.error(t('Nomor HP Acispay wajib diisi'));
                 return;
             }
             if (!username) {
-                toast.error(t('Username AcisPay wajib diisi'));
+                toast.error(t('Username Acispay wajib diisi'));
                 return;
             }
 
@@ -438,7 +438,7 @@ export default function DepositPage() {
                                         <div className="flex-1">
                                             <div className="text-sm font-semibold">{t('Konversi Saldo')}</div>
                                             <div className="text-xs text-muted-foreground">
-                                                {t('Pindahkan saldo dari AcisPay (butuh konfirmasi admin)')}
+                                                {t('Pindahkan saldo dari Acispay (butuh konfirmasi admin)')}
                                             </div>
                                         </div>
                                         <span
@@ -518,20 +518,28 @@ export default function DepositPage() {
 
                                     {methodCategory === 'konversi_saldo' && Number(amount) > 0 ? (
                                         <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
-                                            <div className="text-sm font-semibold">{t('Data AcisPay')}</div>
+                                            <div className="text-sm font-semibold">{t('Data Acispay')}</div>
                                             <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                                 <div>
-                                                    <Label htmlFor="acispay_phone">{t('Nomor HP AcisPay')}</Label>
+                                                    <Label htmlFor="acispay_phone">{t('Nomor HP Acispay')}</Label>
                                                     <Input
                                                         id="acispay_phone"
                                                         className="mt-1"
+                                                        type="tel"
+                                                        inputMode="numeric"
+                                                        pattern="[0-9]*"
+                                                        autoComplete="tel"
+                                                        maxLength={32}
                                                         value={acispayPhone}
-                                                        onChange={(e) => setAcispayPhone(e.target.value)}
+                                                        onChange={(e) => {
+                                                            const next = e.target.value.replace(/\D+/g, '');
+                                                            setAcispayPhone(next);
+                                                        }}
                                                         placeholder="08xxxxxxxxxx"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <Label htmlFor="acispay_username">{t('Username AcisPay')}</Label>
+                                                    <Label htmlFor="acispay_username">{t('Username Acispay')}</Label>
                                                     <Input
                                                         id="acispay_username"
                                                         className="mt-1"
@@ -542,7 +550,7 @@ export default function DepositPage() {
                                                 </div>
                                             </div>
                                             <div className="mt-2 text-xs text-muted-foreground">
-                                                {t('Pastikan saldo AcisPay mencukupi sesuai nominal yang dimasukkan.')}
+                                                {t('Pastikan saldo Acispay mencukupi sesuai nominal yang dimasukkan.')}
                                             </div>
                                         </div>
                                     ) : null}

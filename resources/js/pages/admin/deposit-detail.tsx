@@ -249,11 +249,11 @@ export default function AdminDepositDetail() {
                                     {isKonversiSaldo ? (
                                         <>
                                             <tr className="border-t">
-                                                <td className="px-4 py-3">{t('Nomor HP AcisPay')}</td>
+                                                <td className="px-4 py-3">{t('Nomor HP Acispay')}</td>
                                                 <td className="px-4 py-3">{acispayPhone !== '' ? acispayPhone : '-'}</td>
                                             </tr>
                                             <tr className="border-t">
-                                                <td className="px-4 py-3">{t('Username AcisPay')}</td>
+                                                <td className="px-4 py-3">{t('Username Acispay')}</td>
                                                 <td className="px-4 py-3">{acispayUsername !== '' ? acispayUsername : '-'}</td>
                                             </tr>
                                         </>

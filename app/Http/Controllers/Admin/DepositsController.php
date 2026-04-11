@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\UserBalance;
 use App\Services\DashboardStats;
+use App\Services\TelegramNotifier;
 use App\Support\AdminActivity;
 use App\Support\WalletLedgerWriter;
 use Illuminate\Database\Eloquent\Builder;
@@ -292,13 +293,41 @@ class DepositsController extends Controller
             return back()->with('error', 'Deposit sukses tidak bisa diturunkan statusnya.');
         }
 
+        $fresh = null;
         try {
-            $fresh = Deposit::query()->find((int) $deposit->id);
+            $fresh = Deposit::query()->with(['user:id,name,email'])->find((int) $deposit->id);
             if ($fresh) {
                 broadcast(new DepositStatusUpdated($fresh));
             }
         } catch (Throwable) {
             // best-effort
+        }
+
+        if ($before === 'pending' && $after === 'success') {
+            try {
+                $method = (string) ($fresh?->payment_method ?? $deposit->payment_method ?? '');
+                if ($method === 'konversi_saldo') {
+                    $userLabel = trim((string) ($fresh?->user?->name ?? ''));
+                    if ($userLabel === '') {
+                        $userLabel = trim((string) ($fresh?->user?->email ?? ''));
+                    }
+                    if ($userLabel === '') {
+                        $userLabel = 'User #'.(string) ($fresh?->user_id ?? $deposit->user_id);
+                    }
+
+                    $depositId = (int) ($fresh?->id ?? $deposit->id);
+                    $amount = (int) ($fresh?->amount ?? $deposit->amount);
+
+                    TelegramNotifier::sendMessage(
+                        "[Konversi Saldo] Deposit CONFIRMED (SUCCESS)\n".
+                        "ID: #{$depositId}\n".
+                        "User: {$userLabel}\n".
+                        "Nominal: {$amount}"
+                    );
+                }
+            } catch (Throwable) {
+                // best-effort
+            }
         }
 
         if ($didCredit && is_int($userId)) {
