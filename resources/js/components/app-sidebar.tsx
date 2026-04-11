@@ -218,10 +218,11 @@ export function AppSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
+                                tooltip={{ children: t('Penjelasan Status Layanan') }}
                             >
                                 <Link href="/penjelasan-status-layanan" prefetch>
-                                    <ListChecks />
-                                    <span className="sr-only">{t('Penjelasan Status Layanan')}</span>
+                                    <CircleHelp />
+                                    <span>{t('Penjelasan Status Layanan')}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
