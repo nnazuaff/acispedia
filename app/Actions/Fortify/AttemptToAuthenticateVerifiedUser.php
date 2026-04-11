@@ -26,7 +26,7 @@ class AttemptToAuthenticateVerifiedUser
             $limiter->increment($request);
 
             throw ValidationException::withMessages([
-                $usernameField => 'Email atau password salah.',
+                $usernameField => __('auth.invalid_credentials'),
             ]);
         }
 
@@ -41,7 +41,7 @@ class AttemptToAuthenticateVerifiedUser
             $limiter->increment($request);
 
             throw ValidationException::withMessages([
-                $usernameField => 'Email atau password salah.',
+                $usernameField => __('auth.invalid_credentials'),
             ]);
         }
 
@@ -51,7 +51,7 @@ class AttemptToAuthenticateVerifiedUser
             $limiter->increment($request);
 
             throw ValidationException::withMessages([
-                $usernameField => 'Email atau password salah.',
+                $usernameField => __('auth.invalid_credentials'),
             ]);
         }
 
@@ -66,7 +66,7 @@ class AttemptToAuthenticateVerifiedUser
             $limiter->increment($request);
 
             throw ValidationException::withMessages([
-                $usernameField => 'Email belum terverifikasi. Kami sudah kirim link verifikasi, silakan cek inbox/spam.',
+                $usernameField => __('auth.email_not_verified'),
             ]);
         }
 
