@@ -50,7 +50,8 @@
             $defaultTitle = $appName;
             $defaultDescription = (string) config('seo.description');
             if ($defaultDescription === '') {
-                $defaultDescription = 'Panel SMM untuk order layanan sosial media, deposit saldo, dan monitoring status pesanan.';
+                $defaultDescription =
+                    'Panel SMM untuk order layanan sosial media, deposit saldo, dan monitoring status pesanan.';
             }
             $ogImage = (string) config('seo.og_image', '');
             if ($ogImage === '') {
