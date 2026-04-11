@@ -15,12 +15,3 @@ export default function ServiceStatusExplanationPage() {
         </>
     );
 }
-
-ServiceStatusExplanationPage.layout = {
-    breadcrumbs: [
-        {
-            title: 'Penjelasan Status Layanan',
-            href: '/penjelasan-status-layanan',
-        },
-    ],
-};
