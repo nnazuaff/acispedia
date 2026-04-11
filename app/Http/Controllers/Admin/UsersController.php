@@ -8,7 +8,9 @@ use App\Models\Deposit;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\UserBalance;
+use App\Models\WalletLedger;
 use App\Support\AdminActivity;
+use App\Support\WalletLedgerWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -58,6 +60,8 @@ class UsersController extends Controller
                 'email' => $email,
                 'phone' => $user->phone !== null ? (string) $user->phone : null,
                 'created_at_wib' => $user->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                'last_login_at_wib' => $user->last_login_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                'last_activity_at_wib' => $user->last_activity_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'balance' => (int) ($user->balanceRow?->balance ?? 0),
                 'total_spent' => (int) ($user->balanceRow?->total_spent ?? 0),
                 'total_deposit' => (int) ($user->balanceRow?->total_deposit ?? 0),
@@ -86,6 +90,30 @@ class UsersController extends Controller
     {
         $user->loadMissing(['balanceRow:user_id,balance,total_spent,total_deposit']);
 
+        $ledger = [];
+        try {
+            $ledger = WalletLedger::query()
+                ->where('user_id', (int) $user->id)
+                ->orderByDesc('event_at')
+                ->orderByDesc('id')
+                ->limit(50)
+                ->get(['direction', 'amount', 'balance_before', 'balance_after', 'source_type', 'source_id', 'description', 'event_at'])
+                ->map(fn (WalletLedger $row) => [
+                    'event_at_wib' => $row->event_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                    'direction' => (string) ($row->direction ?? ''),
+                    'amount' => (int) ($row->amount ?? 0),
+                    'balance_before' => (int) ($row->balance_before ?? 0),
+                    'balance_after' => (int) ($row->balance_after ?? 0),
+                    'source_type' => (string) ($row->source_type ?? ''),
+                    'source_id' => $row->source_id !== null ? (string) $row->source_id : null,
+                    'description' => (string) ($row->description ?? ''),
+                ])
+                ->all();
+        } catch (Throwable $e) {
+            report($e);
+            $ledger = [];
+        }
+
         $latestOrders = Order::query()
             ->where('user_id', (int) $user->id)
             ->orderByDesc('id')
@@ -106,6 +134,8 @@ class UsersController extends Controller
                 'phone' => $user->phone !== null ? (string) $user->phone : null,
                 'created_at_wib' => $user->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'updated_at_wib' => $user->updated_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                'last_login_at_wib' => $user->last_login_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                'last_activity_at_wib' => $user->last_activity_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'balance' => (int) ($user->balanceRow?->balance ?? 0),
                 'total_spent' => (int) ($user->balanceRow?->total_spent ?? 0),
                 'total_deposit' => (int) ($user->balanceRow?->total_deposit ?? 0),
@@ -127,6 +157,7 @@ class UsersController extends Controller
                 'tripay_method' => $d->tripay_method !== null ? (string) $d->tripay_method : null,
                 'created_at_wib' => $d->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
             ])->all(),
+            'ledger' => $ledger,
         ]);
     }
 
@@ -201,16 +232,24 @@ class UsersController extends Controller
         return redirect()->route('admin.users')->with('success', 'User berhasil dibuat.');
     }
 
-    public function addBalance(Request $request, User $user): RedirectResponse
+    public function adjustBalance(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
-            'amount' => ['required', 'integer', 'min:1', 'max:1000000000'],
+            'mode' => ['required', 'string', Rule::in(['add', 'subtract', 'set'])],
+            'amount' => ['required', 'integer', 'min:0', 'max:1000000000'],
+            'note' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $mode = (string) $validated['mode'];
         $amount = (int) $validated['amount'];
+        $note = isset($validated['note']) ? trim((string) $validated['note']) : null;
+
+        if (in_array($mode, ['add', 'subtract'], true) && $amount < 1) {
+            return back()->with('error', 'Nominal harus lebih dari 0.');
+        }
 
         try {
-            DB::transaction(function () use ($user, $amount, $request) {
+            DB::transaction(function () use ($user, $mode, $amount, $note, $request) {
                 $balanceRow = UserBalance::query()->lockForUpdate()->firstOrCreate(
                     ['user_id' => (int) $user->id],
                     ['balance' => 0, 'total_spent' => 0, 'total_deposit' => 0]
@@ -219,18 +258,74 @@ class UsersController extends Controller
                 $beforeBalance = (int) ($balanceRow->balance ?? 0);
                 $beforeTotalDeposit = (int) ($balanceRow->total_deposit ?? 0);
 
-                $balanceRow->balance = $beforeBalance + $amount;
-                $balanceRow->total_deposit = $beforeTotalDeposit + $amount;
+                $afterBalance = $beforeBalance;
+                $afterTotalDeposit = $beforeTotalDeposit;
+                $direction = 'credit';
+                $ledgerAmount = 0;
+                $description = 'Admin adjustment';
+
+                if ($mode === 'add') {
+                    $afterBalance = $beforeBalance + $amount;
+                    $afterTotalDeposit = $beforeTotalDeposit + $amount;
+                    $direction = 'credit';
+                    $ledgerAmount = $amount;
+                    $description = 'Tambah saldo (admin)';
+                } elseif ($mode === 'subtract') {
+                    if ($beforeBalance < $amount) {
+                        throw new \RuntimeException('INSUFFICIENT_BALANCE');
+                    }
+                    $afterBalance = $beforeBalance - $amount;
+                    $direction = 'debit';
+                    $ledgerAmount = $amount;
+                    $description = 'Kurangi saldo (admin)';
+                } else {
+                    // set
+                    $afterBalance = max(0, $amount);
+                    $diff = $afterBalance - $beforeBalance;
+                    $direction = $diff >= 0 ? 'credit' : 'debit';
+                    $ledgerAmount = (int) abs($diff);
+                    $description = 'Set saldo (admin)';
+                }
+
+                $balanceRow->balance = $afterBalance;
+                $balanceRow->total_deposit = $afterTotalDeposit;
                 $balanceRow->save();
+
+                if ($ledgerAmount > 0) {
+                    try {
+                        WalletLedgerWriter::record(
+                            (int) $user->id,
+                            $direction,
+                            $ledgerAmount,
+                            $beforeBalance,
+                            (int) $balanceRow->balance,
+                            'admin_adjustment',
+                            (string) $request->user()?->id,
+                            $description,
+                            [
+                                'mode' => $mode,
+                                'note' => $note,
+                                'before_total_deposit' => $beforeTotalDeposit,
+                                'after_total_deposit' => (int) $balanceRow->total_deposit,
+                            ],
+                            now(),
+                        );
+                    } catch (Throwable $e) {
+                        report($e);
+                        // Don't block the balance update if ledger is unavailable.
+                    }
+                }
 
                 AdminActivity::log(
                     $request,
-                    'user_balance_add',
+                    'user_balance_adjust',
                     'user',
                     (string) $user->id,
-                    'Add user balance',
+                    'Adjust user balance',
                     [
+                        'mode' => $mode,
                         'amount' => $amount,
+                        'note' => $note,
                         'before' => [
                             'balance' => $beforeBalance,
                             'total_deposit' => $beforeTotalDeposit,
@@ -243,11 +338,14 @@ class UsersController extends Controller
                 );
             });
         } catch (Throwable $e) {
+            if ($e instanceof \RuntimeException && $e->getMessage() === 'INSUFFICIENT_BALANCE') {
+                return back()->with('error', 'Saldo user tidak cukup untuk dikurangi.');
+            }
             report($e);
-            return back()->with('error', 'Gagal menambah saldo user.');
+            return back()->with('error', 'Gagal mengatur saldo user.');
         }
 
-        return back()->with('success', 'Saldo berhasil ditambahkan.');
+        return back()->with('success', 'Saldo user berhasil diperbarui.');
     }
 
     public function update(Request $request, User $user): RedirectResponse

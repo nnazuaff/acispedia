@@ -5,44 +5,46 @@ import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
+import { useI18n } from '@/i18n/i18n-provider';
 import { cn, toUrl } from '@/lib/utils';
 import { edit } from '@/routes/profile';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
 
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: edit(),
-        icon: User,
-    },
-    {
-        title: 'Security',
-        href: editSecurity(),
-        icon: ShieldCheck,
-    },
-    {
-        title: 'Devices',
-        href: '/settings/devices',
-        icon: Smartphone,
-    },
-];
-
 export default function SettingsLayout({ children }: PropsWithChildren) {
+    const { t } = useI18n();
     const { isCurrentOrParentUrl } = useCurrentUrl();
+
+    const sidebarNavItems: NavItem[] = [
+        {
+            title: t('Profil'),
+            href: edit(),
+            icon: User,
+        },
+        {
+            title: t('Keamanan'),
+            href: editSecurity(),
+            icon: ShieldCheck,
+        },
+        {
+            title: t('Perangkat'),
+            href: '/settings/devices',
+            icon: Smartphone,
+        },
+    ];
 
     return (
         <div className="px-4 py-6">
             <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
+                title={t('Pengaturan')}
+                description={t('Kelola profil dan pengaturan akun Anda.')}
             />
 
             <div className="flex flex-col lg:flex-row lg:space-x-12">
                 <aside className="w-full max-w-xl lg:w-48">
                     <nav
                         className="flex flex-col space-y-1 space-x-0"
-                        aria-label="Settings"
+                        aria-label={t('Pengaturan')}
                     >
                         {sidebarNavItems.map((item, index) => (
                             <Button

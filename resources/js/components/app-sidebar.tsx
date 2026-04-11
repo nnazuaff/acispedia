@@ -8,7 +8,6 @@ import {
     History,
     LayoutGrid,
     Layers,
-    ListChecks,
     ShoppingCart,
     Users,
 } from 'lucide-react';
@@ -113,15 +112,6 @@ export function AppSidebar() {
                                     <Link href="/connections" prefetch>
                                         <Layers />
                                         <span>{t('Koneksi')}</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild tooltip={{ children: t('Status Sistem') }}>
-                                    <Link href="/system-status" prefetch>
-                                        <ListChecks />
-                                        <span>{t('Status Sistem')}</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>

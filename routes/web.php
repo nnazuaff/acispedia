@@ -11,7 +11,6 @@ use App\Http\Controllers\Admin\DepositsController as AdminDepositsController;
 use App\Http\Controllers\Admin\FinancialReportController as AdminFinancialReportController;
 use App\Http\Controllers\Admin\OrdersController as AdminOrdersController;
 use App\Http\Controllers\Admin\ServicesController as AdminServicesController;
-use App\Http\Controllers\Admin\SystemStatusController as AdminSystemStatusController;
 use App\Http\Controllers\Admin\UsersController as AdminUsersController;
 use App\Http\Controllers\Auth\CleanPasswordResetController;
 use App\Http\Controllers\Auth\GuestEmailVerificationController;
@@ -93,13 +92,12 @@ if ($adminDomain !== '') {
             Route::get('users/{user}', [AdminUsersController::class, 'show'])->name('admin.users.show');
             Route::get('users/{user}/edit', [AdminUsersController::class, 'edit'])->name('admin.users.edit');
             Route::put('users/{user}', [AdminUsersController::class, 'update'])->name('admin.users.update');
-            Route::post('users/{user}/balance', [AdminUsersController::class, 'addBalance'])->name('admin.users.balance.add');
+            Route::post('users/{user}/balance', [AdminUsersController::class, 'adjustBalance'])->name('admin.users.balance.adjust');
             Route::delete('users/{user}', [AdminUsersController::class, 'destroy'])->name('admin.users.destroy');
 
             Route::get('services', [AdminServicesController::class, 'index'])->name('admin.services');
             Route::get('connections', [AdminConnectionsController::class, 'index'])->name('admin.connections');
             Route::post('connections/markup', [AdminConnectionsController::class, 'updateMarkup'])->name('admin.connections.markup');
-            Route::get('system-status', [AdminSystemStatusController::class, 'index'])->name('admin.system-status');
             Route::get('activity-logs', [AdminActivityLogsController::class, 'index'])->name('admin.activity-logs');
             Route::get('admin-users', [AdminAdminUsersController::class, 'index'])->name('admin.admin-users');
         });

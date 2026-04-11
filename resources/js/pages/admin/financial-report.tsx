@@ -2,6 +2,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 
 import Heading from '@/components/heading';
+import { useConfirm } from '@/components/confirm-dialog-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -68,6 +69,7 @@ function sanitizeNonNegativeInt(value: unknown): number {
 
 export default function AdminFinancialReport() {
     const { t } = useI18n();
+    const confirm = useConfirm();
 
     const { filters, records, editing, customer_balance, provider } = usePage().props as any as {
         filters: Filters;
@@ -195,8 +197,14 @@ export default function AdminFinancialReport() {
         });
     }
 
-    function destroy(id: number) {
-        const ok = window.confirm(t('Hapus data laporan keuangan ini?'));
+    async function destroy(id: number) {
+        const ok = await confirm({
+            title: t('Konfirmasi'),
+            description: t('Hapus data laporan keuangan ini?'),
+            variant: 'destructive',
+            cancelText: t('Batal'),
+            confirmText: t('Ya, hapus'),
+        });
         if (!ok) return;
 
         router.delete(`/financial-report/${id}`, {

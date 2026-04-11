@@ -13,6 +13,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useConfirm } from '@/components/confirm-dialog-provider';
 import { useI18n } from '@/i18n/i18n-provider';
 
 type UserRow = {
@@ -21,6 +22,8 @@ type UserRow = {
     email: string;
     phone: string | null;
     created_at_wib: string | null;
+    last_login_at_wib?: string | null;
+    last_activity_at_wib?: string | null;
     balance: number;
     total_spent: number;
     total_deposit: number;
@@ -55,6 +58,7 @@ function formatNumber(value: number): string {
 
 export default function AdminUsers() {
     const { t } = useI18n();
+    const confirm = useConfirm();
     const { users, stats, filters } = usePage().props as any as {
         users: UsersPaginator;
         stats: Stats;
@@ -95,9 +99,15 @@ export default function AdminUsers() {
 
     const rows = Array.isArray(users?.data) ? users.data : [];
 
-    function destroyUser(row: UserRow) {
+    async function destroyUser(row: UserRow) {
         if (row.is_admin_protected) return;
-        const ok = window.confirm(t('Hapus user ini? Data terkait (order/deposit) ikut terhapus.'));
+        const ok = await confirm({
+            title: t('Konfirmasi'),
+            description: t('Hapus user ini? Data terkait (order/deposit) ikut terhapus.'),
+            variant: 'destructive',
+            cancelText: t('Batal'),
+            confirmText: t('Ya, hapus'),
+        });
         if (!ok) return;
 
         router.delete(`/users/${row.id}`, {
@@ -160,6 +170,8 @@ export default function AdminUsers() {
                                     <tr className="bg-muted/20">
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('ID')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Dibuat')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Terakhir Login')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Aktivitas Terakhir')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Nama')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Email')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Telepon')}</th>
@@ -172,7 +184,7 @@ export default function AdminUsers() {
                                 <tbody>
                                     {rows.length === 0 ? (
                                         <tr>
-                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={9}>
+                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={11}>
                                                 {t('Tidak ada data.')}
                                             </td>
                                         </tr>
@@ -181,6 +193,8 @@ export default function AdminUsers() {
                                             <tr key={row.id} className="border-t">
                                                 <td className="px-4 py-3 whitespace-nowrap">#{row.id}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.created_at_wib ?? '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.last_login_at_wib ?? '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.last_activity_at_wib ?? '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.name || '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.email || '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.phone ?? '-'}</td>

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
+import { useI18n } from '@/i18n/i18n-provider';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import type { User } from '@/types';
@@ -30,6 +31,7 @@ function formatRupiah(value: unknown): string {
 }
 
 export function UserMenuContent({ user }: Props) {
+    const { t } = useI18n();
     const cleanup = useMobileNavigation();
     const [balance, setBalance] = React.useState<number>(Number(user.balance ?? 0));
 
@@ -81,7 +83,7 @@ export function UserMenuContent({ user }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                Saldo: <span className="text-foreground">{formatRupiah(balance)}</span>
+                {t('Saldo')}: <span className="text-foreground">{formatRupiah(balance)}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
@@ -93,7 +95,7 @@ export function UserMenuContent({ user }: Props) {
                         onClick={cleanup}
                     >
                         <Settings className="mr-2" />
-                        Settings
+                        {t('Pengaturan')}
                     </Link>
                 </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -107,7 +109,7 @@ export function UserMenuContent({ user }: Props) {
                     data-test="logout-button"
                 >
                     <LogOut className="mr-2" />
-                    Log out
+                    {t('Keluar')}
                 </Link>
             </DropdownMenuItem>
         </>
