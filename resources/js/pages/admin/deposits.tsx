@@ -38,6 +38,34 @@ type DepositRow = {
     };
 };
 
+function methodLabel(row: { payment_method: string; tripay_method: string | null }): string {
+    const tripay = String(row.tripay_method ?? '').trim();
+    const upper = tripay.toUpperCase();
+
+    if (upper === 'QRIS2' || upper.startsWith('QRIS')) {
+        return 'QRIS';
+    }
+
+    if (['OVO', 'DANA', 'SHOPEEPAY'].includes(upper)) {
+        return 'E-Wallet';
+    }
+
+    if (upper.endsWith('VA')) {
+        return 'Virtual Account';
+    }
+
+    if (tripay) {
+        return tripay;
+    }
+
+    const payment = String(row.payment_method ?? '').trim();
+    if (payment.toLowerCase() === 'konversi_saldo') {
+        return 'Konversi Saldo';
+    }
+
+    return payment;
+}
+
 type DepositsPaginator = {
     data: DepositRow[];
     current_page: number;
@@ -245,6 +273,7 @@ export default function AdminDeposits() {
                                         <SelectItem value="tripay">Tripay</SelectItem>
                                         <SelectItem value="qris">QRIS</SelectItem>
                                         <SelectItem value="ewallet">E-Wallet</SelectItem>
+                                        <SelectItem value="konversi_saldo">{t('Konversi Saldo')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -310,7 +339,7 @@ export default function AdminDeposits() {
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(row.amount ?? 0))}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.tripay_method || row.payment_method || '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{methodLabel(row)}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     {(() => {
                                                         const meta = depositStatusMeta(row.status, t);

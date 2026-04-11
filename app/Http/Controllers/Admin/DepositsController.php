@@ -87,6 +87,8 @@ class DepositsController extends Controller
                 $query->whereNotNull('tripay_method')->whereIn(DB::raw('UPPER(tripay_method)'), ['OVO', 'DANA', 'SHOPEEPAY']);
             } elseif ($methodKey === 'tripay') {
                 $query->where('payment_method', 'tripay');
+            } elseif ($methodKey === 'konversi_saldo') {
+                $query->where('payment_method', 'konversi_saldo');
             } else {
                 $method = '';
             }

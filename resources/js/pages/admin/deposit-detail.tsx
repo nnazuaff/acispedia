@@ -39,6 +39,34 @@ type DepositDetail = {
     provider_payload: unknown;
 };
 
+function methodLabel(row: { payment_method: string; tripay_method: string | null }): string {
+    const tripay = String(row.tripay_method ?? '').trim();
+    const upper = tripay.toUpperCase();
+
+    if (upper === 'QRIS2' || upper.startsWith('QRIS')) {
+        return 'QRIS';
+    }
+
+    if (['OVO', 'DANA', 'SHOPEEPAY'].includes(upper)) {
+        return 'E-Wallet';
+    }
+
+    if (upper.endsWith('VA')) {
+        return 'Virtual Account';
+    }
+
+    if (tripay) {
+        return tripay;
+    }
+
+    const payment = String(row.payment_method ?? '').trim();
+    if (payment.toLowerCase() === 'konversi_saldo') {
+        return 'Konversi Saldo';
+    }
+
+    return payment;
+}
+
 function formatNumber(value: number): string {
     return new Intl.NumberFormat('id-ID').format(value);
 }
@@ -60,6 +88,16 @@ export default function AdminDepositDetail() {
         deposit: DepositDetail;
         known_statuses: string[];
     };
+
+    const paymentMethod = String(deposit.payment_method ?? '').toLowerCase();
+    const isTripay =
+        paymentMethod === 'tripay' ||
+        Boolean(deposit.tripay_method || deposit.tripay_reference || deposit.tripay_merchant_ref || deposit.tripay_checkout_url);
+    const isKonversiSaldo = paymentMethod === 'konversi_saldo';
+
+    const providerPayload = deposit.provider_payload && typeof deposit.provider_payload === 'object' ? (deposit.provider_payload as any) : null;
+    const acispayPhone = providerPayload?.acispay_phone ? String(providerPayload.acispay_phone) : '';
+    const acispayUsername = providerPayload?.acispay_username ? String(providerPayload.acispay_username) : '';
 
     const statusOptions = React.useMemo(() => {
         return Array.isArray(known_statuses) ? known_statuses : [];
@@ -167,41 +205,59 @@ export default function AdminDepositDetail() {
                                     </tr>
                                     <tr className="border-t">
                                         <td className="px-4 py-3">{t('Metode')}</td>
-                                        <td className="px-4 py-3">{deposit.tripay_method || deposit.payment_method || '-'}</td>
+                                        <td className="px-4 py-3">{methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method })}</td>
                                     </tr>
-                                    <tr className="border-t">
-                                        <td className="px-4 py-3">{t('Tripay Merchant Ref')}</td>
-                                        <td className="px-4 py-3">{deposit.tripay_merchant_ref ?? '-'}</td>
-                                    </tr>
-                                    <tr className="border-t">
-                                        <td className="px-4 py-3">{t('Tripay Reference')}</td>
-                                        <td className="px-4 py-3">{deposit.tripay_reference ?? '-'}</td>
-                                    </tr>
-                                    <tr className="border-t">
-                                        <td className="px-4 py-3">{t('Tripay Pay Code')}</td>
-                                        <td className="px-4 py-3">{deposit.tripay_pay_code ?? '-'}</td>
-                                    </tr>
-                                    <tr className="border-t">
-                                        <td className="px-4 py-3">{t('Checkout URL')}</td>
-                                        <td className="px-4 py-3">
-                                            {deposit.tripay_checkout_url ? (
-                                                <a
-                                                    href={deposit.tripay_checkout_url}
-                                                    className="break-all underline"
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                >
-                                                    {deposit.tripay_checkout_url}
-                                                </a>
-                                            ) : (
-                                                '-'
-                                            )}
-                                        </td>
-                                    </tr>
-                                    <tr className="border-t">
-                                        <td className="px-4 py-3">{t('Expired')}</td>
-                                        <td className="px-4 py-3">{deposit.expired_at_wib ?? '-'}</td>
-                                    </tr>
+
+                                    {isTripay ? (
+                                        <>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Tripay Merchant Ref')}</td>
+                                                <td className="px-4 py-3">{deposit.tripay_merchant_ref ?? '-'}</td>
+                                            </tr>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Tripay Reference')}</td>
+                                                <td className="px-4 py-3">{deposit.tripay_reference ?? '-'}</td>
+                                            </tr>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Tripay Pay Code')}</td>
+                                                <td className="px-4 py-3">{deposit.tripay_pay_code ?? '-'}</td>
+                                            </tr>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Checkout URL')}</td>
+                                                <td className="px-4 py-3">
+                                                    {deposit.tripay_checkout_url ? (
+                                                        <a
+                                                            href={deposit.tripay_checkout_url}
+                                                            className="break-all underline"
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                        >
+                                                            {deposit.tripay_checkout_url}
+                                                        </a>
+                                                    ) : (
+                                                        '-'
+                                                    )}
+                                                </td>
+                                            </tr>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Expired')}</td>
+                                                <td className="px-4 py-3">{deposit.expired_at_wib ?? '-'}</td>
+                                            </tr>
+                                        </>
+                                    ) : null}
+
+                                    {isKonversiSaldo ? (
+                                        <>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Nomor HP AcisPay')}</td>
+                                                <td className="px-4 py-3">{acispayPhone !== '' ? acispayPhone : '-'}</td>
+                                            </tr>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Username AcisPay')}</td>
+                                                <td className="px-4 py-3">{acispayUsername !== '' ? acispayUsername : '-'}</td>
+                                            </tr>
+                                        </>
+                                    ) : null}
                                     <tr className="border-t">
                                         <td className="px-4 py-3">{t('Processed')}</td>
                                         <td className="px-4 py-3">{deposit.processed_at_wib ?? '-'}</td>

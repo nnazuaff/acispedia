@@ -60,6 +60,9 @@ function methodLabel(row: { payment_method: string; tripay_method: string | null
     }
 
     const payment = String(row.payment_method ?? '').trim();
+    if (payment.toLowerCase() === 'konversi_saldo') {
+        return 'Konversi Saldo';
+    }
     if (payment.toLowerCase() === 'tripay') {
         return 'Pembayaran';
     }
