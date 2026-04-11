@@ -86,6 +86,28 @@ const dictionaries: Record<Locale, Dict> = {
         'Total Deposit Hari Ini': "Today's deposits",
         'Total Penjualan Hari Ini': "Today's sales",
         'Laba Bersih Hari Ini': "Today's net profit",
+        'Penjelasan Status Layanan': 'Service Status Explanation',
+        'Arti status pesanan/deposit & panduan singkat.':
+            'Meaning of order/deposit statuses & a short guide.',
+        'Status': 'Statuses',
+        'Pesanan/deposit sedang dalam antrian di server.':
+            'Your order/deposit is in the server queue.',
+        'Pesanan sedang dalam proses.': 'Your order is being processed.',
+        'Pesanan telah berhasil.': 'Your order has been completed successfully.',
+        'Pesanan sudah terproses tapi tercancel. Anda hanya akan membayar layanan yang masuk saja.':
+            'The order was partially delivered and then canceled. You will only pay for what was delivered.',
+        'Pesanan dibatalkan, dan saldo akan otomatis kembali ke akun.':
+            'The order was canceled and your balance will be refunded automatically.',
+        'Mengapa bisa Partial?': 'Why can it be Partial?',
+        'Limit': 'Limit',
+        'Contoh jika satu layanan dengan maksimal 1.000 followers, kemudian Anda membeli 1.000 followers 2x di akun yang sama, kemungkinan besar akan terjadi partial. Karena akun (followers) yang ada di server tersebut hanya 1.000 followers. Jadi Anda tidak bisa mengirim 2.000 followers walaupun dengan cara 1.000 2x pemesanan. Jika hal ini terjadi, silakan gunakan server (layanan) lainnya. Hal ini tidak berpengaruh jika berbeda akun.':
+            "Example: if a service has a maximum of 1,000 followers and you place two 1,000-follower orders for the same account, it may end up partial. The server may only have 1,000 followers available for that account, so 2,000 can't be delivered even if ordered as 1,000 twice. If this happens, use a different service/server. This does not apply if the target account is different.",
+        'Server overload': 'Server overload',
+        'Overload biasanya terjadi di layanan yang murah. Karena murah terlalu banyak pesanan yang masuk sehingga terjadi overload dan partial. Untuk pesanan partial, sisa saldo layanan yang tidak masuk akan otomatis kembali ke akun.':
+            'Overload usually happens on cheaper services because too many orders come in at once, causing partial delivery. For partial orders, the undelivered amount will be refunded automatically.',
+        'Garansi (Refill)': 'Warranty (Refill)',
+        'Refill adalah isi ulang. Jika Anda membeli layanan refill dan ternyata dalam beberapa hari followers berkurang, maka jika pesanan Anda drop/turun Anda bisa lapor melalui tiket dengan menyertakan ID order dan request refill. Jika nama layanan auto refill Anda tidak perlu lapor ke admin karena proses refill otomatis, tapi jika dalam 2x24 jam belum refill maka Anda bisa lapor ke admin.':
+            "Refill means replenishment. If you purchase a refill service and followers decrease after a few days, you can open a ticket including your order ID and request a refill. If the service is auto-refill, you don't need to contact an admin because it's automatic; but if it hasn't refilled within 48 hours, you can contact support/admin.",
 
         // Settings / Profile menu
         'Pengaturan': 'Settings',

@@ -11,6 +11,7 @@ class EmailTemplate
     public static function render(
         string $title,
         string $name,
+      ?string $preheader = null,
         array $introLines,
         ?string $actionText = null,
         ?string $actionUrl = null,
@@ -23,6 +24,12 @@ class EmailTemplate
         $safeTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
         $safeAppName = htmlspecialchars($appName, ENT_QUOTES, 'UTF-8');
         $safeName = trim($name) !== '' ? htmlspecialchars($name, ENT_QUOTES, 'UTF-8') : '';
+
+        $preheaderText = trim((string) ($preheader ?? ''));
+        if ($preheaderText === '') {
+          $preheaderText = trim((string) ($introLines[0] ?? $title));
+        }
+        $safePreheader = htmlspecialchars($preheaderText, ENT_QUOTES, 'UTF-8');
 
         $introHtml = self::renderLines($introLines);
         $outroHtml = self::renderLines($outroLines);
@@ -62,7 +69,7 @@ class EmailTemplate
     <title>{$safeTitle}</title>
   </head>
   <body style="margin:0;padding:0;background:#f6f7f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Segoe UI Variable',Roboto,'Helvetica Neue',Arial,sans-serif;color:#111827;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">{$safeTitle}</div>
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">{$safePreheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
 
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f7f9;padding:32px 12px;">
       <tr>
@@ -78,7 +85,7 @@ class EmailTemplate
                       </div>
                     </td>
                     <td align="right" style="color:#6b7280;font-size:12px;">
-                      {$safeTitle}
+                      {$safeAppName}
                     </td>
                   </tr>
                 </table>

@@ -223,6 +223,8 @@ Route::post('api/tripay/callback', [DepositsController::class, 'tripayCallback']
 Route::middleware(['auth'])->group(function () {
     Broadcast::routes();
     Route::inertia('order', 'order')->name('order');
+    Route::inertia('penjelasan-status-layanan', 'service-status-explanation')
+        ->name('service.status.explanation');
     Route::get('api/service/{id}', [MedanpediaController::class, 'service'])->name('api.medanpedia.service');
     Route::get('api/profile', [MedanpediaController::class, 'profile'])->name('api.medanpedia.profile');
     Route::post('api/orders', [OrdersController::class, 'store'])->name('api.orders.store');

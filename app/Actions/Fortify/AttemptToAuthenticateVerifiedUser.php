@@ -56,12 +56,7 @@ class AttemptToAuthenticateVerifiedUser
         }
 
         if (method_exists($user, 'hasVerifiedEmail') && ! $user->hasVerifiedEmail()) {
-            $key = 'verify:login:send:'.$user->getKey().'|'.$request->ip();
-
-            if (! \Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, 3)) {
-                \Illuminate\Support\Facades\RateLimiter::hit($key, 600);
-                $user->sendEmailVerificationNotification();
-            }
+            $user->sendEmailVerificationNotification();
 
             $limiter->increment($request);
 

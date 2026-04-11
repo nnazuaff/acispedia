@@ -52,13 +52,19 @@ class GuestEmailVerificationController
             return back()->with('status', 'email-already-verified');
         }
 
-        $key = 'verify:resend:'.$user->getKey().'|'.$request->ip();
+        $key = 'mail:verify:'.$user->getKey();
 
-        if (RateLimiter::tooManyAttempts($key, 3)) {
+        if (RateLimiter::tooManyAttempts($key, 1)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            Inertia::flash('toast', [
+                'type' => 'warning',
+                'message' => 'Tunggu '.max(1, (int) $seconds).' detik sebelum kirim ulang link verifikasi.',
+            ]);
+
             return back()->with('status', 'verify-rate-limited');
         }
 
-        RateLimiter::hit($key, 600);
         $user->sendEmailVerificationNotification();
 
         $request->session()->put('verify_email', (string) $user->email);

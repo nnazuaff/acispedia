@@ -87,11 +87,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $key = 'mail:verify:'.$this->getKey();
 
-        if (RateLimiter::tooManyAttempts($key, 3)) {
+        // Cooldown: allow 1 send per 60 seconds.
+        if (RateLimiter::tooManyAttempts($key, 1)) {
             return;
         }
 
-        RateLimiter::hit($key, 600);
+        RateLimiter::hit($key, 60);
 
         $verificationUrl = URL::temporarySignedRoute(
             'verify.email.link',
