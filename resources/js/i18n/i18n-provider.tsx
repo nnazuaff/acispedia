@@ -68,6 +68,18 @@ const dictionaries: Record<Locale, Dict> = {
         'Maksimal': 'Maximum',
         'Memproses...': 'Processing...',
         'Lanjutkan': 'Continue',
+        'Konversi Saldo': 'Balance conversion',
+        'Pindahkan saldo dari AcisPay (butuh konfirmasi admin)':
+            'Transfer balance from AcisPay (requires admin confirmation)',
+        'Data AcisPay': 'AcisPay details',
+        'Nomor HP AcisPay': 'AcisPay phone number',
+        'Username AcisPay': 'AcisPay username',
+        'Nomor HP AcisPay wajib diisi': 'AcisPay phone number is required',
+        'Username AcisPay wajib diisi': 'AcisPay username is required',
+        'Pastikan saldo AcisPay mencukupi sesuai nominal yang dimasukkan.':
+            'Make sure your AcisPay balance is sufficient for the entered amount.',
+        'Masih ada deposit pending. Selesaikan atau batalkan deposit sebelumnya.':
+            'You still have a pending deposit. Complete or cancel the previous deposit first.',
         'Terang': 'Light',
         'Gelap': 'Dark',
         'Sistem': 'System',

@@ -307,6 +307,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('deposit', [DepositController::class, 'index'])->name('deposit');
 
     Route::post('api/deposits/tripay', [DepositsController::class, 'storeTripay'])->name('api.deposits.tripay.store');
+    Route::post('api/deposits/konversi-saldo', [DepositsController::class, 'storeKonversiSaldo'])->name('api.deposits.konversi_saldo.store');
     Route::post('api/deposits/{deposit}/cancel', [DepositsController::class, 'cancel'])->name('api.deposits.cancel');
 
     Route::get('topup', function (Request $request) {

@@ -7,14 +7,17 @@ use App\Events\DepositStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\UserBalance;
+use App\Services\AcispayClient;
 use App\Services\DashboardStats;
 use App\Support\AdminActivity;
 use App\Support\WalletLedgerWriter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -192,30 +195,150 @@ class DepositsController extends Controller
         $after = null;
         $didCredit = false;
         $userId = null;
+        $skipDefault = false;
 
-        try {
-            DB::transaction(function () use ($deposit, $next, &$before, &$after, &$didCredit, &$userId) {
-                $row = Deposit::query()->lockForUpdate()->find((int) $deposit->id);
-                if (! $row) {
-                    return;
-                }
+        $method = strtolower(trim((string) ($deposit->payment_method ?? '')));
 
-                $userId = (int) $row->user_id;
-                $before = (string) ($row->status ?? '');
+        if ($next === 'success' && $method === 'konversi_saldo') {
+            $transferContext = null;
+            $transferResponse = null;
+            $transferError = null;
+            $transferOk = false;
 
-                if ($before === 'success' && $next !== 'success') {
-                    $after = $before;
-                    return;
-                }
+            try {
+                DB::transaction(function () use ($deposit, &$before, &$after, &$userId, &$transferContext) {
+                    $row = Deposit::query()->lockForUpdate()->find((int) $deposit->id);
+                    if (! $row) {
+                        return;
+                    }
 
-                if ($next === $before) {
-                    $after = $before;
-                    return;
-                }
+                    $userId = (int) $row->user_id;
+                    $before = (string) ($row->status ?? '');
 
-                if ($next === 'success') {
+                    if ($before === 'success') {
+                        $after = $before;
+                        return;
+                    }
+
                     if ($before !== 'pending') {
                         $after = $before;
+                        return;
+                    }
+
+                    $payload = is_array($row->provider_payload) ? $row->provider_payload : [];
+
+                    $phone = trim((string) Arr::get($payload, 'acispay_phone', ''));
+                    $username = trim((string) Arr::get($payload, 'acispay_username', ''));
+                    $amount = (int) ($row->amount ?? 0);
+
+                    $idempotencyKey = 'acispedia-konversi-saldo-'.$row->id;
+                    $transferState = strtolower(trim((string) Arr::get($payload, 'acispay_transfer_state', '')));
+                    $alreadyTransferred = $transferState === 'success';
+
+                    if (! $alreadyTransferred) {
+                        $payload['acispay_transfer_state'] = 'initiated';
+                        $payload['acispay_transfer_initiated_at'] = now()->toISOString();
+                        $payload['acispay_transfer_idempotency_key'] = $idempotencyKey;
+                        $row->provider_payload = $payload;
+                        $row->save();
+                    }
+
+                    $transferContext = [
+                        'phone' => $phone,
+                        'username' => $username,
+                        'amount' => $amount,
+                        'idempotency_key' => $idempotencyKey,
+                        'already_transferred' => $alreadyTransferred,
+                    ];
+
+                    $after = $before;
+                });
+            } catch (Throwable $e) {
+                report($e);
+                return back()->with('error', 'Gagal memproses konversi saldo.');
+            }
+
+            if ($before === null || $after === null) {
+                return back()->with('error', 'Deposit tidak ditemukan.');
+            }
+
+            if (! is_array($transferContext)) {
+                return back()->with('error', 'Gagal memuat data deposit.');
+            }
+
+            if ($before !== 'pending') {
+                return back()->with('info', 'Status deposit tidak berubah.');
+            }
+
+            $phone = trim((string) ($transferContext['phone'] ?? ''));
+            $username = trim((string) ($transferContext['username'] ?? ''));
+            $amount = (int) ($transferContext['amount'] ?? 0);
+            $idempotencyKey = (string) ($transferContext['idempotency_key'] ?? '');
+            $alreadyTransferred = (bool) ($transferContext['already_transferred'] ?? false);
+
+            if ($phone === '' || $username === '' || $amount < 1 || $idempotencyKey === '') {
+                return back()->with('error', 'Data AcisPay pada deposit tidak lengkap.');
+            }
+
+            if (! AcispayClient::isConfigured()) {
+                return back()->with('error', 'Konversi saldo belum dikonfigurasi.');
+            }
+
+            if ($alreadyTransferred) {
+                $transferOk = true;
+            } else {
+                try {
+                    $transferResponse = AcispayClient::transfer($phone, $username, $amount, $idempotencyKey);
+                    $transferOk = true;
+                } catch (Throwable $e) {
+                    $transferError = $e->getMessage() !== '' ? $e->getMessage() : 'Gagal memproses konversi saldo.';
+                    $transferOk = false;
+                }
+            }
+
+            try {
+                DB::transaction(function () use (
+                    $deposit,
+                    $transferOk,
+                    $transferResponse,
+                    $transferError,
+                    &$after,
+                    &$didCredit,
+                    &$userId
+                ) {
+                    $row = Deposit::query()->lockForUpdate()->find((int) $deposit->id);
+                    if (! $row) {
+                        return;
+                    }
+
+                    $userId = (int) $row->user_id;
+                    $beforeNow = (string) ($row->status ?? '');
+
+                    $payload = is_array($row->provider_payload) ? $row->provider_payload : [];
+                    $payload['acispay_transfer_attempted_at'] = now()->toISOString();
+                    $payload['acispay_transfer_ok'] = $transferOk;
+
+                    if (is_array($transferResponse)) {
+                        $payload['acispay_transfer_raw'] = $transferResponse;
+                    }
+                    if (is_string($transferError) && trim($transferError) !== '') {
+                        $payload['acispay_transfer_error'] = $transferError;
+                    }
+
+                    $payload['acispay_transfer_state'] = $transferOk ? 'success' : 'failed';
+                    $payload['acispay_transfer_trace_id'] = (string) Str::uuid();
+
+                    $row->provider_payload = $payload;
+
+                    if (! $transferOk) {
+                        $row->save();
+                        $after = $beforeNow;
+                        return;
+                    }
+
+                    if ($beforeNow !== 'pending') {
+                        $row->save();
+                        $after = $beforeNow;
                         return;
                     }
 
@@ -256,31 +379,116 @@ class DepositsController extends Controller
                             'Deposit sukses (admin)',
                             [
                                 'deposit_id' => (int) $row->id,
+                                'method' => 'konversi_saldo',
                             ],
                             $row->processed_at,
                         );
                     }
 
                     $after = 'success';
+                });
+            } catch (Throwable $e) {
+                report($e);
+                return back()->with('error', 'Gagal menyelesaikan deposit konversi saldo.');
+            }
 
-                    return;
-                }
+            if ($after !== 'success') {
+                return back()->with('error', $transferError ?? 'Transfer AcisPay gagal.');
+            }
 
-                // Non-success updates are only safe while pending.
-                if ($before !== 'pending') {
-                    $after = $before;
-                    return;
-                }
+            $skipDefault = true;
+        }
 
-                $row->status = $next;
-                $row->processed_at = now();
-                $row->save();
+        if (! $skipDefault) {
+            try {
+                DB::transaction(function () use ($deposit, $next, &$before, &$after, &$didCredit, &$userId) {
+                    $row = Deposit::query()->lockForUpdate()->find((int) $deposit->id);
+                    if (! $row) {
+                        return;
+                    }
 
-                $after = $next;
-            });
-        } catch (Throwable $e) {
-            report($e);
-            return back()->with('error', 'Gagal memperbarui status deposit.');
+                    $userId = (int) $row->user_id;
+                    $before = (string) ($row->status ?? '');
+
+                    if ($before === 'success' && $next !== 'success') {
+                        $after = $before;
+                        return;
+                    }
+
+                    if ($next === $before) {
+                        $after = $before;
+                        return;
+                    }
+
+                    if ($next === 'success') {
+                        if ($before !== 'pending') {
+                            $after = $before;
+                            return;
+                        }
+
+                        $row->status = 'success';
+                        $row->processed_at = now();
+                        $row->save();
+
+                        UserBalance::query()->firstOrCreate([
+                            'user_id' => (int) $row->user_id,
+                        ], [
+                            'balance' => 0,
+                            'total_spent' => 0,
+                            'total_deposit' => 0,
+                        ]);
+
+                        $bal = UserBalance::query()
+                            ->where('user_id', (int) $row->user_id)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if ($bal) {
+                            $balanceBefore = (int) $bal->balance;
+                            $balanceAfter = $balanceBefore + (int) $row->amount;
+
+                            $bal->balance = $balanceAfter;
+                            $bal->total_deposit = (int) $bal->total_deposit + (int) $row->amount;
+                            $bal->save();
+                            $didCredit = true;
+
+                            WalletLedgerWriter::record(
+                                (int) $row->user_id,
+                                'credit',
+                                (int) $row->amount,
+                                (int) $balanceBefore,
+                                (int) $balanceAfter,
+                                'deposit',
+                                (string) $row->id,
+                                'Deposit sukses (admin)',
+                                [
+                                    'deposit_id' => (int) $row->id,
+                                ],
+                                $row->processed_at,
+                            );
+                        }
+
+                        $after = 'success';
+
+                        return;
+                    }
+
+                    // Non-success updates are only safe while pending.
+                    if ($before !== 'pending') {
+                        $after = $before;
+                        return;
+                    }
+
+                    $row->status = $next;
+                    $row->processed_at = now();
+                    $row->save();
+
+                    $after = $next;
+                });
+            } catch (Throwable $e) {
+                report($e);
+                return back()->with('error', 'Gagal memperbarui status deposit.');
+            }
         }
 
         if ($before === null || $after === null) {

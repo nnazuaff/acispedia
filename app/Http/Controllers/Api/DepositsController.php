@@ -7,6 +7,7 @@ use App\Events\DepositStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\UserBalance;
+use App\Services\AcispayClient;
 use App\Services\DashboardStats;
 use App\Services\TripayClient;
 use App\Support\UserActivity;
@@ -23,6 +24,124 @@ use Throwable;
 
 class DepositsController extends Controller
 {
+    public function storeKonversiSaldo(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'amount' => ['required', 'integer', 'min:1000', 'max:200000000'],
+            'acispay_phone' => ['required', 'string', 'min:8', 'max:32'],
+            'acispay_username' => ['required', 'string', 'min:3', 'max:64'],
+        ]);
+
+        $amount = (int) $validated['amount'];
+        $acispayPhone = trim((string) $validated['acispay_phone']);
+        $acispayUsername = trim((string) $validated['acispay_username']);
+
+        if (! AcispayClient::isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Metode konversi saldo belum dikonfigurasi.',
+            ], 422);
+        }
+
+        try {
+            $check = AcispayClient::checkBalance($acispayPhone, $acispayUsername);
+        } catch (Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() !== '' ? $e->getMessage() : 'Gagal memeriksa saldo.',
+            ], 422);
+        }
+
+        $available = (int) ($check['balance'] ?? 0);
+        if ($available < $amount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Saldo AcisPay tidak mencukupi.',
+            ], 422);
+        }
+
+        $depositId = null;
+
+        try {
+            $depositId = DB::transaction(function () use ($user, $amount, $acispayPhone, $acispayUsername, $available, $check) {
+                $activePending = Deposit::query()
+                    ->where('user_id', (int) $user->id)
+                    ->where('status', 'pending')
+                    ->where(function (Builder $q) {
+                        $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
+                    })
+                    ->exists();
+
+                if ($activePending) {
+                    throw new RuntimeException('Masih ada deposit pending. Selesaikan atau batalkan deposit sebelumnya.');
+                }
+
+                $payload = [
+                    'type' => 'konversi_saldo',
+                    'acispay_phone' => $acispayPhone,
+                    'acispay_username' => $acispayUsername,
+                    'acispay_available_balance' => $available,
+                    'acispay_checked_at' => now()->toISOString(),
+                    'acispay_check_raw' => $check['raw'] ?? null,
+                ];
+
+                $deposit = Deposit::query()->create([
+                    'user_id' => (int) $user->id,
+                    'amount' => $amount,
+                    'final_amount' => $amount,
+                    'payment_method' => 'konversi_saldo',
+                    'status' => 'pending',
+                    'provider_payload' => $payload,
+                ]);
+
+                return (int) $deposit->id;
+            });
+
+            if ($depositId !== null) {
+                UserActivity::log(
+                    $user,
+                    'deposit_create',
+                    'Buat deposit',
+                    [
+                        'deposit_id' => (int) $depositId,
+                        'amount' => (int) $amount,
+                        'method' => 'konversi_saldo',
+                    ]
+                );
+            }
+
+            try {
+                $fresh = Deposit::query()->find((int) $depositId);
+                if ($fresh) {
+                    broadcast(new DepositStatusUpdated($fresh));
+                }
+            } catch (Throwable) {
+                // best-effort
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pengajuan konversi saldo dibuat. Menunggu konfirmasi admin.',
+                'deposit_id' => (int) $depositId,
+                'amount' => $amount,
+            ]);
+        } catch (RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat pengajuan konversi saldo.',
+            ], 500);
+        }
+    }
+
     private static function normalizeTripayPhone(string $input): string
     {
         $raw = trim($input);

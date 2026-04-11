@@ -74,8 +74,10 @@ export default function DepositPage() {
 
     const quickAmounts = React.useMemo(() => [1000, 5000, 10000, 20000, 50000, 100000, 200000], []);
     const [amount, setAmount] = React.useState<number>(0);
-    const [methodCategory, setMethodCategory] = React.useState<'qris' | 'ewallet'>('qris');
+    const [methodCategory, setMethodCategory] = React.useState<'qris' | 'ewallet' | 'konversi_saldo'>('qris');
     const [ewalletCode, setEwalletCode] = React.useState<'OVO' | 'DANA' | 'SHOPEEPAY'>('OVO');
+    const [acispayPhone, setAcispayPhone] = React.useState<string>('');
+    const [acispayUsername, setAcispayUsername] = React.useState<string>('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [balanceState, setBalanceState] = React.useState<number>(Number(balance ?? 0));
     const [activePending, setActivePending] = React.useState<typeof activePendingProp>(activePendingProp);
@@ -191,6 +193,11 @@ export default function DepositPage() {
     async function createDeposit() {
         if (isSubmitting) return;
 
+        if (activePending?.id) {
+            toast.error(t('Masih ada deposit pending. Selesaikan atau batalkan deposit sebelumnya.'));
+            return;
+        }
+
         const amt = Number(amount);
         if (!Number.isFinite(amt) || amt < 1000) {
             toast.error(t('Minimal deposit Rp 1.000'));
@@ -199,6 +206,70 @@ export default function DepositPage() {
 
         if (amt > 200000) {
             toast.error(t('Maksimal deposit Rp 200.000'));
+            return;
+        }
+
+        if (methodCategory === 'konversi_saldo') {
+            const phone = acispayPhone.trim();
+            const username = acispayUsername.trim();
+
+            if (!phone) {
+                toast.error(t('Nomor HP AcisPay wajib diisi'));
+                return;
+            }
+            if (!username) {
+                toast.error(t('Username AcisPay wajib diisi'));
+                return;
+            }
+
+            setIsSubmitting(true);
+
+            try {
+                const xsrf = getXsrfToken();
+
+                const res = await fetch('/api/deposits/konversi-saldo', {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        ...(xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}),
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        amount: amt,
+                        acispay_phone: phone,
+                        acispay_username: username,
+                    }),
+                });
+
+                const json = (await res.json()) as any;
+                if (!res.ok || !json?.success) {
+                    toast.error(json?.message ?? t('Gagal membuat deposit.'));
+                    return;
+                }
+
+                toast.success(json?.message ?? t('Deposit dibuat.'));
+
+                router.get(
+                    '/history/deposit',
+                    {
+                        page: 1,
+                        per_page: 25,
+                    },
+                    {
+                        preserveState: false,
+                        preserveScroll: false,
+                        replace: true,
+                    }
+                );
+                return;
+            } catch (e) {
+                const msg = e instanceof Error ? e.message : t('Kesalahan tidak diketahui.');
+                toast.error(msg);
+            } finally {
+                setIsSubmitting(false);
+            }
+
             return;
         }
 
@@ -348,6 +419,51 @@ export default function DepositPage() {
                                         type="button"
                                         className={
                                             'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ' +
+                                            (methodCategory === 'konversi_saldo'
+                                                ? 'border-teal-500/60 bg-teal-500/10'
+                                                : 'border-border/60 bg-muted/10 hover:bg-muted/20')
+                                        }
+                                        onClick={() => setMethodCategory('konversi_saldo')}
+                                    >
+                                        <span
+                                            className={
+                                                'flex h-10 w-10 items-center justify-center rounded-lg ' +
+                                                (methodCategory === 'konversi_saldo'
+                                                    ? 'bg-teal-500 text-white'
+                                                    : 'bg-muted text-foreground')
+                                            }
+                                        >
+                                            <Wallet className="size-5" />
+                                        </span>
+                                        <div className="flex-1">
+                                            <div className="text-sm font-semibold">{t('Konversi Saldo')}</div>
+                                            <div className="text-xs text-muted-foreground">
+                                                {t('Pindahkan saldo dari AcisPay (butuh konfirmasi admin)')}
+                                            </div>
+                                        </div>
+                                        <span
+                                            className={
+                                                'h-5 w-5 rounded-full border-2 ' +
+                                                (methodCategory === 'konversi_saldo'
+                                                    ? 'border-teal-500'
+                                                    : 'border-muted-foreground/40')
+                                            }
+                                        >
+                                            <span
+                                                className={
+                                                    'block h-full w-full scale-50 rounded-full ' +
+                                                    (methodCategory === 'konversi_saldo'
+                                                        ? 'bg-teal-500'
+                                                        : 'bg-transparent')
+                                                }
+                                            />
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        className={
+                                            'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ' +
                                             (methodCategory === 'ewallet'
                                                 ? 'border-teal-500/60 bg-teal-500/10'
                                                 : 'border-border/60 bg-muted/10 hover:bg-muted/20')
@@ -397,6 +513,37 @@ export default function DepositPage() {
                                                     <SelectItem value="SHOPEEPAY">ShopeePay</SelectItem>
                                                 </SelectContent>
                                             </Select>
+                                        </div>
+                                    ) : null}
+
+                                    {methodCategory === 'konversi_saldo' && Number(amount) > 0 ? (
+                                        <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
+                                            <div className="text-sm font-semibold">{t('Data AcisPay')}</div>
+                                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                                <div>
+                                                    <Label htmlFor="acispay_phone">{t('Nomor HP AcisPay')}</Label>
+                                                    <Input
+                                                        id="acispay_phone"
+                                                        className="mt-1"
+                                                        value={acispayPhone}
+                                                        onChange={(e) => setAcispayPhone(e.target.value)}
+                                                        placeholder="08xxxxxxxxxx"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="acispay_username">{t('Username AcisPay')}</Label>
+                                                    <Input
+                                                        id="acispay_username"
+                                                        className="mt-1"
+                                                        value={acispayUsername}
+                                                        onChange={(e) => setAcispayUsername(e.target.value)}
+                                                        placeholder="username"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="mt-2 text-xs text-muted-foreground">
+                                                {t('Pastikan saldo AcisPay mencukupi sesuai nominal yang dimasukkan.')}
+                                            </div>
                                         </div>
                                     ) : null}
 
@@ -462,7 +609,7 @@ export default function DepositPage() {
                                 </Link>
                             </Button>
 
-                            <Button type="button" onClick={createDeposit} disabled={isSubmitting}>
+                            <Button type="button" onClick={createDeposit} disabled={isSubmitting || !!activePending}>
                                 <ArrowRight className="mr-2 h-4 w-4" />
                                 {isSubmitting ? t('Memproses...') : t('Lanjutkan')}
                             </Button>
