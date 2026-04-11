@@ -4,11 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Concerns\PasswordValidationRules;
 use App\Http\Controllers\Controller;
-use App\Models\Deposit;
-use App\Models\Order;
 use App\Models\User;
 use App\Models\UserBalance;
-use App\Models\UserActivityLog;
 use App\Models\WalletLedger;
 use App\Support\AdminActivity;
 use App\Support\PhoneNormalizer;
@@ -92,85 +89,26 @@ class UsersController extends Controller
         $user->loadMissing(['balanceRow:user_id,balance,total_spent,total_deposit']);
 
         $allowedPerPage = [25, 50, 100, 200];
-        $ordersPerPage = (int) $request->integer('orders_per_page', 25);
-        if (! in_array($ordersPerPage, $allowedPerPage, true)) {
-            $ordersPerPage = 25;
-        }
-        $depositsPerPage = (int) $request->integer('deposits_per_page', 25);
-        if (! in_array($depositsPerPage, $allowedPerPage, true)) {
-            $depositsPerPage = 25;
+        $ledgerPerPage = (int) $request->integer('ledger_per_page', 50);
+        if (! in_array($ledgerPerPage, $allowedPerPage, true)) {
+            $ledgerPerPage = 50;
         }
 
-        $activityPerPage = (int) $request->integer('activity_per_page', 25);
-        if (! in_array($activityPerPage, $allowedPerPage, true)) {
-            $activityPerPage = 25;
-        }
-
-        $ledger = [];
-        try {
-            $ledger = WalletLedger::query()
-                ->where('user_id', (int) $user->id)
-                ->orderByDesc('event_at')
-                ->orderByDesc('id')
-                ->limit(50)
-                ->get(['direction', 'amount', 'balance_before', 'balance_after', 'source_type', 'source_id', 'description', 'event_at'])
-                ->map(fn (WalletLedger $row) => [
-                    'event_at_wib' => $row->event_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
-                    'direction' => (string) ($row->direction ?? ''),
-                    'amount' => (int) ($row->amount ?? 0),
-                    'balance_before' => (int) ($row->balance_before ?? 0),
-                    'balance_after' => (int) ($row->balance_after ?? 0),
-                    'source_type' => (string) ($row->source_type ?? ''),
-                    'source_id' => $row->source_id !== null ? (string) $row->source_id : null,
-                    'description' => (string) ($row->description ?? ''),
-                ])
-                ->all();
-        } catch (Throwable $e) {
-            report($e);
-            $ledger = [];
-        }
-
-        $orders = Order::query()
+        $ledger = WalletLedger::query()
             ->where('user_id', (int) $user->id)
+            ->orderByDesc('event_at')
             ->orderByDesc('id')
-            ->paginate($ordersPerPage, ['id', 'service_name', 'target', 'total_price', 'status', 'created_at'], 'orders_page')
+            ->paginate($ledgerPerPage, ['direction', 'amount', 'balance_before', 'balance_after', 'source_type', 'source_id', 'description', 'event_at'], 'ledger_page')
             ->withQueryString()
-            ->through(fn (Order $o) => [
-                'id' => (int) $o->id,
-                'service_name' => (string) ($o->service_name ?? ''),
-                'target' => (string) ($o->target ?? ''),
-                'total_price' => (int) ($o->total_price ?? 0),
-                'status' => (string) ($o->status ?? ''),
-                'created_at_wib' => $o->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
-            ]);
-
-        $deposits = Deposit::query()
-            ->where('user_id', (int) $user->id)
-            ->orderByDesc('id')
-            ->paginate($depositsPerPage, ['id', 'amount', 'final_amount', 'status', 'payment_method', 'tripay_method', 'created_at'], 'deposits_page')
-            ->withQueryString()
-            ->through(fn (Deposit $d) => [
-                'id' => (int) $d->id,
-                'amount' => (int) ($d->amount ?? 0),
-                'final_amount' => (int) ($d->final_amount ?? 0),
-                'status' => (string) ($d->status ?? ''),
-                'payment_method' => (string) ($d->payment_method ?? ''),
-                'tripay_method' => $d->tripay_method !== null ? (string) $d->tripay_method : null,
-                'created_at_wib' => $d->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
-            ]);
-
-        $activity = UserActivityLog::query()
-            ->where('user_id', (int) $user->id)
-            ->orderByDesc('id')
-            ->paginate($activityPerPage, ['id', 'action', 'message', 'ip', 'meta', 'created_at'], 'activity_page')
-            ->withQueryString()
-            ->through(fn (UserActivityLog $r) => [
-                'id' => (int) $r->id,
-                'action' => (string) ($r->action ?? ''),
-                'message' => (string) ($r->message ?? ''),
-                'ip' => $r->ip !== null ? (string) $r->ip : null,
-                'created_at_wib' => $r->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
-                'meta' => is_array($r->meta) ? $r->meta : null,
+            ->through(fn (WalletLedger $row) => [
+                'event_at_wib' => $row->event_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                'direction' => (string) ($row->direction ?? ''),
+                'amount' => (int) ($row->amount ?? 0),
+                'balance_before' => (int) ($row->balance_before ?? 0),
+                'balance_after' => (int) ($row->balance_after ?? 0),
+                'source_type' => (string) ($row->source_type ?? ''),
+                'source_id' => $row->source_id !== null ? (string) $row->source_id : null,
+                'description' => (string) ($row->description ?? ''),
             ]);
 
         return Inertia::render('admin/user-detail', [
@@ -179,6 +117,7 @@ class UsersController extends Controller
                 'name' => (string) ($user->name ?? ''),
                 'email' => (string) ($user->email ?? ''),
                 'phone' => $user->phone !== null ? (string) $user->phone : null,
+                'is_email_verified' => (bool) $user->hasVerifiedEmail(),
                 'created_at_wib' => $user->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'updated_at_wib' => $user->updated_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'last_login_at_wib' => $user->last_login_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
@@ -187,14 +126,9 @@ class UsersController extends Controller
                 'total_spent' => (int) ($user->balanceRow?->total_spent ?? 0),
                 'total_deposit' => (int) ($user->balanceRow?->total_deposit ?? 0),
             ],
-            'orders' => $orders,
-            'deposits' => $deposits,
-            'activity' => $activity,
             'ledger' => $ledger,
             'filters' => [
-                'orders_per_page' => $ordersPerPage,
-                'deposits_per_page' => $depositsPerPage,
-                'activity_per_page' => $activityPerPage,
+                'ledger_per_page' => $ledgerPerPage,
             ],
         ]);
     }

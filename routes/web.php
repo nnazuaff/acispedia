@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\DepositsController as AdminDepositsController;
 use App\Http\Controllers\Admin\FinancialReportController as AdminFinancialReportController;
 use App\Http\Controllers\Admin\OrdersController as AdminOrdersController;
 use App\Http\Controllers\Admin\ServicesController as AdminServicesController;
+use App\Http\Controllers\Admin\UserActivityLogsController as AdminUserActivityLogsController;
 use App\Http\Controllers\Admin\UsersController as AdminUsersController;
 use App\Http\Controllers\Auth\CleanPasswordResetController;
 use App\Http\Controllers\Auth\GuestEmailVerificationController;
@@ -99,6 +100,7 @@ if ($adminDomain !== '') {
             Route::get('connections', [AdminConnectionsController::class, 'index'])->name('admin.connections');
             Route::post('connections/markup', [AdminConnectionsController::class, 'updateMarkup'])->name('admin.connections.markup');
             Route::get('activity-logs', [AdminActivityLogsController::class, 'index'])->name('admin.activity-logs');
+               Route::get('user-activity-logs', [AdminUserActivityLogsController::class, 'index'])->name('admin.user-activity-logs');
             Route::get('admin-users', [AdminAdminUsersController::class, 'index'])->name('admin.admin-users');
         });
 }

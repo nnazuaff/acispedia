@@ -128,6 +128,18 @@ export function AppSidebar() {
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
+
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    tooltip={{ children: t('Log Aktivitas User') }}
+                                >
+                                    <Link href="/user-activity-logs" prefetch>
+                                        <Activity />
+                                        <span>{t('Log Aktivitas User')}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarGroup>
                 ) : (

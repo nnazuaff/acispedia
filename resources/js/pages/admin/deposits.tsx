@@ -296,7 +296,19 @@ export default function AdminDeposits() {
                                             <tr key={row.id} className="border-t">
                                                 <td className="px-4 py-3 whitespace-nowrap">#{row.id}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.created_at_wib ?? '-'}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.user?.name || row.user?.email || '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    {row.user?.id ? (
+                                                        <Link
+                                                            href={`/users/${row.user.id}`}
+                                                            className="font-medium text-primary hover:underline"
+                                                            prefetch
+                                                        >
+                                                            {row.user?.name || row.user?.email || '-'}
+                                                        </Link>
+                                                    ) : (
+                                                        <>{row.user?.name || row.user?.email || '-'}</>
+                                                    )}
+                                                </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(row.amount ?? 0))}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.tripay_method || row.payment_method || '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">

@@ -9,6 +9,7 @@ use App\Models\Deposit;
 use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Support\AdminActivity;
+use App\Support\WalletLedgerWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -235,10 +236,28 @@ class DepositsController extends Controller
                         ->first();
 
                     if ($bal) {
-                        $bal->balance = (int) $bal->balance + (int) $row->amount;
+                        $balanceBefore = (int) $bal->balance;
+                        $balanceAfter = $balanceBefore + (int) $row->amount;
+
+                        $bal->balance = $balanceAfter;
                         $bal->total_deposit = (int) $bal->total_deposit + (int) $row->amount;
                         $bal->save();
                         $didCredit = true;
+
+                        WalletLedgerWriter::record(
+                            (int) $row->user_id,
+                            'credit',
+                            (int) $row->amount,
+                            (int) $balanceBefore,
+                            (int) $balanceAfter,
+                            'deposit',
+                            (string) $row->id,
+                            'Deposit sukses (admin)',
+                            [
+                                'deposit_id' => (int) $row->id,
+                            ],
+                            $row->processed_at,
+                        );
                     }
 
                     $after = 'success';

@@ -12,6 +12,7 @@ use App\Services\DashboardStats;
 use App\Services\MedanpediaClient;
 use App\Services\ServicePolicy;
 use App\Support\UserActivity;
+use App\Support\WalletLedgerWriter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -183,9 +184,30 @@ class OrdersController extends Controller
                     'status_check_attempts' => 0,
                 ]);
 
+                $balanceBefore = $currentBalance;
+                $balanceAfter = max(0, $currentBalance - $totalPrice);
                 $balanceRow->balance = max(0, $currentBalance - $totalPrice);
                 $balanceRow->total_spent = (int) $balanceRow->total_spent + $totalPrice;
                 $balanceRow->save();
+
+                WalletLedgerWriter::record(
+                    (int) $user->id,
+                    'debit',
+                    (int) $totalPrice,
+                    (int) $balanceBefore,
+                    (int) $balanceAfter,
+                    'order',
+                    (string) $created->id,
+                    'Pembayaran order',
+                    [
+                        'order_id' => (int) $created->id,
+                        'service_id' => (int) $serviceId,
+                        'service_name' => (string) $serviceName,
+                        'target' => (string) $target,
+                        'quantity' => (int) $quantity,
+                    ],
+                    $created->created_at,
+                );
 
                 return ['order' => $created, 'balance' => (int) $balanceRow->balance];
             });
@@ -256,10 +278,28 @@ class OrdersController extends Controller
                     ->first();
 
                 if ($balanceRow) {
-                    $balanceRow->balance = (int) $balanceRow->balance + $totalPrice;
+                    $balanceBefore = (int) $balanceRow->balance;
+                    $balanceAfter = $balanceBefore + $totalPrice;
+
+                    $balanceRow->balance = $balanceAfter;
                     $spent = (int) $balanceRow->total_spent;
                     $balanceRow->total_spent = $spent >= $totalPrice ? $spent - $totalPrice : 0;
                     $balanceRow->save();
+
+                    WalletLedgerWriter::record(
+                        (int) $user->id,
+                        'credit',
+                        (int) $totalPrice,
+                        (int) $balanceBefore,
+                        (int) $balanceAfter,
+                        'order',
+                        (string) $createdOrder->id,
+                        'Refund order (gagal submit)',
+                        [
+                            'order_id' => (int) $createdOrder->id,
+                        ],
+                        now(),
+                    );
                 }
 
                 $createdOrder->status = 'Error';

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserActivityLog extends Model
 {
@@ -18,4 +19,12 @@ class UserActivityLog extends Model
     protected $casts = [
         'meta' => 'array',
     ];
+
+    /**
+     * @return BelongsTo<User, UserActivityLog>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

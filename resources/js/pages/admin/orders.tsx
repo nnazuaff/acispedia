@@ -47,8 +47,8 @@ type OrdersPaginator = {
 type Stats = {
     total: number;
     success: number;
+    processing: number;
     failed: number;
-    other: number;
 };
 
 type Filters = {
@@ -181,18 +181,18 @@ export default function AdminOrders() {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-slate-500/30 bg-slate-500/5">
+                    <Card className="border-sky-500/30 bg-sky-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                {t('Lainnya')}
+                                {t('Proses')}
                             </div>
                             <div className="mt-2 text-2xl font-semibold">
-                                {formatNumber(stats?.other ?? 0)}
+                                {formatNumber(stats?.processing ?? 0)}
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-sky-500/30 bg-sky-500/5">
+                    <Card className="border-slate-500/30 bg-slate-500/5">
                         <CardContent className="pt-6">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 {t('Total')}
@@ -331,7 +331,17 @@ export default function AdminOrders() {
                                                     {row.created_at_wib ?? '-'}
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
-                                                    {row.user?.name || row.user?.email || '-'}
+                                                    {row.user?.id ? (
+                                                        <Link
+                                                            href={`/users/${row.user.id}`}
+                                                            className="font-medium text-primary hover:underline"
+                                                            prefetch
+                                                        >
+                                                            {row.user?.name || row.user?.email || '-'}
+                                                        </Link>
+                                                    ) : (
+                                                        <>{row.user?.name || row.user?.email || '-'}</>
+                                                    )}
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     {row.service_name || '-'}

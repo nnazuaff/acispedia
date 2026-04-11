@@ -103,8 +103,8 @@ class OrdersController extends Controller
         $stats = [
             'total' => 0,
             'success' => 0,
+            'processing' => 0,
             'failed' => 0,
-            'other' => 0,
         ];
 
         try {
@@ -205,7 +205,7 @@ class OrdersController extends Controller
 
     /**
      * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Order>  $query
-     * @return array{total:int, success:int, failed:int, other:int}
+     * @return array{total:int, success:int, processing:int, failed:int}
      */
     private function computeStats($query): array
     {
@@ -215,17 +215,19 @@ class OrdersController extends Controller
             ->whereRaw('LOWER(status) = ?', ['success'])
             ->count();
 
+        $processing = (int) (clone $query)
+            ->whereRaw('LOWER(status) IN (?,?,?,?)', ['pending', 'processing', 'submitting', 'partial'])
+            ->count();
+
         $failed = (int) (clone $query)
             ->whereRaw('LOWER(status) IN (?,?,?)', ['failed', 'error', 'canceled'])
             ->count();
 
-        $other = max(0, $total - $success - $failed);
-
         return [
             'total' => $total,
             'success' => $success,
+            'processing' => $processing,
             'failed' => $failed,
-            'other' => $other,
         ];
     }
 }

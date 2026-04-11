@@ -6,6 +6,7 @@ use App\Events\DashboardStatsUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\UserBalance;
 use App\Services\DashboardStats;
+use App\Support\WalletLedgerWriter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -42,9 +43,25 @@ class BalanceController extends Controller
                     return 0;
                 }
 
-                $row->balance = (int) $row->balance + $amount;
+                $balanceBefore = (int) $row->balance;
+                $balanceAfter = $balanceBefore + $amount;
+
+                $row->balance = $balanceAfter;
                 $row->total_deposit = (int) $row->total_deposit + $amount;
                 $row->save();
+
+                WalletLedgerWriter::record(
+                    (int) $user->id,
+                    'credit',
+                    (int) $amount,
+                    (int) $balanceBefore,
+                    (int) $balanceAfter,
+                    'topup',
+                    null,
+                    'Top up saldo',
+                    null,
+                    now(),
+                );
 
                 return (int) $row->balance;
             });

@@ -10,6 +10,7 @@ use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Services\TripayClient;
 use App\Support\UserActivity;
+use App\Support\WalletLedgerWriter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -456,9 +457,31 @@ class DepositsController extends Controller
                         ->first();
 
                     if ($bal) {
-                        $bal->balance = (int) $bal->balance + (int) $row->amount;
+                        $balanceBefore = (int) $bal->balance;
+                        $balanceAfter = $balanceBefore + (int) $row->amount;
+
+                        $bal->balance = $balanceAfter;
                         $bal->total_deposit = (int) $bal->total_deposit + (int) $row->amount;
                         $bal->save();
+
+                        WalletLedgerWriter::record(
+                            (int) $row->user_id,
+                            'credit',
+                            (int) $row->amount,
+                            (int) $balanceBefore,
+                            (int) $balanceAfter,
+                            'deposit',
+                            (string) $row->id,
+                            'Deposit sukses',
+                            [
+                                'deposit_id' => (int) $row->id,
+                                'payment_method' => (string) ($row->payment_method ?? ''),
+                                'tripay_method' => $row->tripay_method !== null ? (string) $row->tripay_method : null,
+                                'tripay_reference' => $row->tripay_reference !== null ? (string) $row->tripay_reference : null,
+                                'tripay_merchant_ref' => $row->tripay_merchant_ref !== null ? (string) $row->tripay_merchant_ref : null,
+                            ],
+                            $row->processed_at,
+                        );
                     }
 
                     $shouldBroadcastStats = true;
