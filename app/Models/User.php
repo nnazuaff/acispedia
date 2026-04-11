@@ -107,6 +107,7 @@ class User extends Authenticatable implements MustVerifyEmail
         $content = EmailTemplate::render(
             title: 'Verifikasi Email',
             name: (string) $this->name,
+            preheader: 'Klik tombol untuk verifikasi email. Link berlaku 60 menit.',
             introLines: [
                 'Terima kasih sudah mendaftar di AcisPedia.',
                 'Silakan klik tombol di bawah untuk memverifikasi email Anda dan mengaktifkan akun.',
@@ -170,6 +171,7 @@ class User extends Authenticatable implements MustVerifyEmail
         $content = EmailTemplate::render(
             title: 'Reset Password',
             name: (string) $this->name,
+            preheader: 'Klik tombol untuk mengatur ulang password. Link berlaku 60 menit.',
             introLines: [
                 'Kami menerima permintaan untuk mengatur ulang password akun Anda.',
                 'Klik tombol di bawah untuk membuat password baru.',
