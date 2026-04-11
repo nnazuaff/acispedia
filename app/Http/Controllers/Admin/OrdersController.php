@@ -6,6 +6,7 @@ use App\Events\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Support\AdminActivity;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -48,9 +49,9 @@ class OrdersController extends Controller
 
         if ($q !== '') {
             $qLower = mb_strtolower($q);
-            $query->where(function ($sub) use ($q, $qLower) {
+            $query->where(function (Builder $sub) use ($q, $qLower) {
                 $sub->where('service_name', 'like', "%{$q}%")
-                    ->orWhereHas('user', function ($uq) use ($q) {
+                    ->orWhereHas('user', function (Builder $uq) use ($q) {
                         $uq->where('name', 'like', "%{$q}%")
                             ->orWhere('email', 'like', "%{$q}%");
                     });

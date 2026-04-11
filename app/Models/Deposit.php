@@ -5,6 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $amount
+ * @property int $final_amount
+ * @property string $payment_method
+ * @property string $status
+ * @property string|null $tripay_merchant_ref
+ * @property string|null $tripay_reference
+ * @property string|null $tripay_method
+ * @property string|null $tripay_pay_code
+ * @property string|null $tripay_checkout_url
+ * @property string|null $tripay_status
+ * @property \Illuminate\Support\Carbon|null $expired_at
+ * @property \Illuminate\Support\Carbon|null $processed_at
+ * @property array|null $provider_payload
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read User|null $user
+ */
 class Deposit extends Model
 {
     /**

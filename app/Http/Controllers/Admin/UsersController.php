@@ -10,6 +10,7 @@ use App\Models\WalletLedger;
 use App\Support\AdminActivity;
 use App\Support\PhoneNormalizer;
 use App\Support\WalletLedgerWriter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +35,7 @@ class UsersController extends Controller
         $query = User::query()->with(['balanceRow:user_id,balance,total_spent,total_deposit']);
 
         if ($q !== '') {
-            $query->where(function ($uq) use ($q) {
+            $query->where(function (Builder $uq) use ($q) {
                 $uq->where('name', 'like', "%{$q}%")
                     ->orWhere('email', 'like', "%{$q}%")
                     ->orWhere('phone', 'like', "%{$q}%")

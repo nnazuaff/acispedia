@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminActivityLog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,11 +24,11 @@ class ActivityLogsController extends Controller
         $query = AdminActivityLog::query()->with(['adminUser:id,name,email']);
 
         if ($q !== '') {
-            $query->where(function ($sq) use ($q) {
+            $query->where(function (Builder $sq) use ($q) {
                 $sq->where('message', 'like', "%{$q}%")
                     ->orWhere('entity_type', 'like', "%{$q}%")
                     ->orWhere('entity_id', 'like', "%{$q}%")
-                    ->orWhereHas('adminUser', function ($uq) use ($q) {
+                    ->orWhereHas('adminUser', function (Builder $uq) use ($q) {
                         $uq->where('name', 'like', "%{$q}%")
                             ->orWhere('email', 'like', "%{$q}%");
                     });

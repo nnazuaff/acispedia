@@ -20,6 +20,20 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Throwable;
 
+/**
+ * @property int $id
+ * @property string|null $name
+ * @property string|null $email
+ * @property string|null $phone
+ * @property string|null $account_status
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property \Illuminate\Support\Carbon|null $last_login_at
+ * @property \Illuminate\Support\Carbon|null $last_activity_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read UserBalance|null $balanceRow
+ * @property-read float $balance
+ */
 #[Fillable(['name', 'email', 'phone', 'password', 'account_status'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail

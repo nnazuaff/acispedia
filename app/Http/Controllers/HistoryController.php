@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Deposit;
 use App\Models\Order;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\DB;
@@ -86,6 +87,10 @@ class HistoryController extends Controller
     {
         $user = $request->user();
 
+        if (! $user) {
+            abort(HttpResponse::HTTP_NOT_FOUND);
+        }
+
         $q = trim((string) $request->query('q', ''));
         $status = trim((string) $request->query('status', ''));
         $perPage = (int) $request->query('per_page', 25);
@@ -104,7 +109,7 @@ class HistoryController extends Controller
             ->where('user_id', (int) $user->id);
 
         if ($q !== '') {
-            $ordersQuery->where(function ($query) use ($q) {
+            $ordersQuery->where(function (Builder $query) use ($q) {
                 $query
                     ->where('service_name', 'like', '%'.$q.'%')
                     ->orWhere('target', 'like', '%'.$q.'%')
@@ -147,6 +152,10 @@ class HistoryController extends Controller
     public function deposit(Request $request): Response
     {
         $user = $request->user();
+
+        if (! $user) {
+            abort(HttpResponse::HTTP_NOT_FOUND);
+        }
 
         // Best-effort: expire old pending deposits when user opens history.
         DB::transaction(function () use ($user) {
@@ -213,7 +222,7 @@ class HistoryController extends Controller
         }
 
         if ($q !== '') {
-            $query->where(function ($sub) use ($q) {
+            $query->where(function (Builder $sub) use ($q) {
                 $sub
                     ->where('tripay_merchant_ref', 'like', '%'.$q.'%')
                     ->orWhere('tripay_reference', 'like', '%'.$q.'%')

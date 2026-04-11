@@ -89,7 +89,6 @@ const dictionaries: Record<Locale, Dict> = {
         'Penjelasan Status Layanan': 'Service Status Explanation',
         'Arti status pesanan/deposit & panduan singkat.':
             'Meaning of order/deposit statuses & a short guide.',
-        'Status': 'Statuses',
         'Pesanan/deposit sedang dalam antrian di server.':
             'Your order/deposit is in the server queue.',
         'Pesanan sedang dalam proses.': 'Your order is being processed.',
@@ -116,7 +115,6 @@ const dictionaries: Record<Locale, Dict> = {
         'Perangkat': 'Devices',
         'Kelola profil dan pengaturan akun Anda.': 'Manage your profile and account settings.',
         'Saldo': 'Balance',
-        'Nomor HP / WhatsApp': 'Phone / WhatsApp',
 
         // Landing
         'modern untuk pertumbuhan sosial media': 'modern for social media growth',
@@ -211,7 +209,6 @@ const dictionaries: Record<Locale, Dict> = {
         '5. Retensi Data': '5. Data Retention',
         'Kami menyimpan data selama diperlukan untuk menyediakan layanan, memenuhi kewajiban hukum, menyelesaikan sengketa, dan menegakkan ketentuan.':
             'We retain data as long as needed to provide the service, comply with legal obligations, resolve disputes, and enforce the terms.',
-        'Keamanan': 'Security',
         'Kami menerapkan langkah keamanan yang wajar untuk melindungi data dari akses tidak sah.':
             'We implement reasonable security measures to protect data from unauthorized access.',
         'Namun, tidak ada sistem yang 100% aman; Anda juga bertanggung jawab untuk menjaga keamanan akun Anda.':
@@ -455,7 +452,6 @@ const dictionaries: Record<Locale, Dict> = {
         'Harga / 1000': 'Price / 1000',
         'Estimasi': 'Estimated',
         'Informasi': 'Information',
-        'Saldo': 'Balance',
         'Pastikan akun tidak private saat order diproses.':
             'Make sure the account is not private while the order is being processed.',
         'Jangan ubah username/tautan selama pesanan berjalan.':
@@ -560,7 +556,6 @@ const dictionaries: Record<Locale, Dict> = {
         'Link verifikasi baru telah dikirim ke alamat email yang Anda berikan saat registrasi.':
             'A new verification link has been sent to the email address you provided during registration.',
         'Kirim ulang email verifikasi': 'Resend verification email',
-        'Keluar': 'Log out',
         'Klik link verifikasi yang dikirim ke email untuk mengaktifkan akun.':
             'Click the verification link sent to your email to activate your account.',
         'Email sudah terverifikasi. Silakan login.':
@@ -616,7 +611,6 @@ const dictionaries: Record<Locale, Dict> = {
             'When you enable two-factor authentication, you will be prompted for a secure PIN during login. This PIN can be retrieved from a TOTP-supported authenticator app on your phone.',
         'Lanjutkan pengaturan': 'Continue setup',
         'Aktifkan 2FA': 'Enable 2FA',
-        'Perangkat': 'Devices',
         'Logout': 'Log out',
         'Logout perangkat lain': 'Log out other devices',
         'Logout dari semua perangkat lain?': 'Log out from all other devices?',

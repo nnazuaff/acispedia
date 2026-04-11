@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Deposit;
 use App\Services\DashboardStats;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,7 +21,7 @@ class DepositController extends Controller
             $activePending = Deposit::query()
                 ->where('user_id', (int) $user->id)
                 ->where('status', 'pending')
-                ->where(function ($q) {
+                ->where(function (Builder $q) {
                     $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
                 })
                 ->orderByDesc('created_at')

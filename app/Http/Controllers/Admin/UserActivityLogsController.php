@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\UserActivityLog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,11 +30,11 @@ class UserActivityLogsController extends Controller
         }
 
         if ($q !== '') {
-            $query->where(function ($sub) use ($q) {
+            $query->where(function (Builder $sub) use ($q) {
                 $sub->where('action', 'like', "%{$q}%")
                     ->orWhere('message', 'like', "%{$q}%")
                     ->orWhere('ip', 'like', "%{$q}%")
-                    ->orWhereHas('user', function ($uq) use ($q) {
+                    ->orWhereHas('user', function (Builder $uq) use ($q) {
                         $uq->where('name', 'like', "%{$q}%")
                             ->orWhere('email', 'like', "%{$q}%")
                             ->orWhere('id', $q);

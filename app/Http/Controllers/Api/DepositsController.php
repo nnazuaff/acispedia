@@ -11,6 +11,7 @@ use App\Services\DashboardStats;
 use App\Services\TripayClient;
 use App\Support\UserActivity;
 use App\Support\WalletLedgerWriter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -184,7 +185,7 @@ class DepositsController extends Controller
                 $activePending = Deposit::query()
                     ->where('user_id', (int) $user->id)
                     ->where('status', 'pending')
-                    ->where(function ($q) {
+                    ->where(function (Builder $q) {
                         $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
                     })
                     ->exists();

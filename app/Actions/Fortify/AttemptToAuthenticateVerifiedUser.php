@@ -45,7 +45,7 @@ class AttemptToAuthenticateVerifiedUser
             ]);
         }
 
-        $credentials = [$usernameField => (string) $user->{$usernameField}, 'password' => $password];
+        $credentials = [$usernameField => (string) $user->getAttribute($usernameField), 'password' => $password];
 
         if (! $guard->validate($credentials)) {
             $limiter->increment($request);

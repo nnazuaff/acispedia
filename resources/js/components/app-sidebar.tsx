@@ -109,6 +109,18 @@ export function AppSidebar() {
                             </SidebarMenuItem>
 
                             <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    tooltip={{ children: t('Penjelasan Status Layanan') }}
+                                >
+                                    <Link href="/penjelasan-status-layanan" prefetch>
+                                        <CircleHelp />
+                                        <span>{t('Penjelasan Status Layanan')}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+
+                            <SidebarMenuItem>
                                 <SidebarMenuButton asChild tooltip={{ children: t('Koneksi') }}>
                                     <Link href="/connections" prefetch>
                                         <Layers />

@@ -5,6 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $admin_user_id
+ * @property string $action
+ * @property string|null $entity_type
+ * @property string|null $entity_id
+ * @property string $message
+ * @property array|null $meta
+ * @property string|null $ip
+ * @property string|null $user_agent
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read User|null $adminUser
+ */
 class AdminActivityLog extends Model
 {
     /**

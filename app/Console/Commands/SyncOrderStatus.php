@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Services\DashboardStats;
 use App\Services\MedanpediaClient;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class SyncOrderStatus extends Command
@@ -37,7 +38,7 @@ class SyncOrderStatus extends Command
         $orders = Order::query()
             ->whereNotNull('provider_order_id')
             ->whereNotIn('status', $finalStatuses)
-            ->where(function ($q) {
+            ->where(function (Builder $q) {
                 $q->whereNull('last_status_check')
                     ->orWhere('last_status_check', '<', now()->subMinutes(5));
             })

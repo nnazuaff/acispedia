@@ -10,6 +10,7 @@ use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Support\AdminActivity;
 use App\Support\WalletLedgerWriter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -57,8 +58,8 @@ class DepositsController extends Controller
                 $qInt = (int) $q;
             }
 
-            $query->where(function ($sub) use ($q, $qInt) {
-                $sub->whereHas('user', function ($uq) use ($q) {
+            $query->where(function (Builder $sub) use ($q, $qInt) {
+                $sub->whereHas('user', function (Builder $uq) use ($q) {
                     $uq->where('name', 'like', "%{$q}%")
                         ->orWhere('email', 'like', "%{$q}%");
                 });
