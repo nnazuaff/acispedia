@@ -30,6 +30,16 @@ use Laravel\Fortify\Features;
 
 $adminDomain = (string) config('admin.domain', '');
 
+Route::get('favicon.ico', function () {
+    $v = @filemtime(public_path('favicon.png')) ?: '1';
+    return redirect('/favicon.png?v='.$v);
+})->name('favicon');
+
+Route::get('apple-touch-icon.png', function () {
+    $v = @filemtime(public_path('favicon.png')) ?: '1';
+    return redirect('/favicon.png?v='.$v);
+});
+
 if ($adminDomain !== '') {
     Route::domain($adminDomain)
         ->middleware(['auth', 'verified', 'admin'])
