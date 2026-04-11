@@ -9,6 +9,7 @@ use App\Models\Deposit;
 use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Services\TripayClient;
+use App\Support\UserActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -204,6 +205,20 @@ class DepositsController extends Controller
 
                 return (int) $deposit->id;
             });
+
+            if ($depositId !== null) {
+                UserActivity::log(
+                    $user,
+                    'deposit_create',
+                    'Buat deposit',
+                    [
+                        'deposit_id' => (int) $depositId,
+                        'amount' => (int) $amount,
+                        'method' => (string) $method,
+                        'merchant_ref' => (string) $merchantRef,
+                    ]
+                );
+            }
 
             $json = TripayClient::createTransaction(
                 $merchantRef,

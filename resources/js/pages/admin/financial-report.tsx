@@ -67,6 +67,18 @@ function sanitizeNonNegativeInt(value: unknown): number {
     return Math.round(n);
 }
 
+function parseMoneyLikeToInt(value: unknown): number {
+    const raw = String(value ?? '').trim();
+    if (raw === '') return 0;
+
+    const digitsOnly = raw.replace(/[^\d]/g, '');
+    if (digitsOnly === '') return 0;
+
+    const n = Number(digitsOnly);
+    if (!Number.isFinite(n) || n < 0) return 0;
+    return Math.round(n);
+}
+
 export default function AdminFinancialReport() {
     const { t } = useI18n();
     const confirm = useConfirm();
@@ -116,7 +128,8 @@ export default function AdminFinancialReport() {
             setTotalReceivables(editing.total_receivables ?? 0);
         } else {
             setReportDate(filters?.date_from ?? '');
-            setVendorMedanpedia(0);
+            const defaultMedanpedia = provider?.medanpedia?.configured ? Number(provider?.medanpedia?.balance ?? 0) : 0;
+            setVendorMedanpedia(sanitizeNonNegativeInt(defaultMedanpedia));
             setBankBri(0);
             setBankBni(0);
             setBankBca(0);
@@ -290,47 +303,47 @@ export default function AdminFinancialReport() {
                                     id="vendor_medanpedia"
                                     inputMode="numeric"
                                     value={String(vendorMedanpedia)}
-                                    onChange={(e) => setVendorMedanpedia(sanitizeNonNegativeInt(e.target.value))}
+                                    onChange={(e) => setVendorMedanpedia(parseMoneyLikeToInt(e.target.value))}
                                 />
                             </div>
 
                             <div>
                                 <Label htmlFor="bank_bri">{t('Bank BRI')}</Label>
-                                <Input id="bank_bri" inputMode="numeric" value={String(bankBri)} onChange={(e) => setBankBri(sanitizeNonNegativeInt(e.target.value))} />
+                                <Input id="bank_bri" inputMode="numeric" value={String(bankBri)} onChange={(e) => setBankBri(parseMoneyLikeToInt(e.target.value))} />
                             </div>
                             <div>
                                 <Label htmlFor="bank_bni">{t('Bank BNI')}</Label>
-                                <Input id="bank_bni" inputMode="numeric" value={String(bankBni)} onChange={(e) => setBankBni(sanitizeNonNegativeInt(e.target.value))} />
+                                <Input id="bank_bni" inputMode="numeric" value={String(bankBni)} onChange={(e) => setBankBni(parseMoneyLikeToInt(e.target.value))} />
                             </div>
                             <div>
                                 <Label htmlFor="bank_bca">{t('Bank BCA')}</Label>
-                                <Input id="bank_bca" inputMode="numeric" value={String(bankBca)} onChange={(e) => setBankBca(sanitizeNonNegativeInt(e.target.value))} />
+                                <Input id="bank_bca" inputMode="numeric" value={String(bankBca)} onChange={(e) => setBankBca(parseMoneyLikeToInt(e.target.value))} />
                             </div>
 
                             <div>
                                 <Label htmlFor="wallet_ovo">{t('Saldo OVO')}</Label>
-                                <Input id="wallet_ovo" inputMode="numeric" value={String(walletOvo)} onChange={(e) => setWalletOvo(sanitizeNonNegativeInt(e.target.value))} />
+                                <Input id="wallet_ovo" inputMode="numeric" value={String(walletOvo)} onChange={(e) => setWalletOvo(parseMoneyLikeToInt(e.target.value))} />
                             </div>
                             <div>
                                 <Label htmlFor="wallet_dana">{t('Saldo DANA')}</Label>
-                                <Input id="wallet_dana" inputMode="numeric" value={String(walletDana)} onChange={(e) => setWalletDana(sanitizeNonNegativeInt(e.target.value))} />
+                                <Input id="wallet_dana" inputMode="numeric" value={String(walletDana)} onChange={(e) => setWalletDana(parseMoneyLikeToInt(e.target.value))} />
                             </div>
                             <div>
                                 <Label htmlFor="wallet_gojek">{t('Saldo GOJEK')}</Label>
-                                <Input id="wallet_gojek" inputMode="numeric" value={String(walletGojek)} onChange={(e) => setWalletGojek(sanitizeNonNegativeInt(e.target.value))} />
+                                <Input id="wallet_gojek" inputMode="numeric" value={String(walletGojek)} onChange={(e) => setWalletGojek(parseMoneyLikeToInt(e.target.value))} />
                             </div>
                             <div>
                                 <Label htmlFor="wallet_other">{t('Lainnya')}</Label>
-                                <Input id="wallet_other" inputMode="numeric" value={String(walletOther)} onChange={(e) => setWalletOther(sanitizeNonNegativeInt(e.target.value))} />
+                                <Input id="wallet_other" inputMode="numeric" value={String(walletOther)} onChange={(e) => setWalletOther(parseMoneyLikeToInt(e.target.value))} />
                             </div>
 
                             <div>
                                 <Label htmlFor="cash_on_hand">{t('Uang Cash')}</Label>
-                                <Input id="cash_on_hand" inputMode="numeric" value={String(cashOnHand)} onChange={(e) => setCashOnHand(sanitizeNonNegativeInt(e.target.value))} />
+                                <Input id="cash_on_hand" inputMode="numeric" value={String(cashOnHand)} onChange={(e) => setCashOnHand(parseMoneyLikeToInt(e.target.value))} />
                             </div>
                             <div>
                                 <Label htmlFor="total_receivables">{t('Total Piutang')}</Label>
-                                <Input id="total_receivables" inputMode="numeric" value={String(totalReceivables)} onChange={(e) => setTotalReceivables(sanitizeNonNegativeInt(e.target.value))} />
+                                <Input id="total_receivables" inputMode="numeric" value={String(totalReceivables)} onChange={(e) => setTotalReceivables(parseMoneyLikeToInt(e.target.value))} />
                             </div>
                         </div>
 

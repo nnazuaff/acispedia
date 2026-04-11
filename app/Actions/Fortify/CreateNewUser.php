@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
+use App\Support\PhoneNormalizer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -20,9 +21,11 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        $input['phone'] = PhoneNormalizer::digitsOnly($input['phone'] ?? null);
+
         $validator = Validator::make($input, [
             ...$this->profileRules(),
-            'phone' => ['required', 'string', 'max:25', Rule::unique(User::class, 'phone')],
+            'phone' => ['required', 'string', 'max:25', 'regex:/^\d+$/', Rule::unique(User::class, 'phone')],
             'password' => $this->passwordRules(),
             'security_check' => ['required', 'string'],
         ]);
@@ -43,7 +46,7 @@ class CreateNewUser implements CreatesNewUsers
         return User::create([
             'name' => $input['name'],
             'email' => $input['email'],
-            'phone' => trim($input['phone']),
+            'phone' => $input['phone'],
             'password' => $input['password'],
         ]);
     }

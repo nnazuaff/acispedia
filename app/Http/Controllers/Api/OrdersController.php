@@ -11,6 +11,7 @@ use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Services\MedanpediaClient;
 use App\Services\ServicePolicy;
+use App\Support\UserActivity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -151,6 +152,17 @@ class OrdersController extends Controller
                     ->lockForUpdate()
                     ->first();
 
+                $finalStatuses = ['Success', 'Canceled', 'Partial', 'Error'];
+                $hasDuplicateTarget = Order::query()
+                    ->where('user_id', $user->id)
+                    ->where('target', $target)
+                    ->whereNotIn('status', $finalStatuses)
+                    ->exists();
+
+                if ($hasDuplicateTarget) {
+                    return ['error' => 'DUPLICATE_TARGET'];
+                }
+
                 $currentBalance = $balanceRow ? (int) $balanceRow->balance : 0;
 
                 if ($currentBalance < $totalPrice) {
@@ -205,8 +217,30 @@ class OrdersController extends Controller
             ], 200);
         }
 
+        if (is_array($order) && ($order['error'] ?? null) === 'DUPLICATE_TARGET') {
+            return response()->json([
+                'success' => false,
+                'code' => 'DUPLICATE_TARGET',
+                'message' => 'Target/URL ini masih memiliki order yang berjalan. Tunggu selesai atau batalkan terlebih dahulu.',
+            ], 200);
+        }
+
         /** @var Order $createdOrder */
         $createdOrder = $order['order'];
+
+        UserActivity::log(
+            $user,
+            'order_create',
+            'Buat order',
+            [
+                'order_id' => (int) $createdOrder->id,
+                'service_id' => $serviceId,
+                'service_name' => $serviceName,
+                'target' => $target,
+                'quantity' => $quantity,
+                'total_price' => $totalPrice,
+            ]
+        );
 
         // 2) Submit to provider.
         $providerResp = $client->createOrder($serviceId, $target, $quantity, $commentsNormalized);

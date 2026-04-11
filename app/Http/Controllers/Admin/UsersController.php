@@ -8,8 +8,10 @@ use App\Models\Deposit;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\UserBalance;
+use App\Models\UserActivityLog;
 use App\Models\WalletLedger;
 use App\Support\AdminActivity;
+use App\Support\PhoneNormalizer;
 use App\Support\WalletLedgerWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -89,6 +91,21 @@ class UsersController extends Controller
     {
         $user->loadMissing(['balanceRow:user_id,balance,total_spent,total_deposit']);
 
+        $allowedPerPage = [25, 50, 100, 200];
+        $ordersPerPage = (int) $request->integer('orders_per_page', 25);
+        if (! in_array($ordersPerPage, $allowedPerPage, true)) {
+            $ordersPerPage = 25;
+        }
+        $depositsPerPage = (int) $request->integer('deposits_per_page', 25);
+        if (! in_array($depositsPerPage, $allowedPerPage, true)) {
+            $depositsPerPage = 25;
+        }
+
+        $activityPerPage = (int) $request->integer('activity_per_page', 25);
+        if (! in_array($activityPerPage, $allowedPerPage, true)) {
+            $activityPerPage = 25;
+        }
+
         $ledger = [];
         try {
             $ledger = WalletLedger::query()
@@ -113,17 +130,48 @@ class UsersController extends Controller
             $ledger = [];
         }
 
-        $latestOrders = Order::query()
+        $orders = Order::query()
             ->where('user_id', (int) $user->id)
             ->orderByDesc('id')
-            ->limit(10)
-            ->get(['id', 'service_name', 'target', 'total_price', 'status', 'created_at']);
+            ->paginate($ordersPerPage, ['id', 'service_name', 'target', 'total_price', 'status', 'created_at'], 'orders_page')
+            ->withQueryString()
+            ->through(fn (Order $o) => [
+                'id' => (int) $o->id,
+                'service_name' => (string) ($o->service_name ?? ''),
+                'target' => (string) ($o->target ?? ''),
+                'total_price' => (int) ($o->total_price ?? 0),
+                'status' => (string) ($o->status ?? ''),
+                'created_at_wib' => $o->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
+            ]);
 
-        $latestDeposits = Deposit::query()
+        $deposits = Deposit::query()
             ->where('user_id', (int) $user->id)
             ->orderByDesc('id')
-            ->limit(10)
-            ->get(['id', 'amount', 'final_amount', 'status', 'payment_method', 'tripay_method', 'created_at']);
+            ->paginate($depositsPerPage, ['id', 'amount', 'final_amount', 'status', 'payment_method', 'tripay_method', 'created_at'], 'deposits_page')
+            ->withQueryString()
+            ->through(fn (Deposit $d) => [
+                'id' => (int) $d->id,
+                'amount' => (int) ($d->amount ?? 0),
+                'final_amount' => (int) ($d->final_amount ?? 0),
+                'status' => (string) ($d->status ?? ''),
+                'payment_method' => (string) ($d->payment_method ?? ''),
+                'tripay_method' => $d->tripay_method !== null ? (string) $d->tripay_method : null,
+                'created_at_wib' => $d->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
+            ]);
+
+        $activity = UserActivityLog::query()
+            ->where('user_id', (int) $user->id)
+            ->orderByDesc('id')
+            ->paginate($activityPerPage, ['id', 'action', 'message', 'ip', 'meta', 'created_at'], 'activity_page')
+            ->withQueryString()
+            ->through(fn (UserActivityLog $r) => [
+                'id' => (int) $r->id,
+                'action' => (string) ($r->action ?? ''),
+                'message' => (string) ($r->message ?? ''),
+                'ip' => $r->ip !== null ? (string) $r->ip : null,
+                'created_at_wib' => $r->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                'meta' => is_array($r->meta) ? $r->meta : null,
+            ]);
 
         return Inertia::render('admin/user-detail', [
             'user' => [
@@ -139,24 +187,15 @@ class UsersController extends Controller
                 'total_spent' => (int) ($user->balanceRow?->total_spent ?? 0),
                 'total_deposit' => (int) ($user->balanceRow?->total_deposit ?? 0),
             ],
-            'latest_orders' => $latestOrders->map(fn (Order $o) => [
-                'id' => (int) $o->id,
-                'service_name' => (string) ($o->service_name ?? ''),
-                'target' => (string) ($o->target ?? ''),
-                'total_price' => (int) ($o->total_price ?? 0),
-                'status' => (string) ($o->status ?? ''),
-                'created_at_wib' => $o->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
-            ])->all(),
-            'latest_deposits' => $latestDeposits->map(fn (Deposit $d) => [
-                'id' => (int) $d->id,
-                'amount' => (int) ($d->amount ?? 0),
-                'final_amount' => (int) ($d->final_amount ?? 0),
-                'status' => (string) ($d->status ?? ''),
-                'payment_method' => (string) ($d->payment_method ?? ''),
-                'tripay_method' => $d->tripay_method !== null ? (string) $d->tripay_method : null,
-                'created_at_wib' => $d->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
-            ])->all(),
+            'orders' => $orders,
+            'deposits' => $deposits,
+            'activity' => $activity,
             'ledger' => $ledger,
+            'filters' => [
+                'orders_per_page' => $ordersPerPage,
+                'deposits_per_page' => $depositsPerPage,
+                'activity_per_page' => $activityPerPage,
+            ],
         ]);
     }
 
@@ -186,14 +225,19 @@ class UsersController extends Controller
             'password' => $this->passwordRules(),
         ]);
 
+        $normalizedPhone = PhoneNormalizer::digitsOnly($validated['phone'] ?? null);
+        if ($normalizedPhone === '') {
+            $normalizedPhone = null;
+        }
+
         $createdUserId = null;
 
         try {
-            DB::transaction(function () use ($validated, &$createdUserId) {
+            DB::transaction(function () use ($validated, $normalizedPhone, &$createdUserId) {
                 $user = User::query()->create([
                     'name' => $validated['name'],
                     'email' => $validated['email'],
-                    'phone' => $validated['phone'] ?? null,
+                    'phone' => $normalizedPhone,
                     'password' => Hash::make((string) $validated['password']),
                     // Admin-created accounts are considered ready-to-use.
                     'email_verified_at' => now(),
@@ -355,6 +399,11 @@ class UsersController extends Controller
             'phone' => ['nullable', 'string', 'max:32'],
         ]);
 
+        $normalizedPhone = PhoneNormalizer::digitsOnly($validated['phone'] ?? null);
+        if ($normalizedPhone === '') {
+            $normalizedPhone = null;
+        }
+
         $before = [
             'name' => (string) ($user->name ?? ''),
             'email' => (string) ($user->email ?? ''),
@@ -362,7 +411,7 @@ class UsersController extends Controller
         ];
 
         try {
-            DB::transaction(function () use ($user, $validated) {
+            DB::transaction(function () use ($user, $validated, $normalizedPhone) {
                 $row = User::query()->lockForUpdate()->find((int) $user->id);
                 if (! $row) {
                     return;
@@ -373,7 +422,7 @@ class UsersController extends Controller
                     $row->email = (string) $validated['email'];
                     $row->email_verified_at = now();
                 }
-                $row->phone = $validated['phone'] ?? null;
+                $row->phone = $normalizedPhone;
                 $row->save();
             });
         } catch (Throwable $e) {

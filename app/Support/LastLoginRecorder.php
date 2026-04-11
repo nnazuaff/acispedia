@@ -30,6 +30,8 @@ class LastLoginRecorder
                 'last_login_at' => $now,
                 'last_activity_at' => $now,
             ])->save();
+
+            \App\Support\UserActivity::log($user, 'login', 'User login');
         } catch (Throwable) {
             // Best-effort only.
         }
