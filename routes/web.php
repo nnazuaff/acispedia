@@ -76,7 +76,26 @@ if ($adminDomain !== '') {
                         'total_price',
                         'status',
                         'created_at',
-                    ]);
+                    ])
+                    ->map(function (Order $order): array {
+                        return [
+                            'id' => $order->id,
+                            'created_at' => $order->created_at?->toISOString(),
+                            'created_at_wib' => $order->created_at?->timezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                            'service_name' => $order->service_name,
+                            'quantity' => $order->quantity,
+                            'total_price' => $order->total_price,
+                            'status' => $order->status,
+                            'user' => $order->user
+                                ? [
+                                    'id' => $order->user->id,
+                                    'name' => $order->user->name,
+                                    'email' => $order->user->email,
+                                ]
+                                : null,
+                        ];
+                    })
+                    ->values();
 
                 return Inertia::render('admin/dashboard', [
                     'stats' => $stats,

@@ -26,15 +26,41 @@ type AdminDashboardStats = {
 type RecentOrderRow = {
     id: number;
     created_at: string | null;
+    created_at_wib?: string | null;
     service_name: string | null;
     quantity: number | null;
     total_price: number | null;
     status: string | null;
     user?: {
+        id?: number | null;
         name?: string | null;
         email?: string | null;
     } | null;
 };
+
+function formatIsoToWibYmdHi(value: string | null | undefined): string | null {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    const parts = new Intl.DateTimeFormat('en', {
+        timeZone: 'Asia/Jakarta',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    }).formatToParts(date);
+
+    const map: Record<string, string> = {};
+    for (const part of parts) {
+        if (part.type !== 'literal') map[part.type] = part.value;
+    }
+
+    if (!map.year || !map.month || !map.day || !map.hour || !map.minute) return value;
+    return `${map.year}-${map.month}-${map.day} ${map.hour}:${map.minute}`;
+}
 
 export default function AdminDashboard({
     stats,
@@ -157,7 +183,7 @@ export default function AdminDashboard({
                                                     #{row.id}
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
-                                                    {row.created_at ?? '-'}
+                                                    {row.created_at_wib ?? formatIsoToWibYmdHi(row.created_at) ?? '-'}
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     {row.user?.name || row.user?.email || '-'}
