@@ -8,6 +8,7 @@ import {
     History,
     LayoutGrid,
     Layers,
+    ListChecks,
     ShoppingCart,
     Users,
 } from 'lucide-react';

@@ -60,7 +60,6 @@ class UsersController extends Controller
                 'email' => $email,
                 'phone' => $user->phone !== null ? (string) $user->phone : null,
                 'created_at_wib' => $user->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
-                'last_login_at_wib' => $user->last_login_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'last_activity_at_wib' => $user->last_activity_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'balance' => (int) ($user->balanceRow?->balance ?? 0),
                 'total_spent' => (int) ($user->balanceRow?->total_spent ?? 0),

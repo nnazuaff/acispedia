@@ -22,7 +22,6 @@ type UserRow = {
     email: string;
     phone: string | null;
     created_at_wib: string | null;
-    last_login_at_wib?: string | null;
     last_activity_at_wib?: string | null;
     balance: number;
     total_spent: number;
@@ -170,21 +169,20 @@ export default function AdminUsers() {
                                     <tr className="bg-muted/20">
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('ID')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Dibuat')}</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Terakhir Login')}</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Aktivitas Terakhir')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Nama')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Email')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Telepon')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Saldo')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Total Deposit')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Total Spent')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Aktivitas Terakhir')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Aksi')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {rows.length === 0 ? (
                                         <tr>
-                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={11}>
+                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={10}>
                                                 {t('Tidak ada data.')}
                                             </td>
                                         </tr>
@@ -193,14 +191,13 @@ export default function AdminUsers() {
                                             <tr key={row.id} className="border-t">
                                                 <td className="px-4 py-3 whitespace-nowrap">#{row.id}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.created_at_wib ?? '-'}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.last_login_at_wib ?? '-'}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.last_activity_at_wib ?? '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.name || '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.email || '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.phone ?? '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(row.balance ?? 0))}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(row.total_deposit ?? 0))}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(row.total_spent ?? 0))}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.last_activity_at_wib ?? '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     <div className="flex gap-2">
                                                         <Button asChild variant="outline" size="sm">
