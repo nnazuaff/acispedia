@@ -48,10 +48,10 @@
             $appUrl = (string) config('app.url', '');
             $canonical = url()->current();
             $defaultTitle = $appName;
-            $defaultDescription = (string) config(
-                'seo.description',
-                'Panel SMM untuk order layanan sosial media, deposit saldo, dan monitoring status pesanan.',
-            );
+            $defaultDescription = (string) config('seo.description');
+            if ($defaultDescription === '') {
+                $defaultDescription = 'Panel SMM untuk order layanan sosial media, deposit saldo, dan monitoring status pesanan.';
+            }
             $ogImage = (string) config('seo.og_image', '');
             if ($ogImage === '') {
                 $ogImage = asset('favicon.png');
