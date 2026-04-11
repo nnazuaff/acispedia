@@ -88,7 +88,9 @@ export default function Profile({
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="phone">Nomor HP / WhatsApp</Label>
+                                <Label htmlFor="phone">
+                                    {t('Nomor HP / WhatsApp')}
+                                </Label>
 
                                 <Input
                                     id="phone"
@@ -97,7 +99,7 @@ export default function Profile({
                                     name="phone"
                                     required
                                     autoComplete="tel"
-                                    placeholder="08xxxxxxxxxx"
+                                    placeholder={t('08xxxxxxxxxx')}
                                 />
 
                                 <InputError

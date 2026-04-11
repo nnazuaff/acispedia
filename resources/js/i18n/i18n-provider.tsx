@@ -53,6 +53,7 @@ const dictionaries: Record<Locale, Dict> = {
         'Menu': 'Menu',
         'Tema': 'Theme',
         'Kembali': 'Back',
+        'Keluar': 'Log out',
         'Batal': 'Cancel',
         'Tutup': 'Close',
         'Simpan': 'Save',
@@ -80,6 +81,15 @@ const dictionaries: Record<Locale, Dict> = {
         'Laporan Keuangan': 'Financial report',
         'Koneksi': 'Connections',
         'Log Aktivitas': 'Activity logs',
+
+        // Settings / Profile menu
+        'Pengaturan': 'Settings',
+        'Profil': 'Profile',
+        'Keamanan': 'Security',
+        'Perangkat': 'Devices',
+        'Kelola profil dan pengaturan akun Anda.': 'Manage your profile and account settings.',
+        'Saldo': 'Balance',
+        'Nomor HP / WhatsApp': 'Phone / WhatsApp',
 
         // Landing
         'modern untuk pertumbuhan sosial media': 'modern for social media growth',
