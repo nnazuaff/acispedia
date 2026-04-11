@@ -272,6 +272,7 @@ class UsersController extends Controller
             ]
         );
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'User berhasil dibuat.']);
         return redirect()->route('admin.users')->with('success', 'User berhasil dibuat.');
     }
 
@@ -288,6 +289,7 @@ class UsersController extends Controller
         $note = isset($validated['note']) ? trim((string) $validated['note']) : null;
 
         if (in_array($mode, ['add', 'subtract'], true) && $amount < 1) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Nominal harus lebih dari 0.']);
             return back()->with('error', 'Nominal harus lebih dari 0.');
         }
 
@@ -382,12 +384,15 @@ class UsersController extends Controller
             });
         } catch (Throwable $e) {
             if ($e instanceof \RuntimeException && $e->getMessage() === 'INSUFFICIENT_BALANCE') {
+                Inertia::flash('toast', ['type' => 'error', 'message' => 'Saldo user tidak cukup untuk dikurangi.']);
                 return back()->with('error', 'Saldo user tidak cukup untuk dikurangi.');
             }
             report($e);
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Gagal mengatur saldo user.']);
             return back()->with('error', 'Gagal mengatur saldo user.');
         }
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Saldo user berhasil diperbarui.']);
         return back()->with('success', 'Saldo user berhasil diperbarui.');
     }
 
@@ -427,6 +432,7 @@ class UsersController extends Controller
             });
         } catch (Throwable $e) {
             report($e);
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Gagal menyimpan perubahan user.']);
             return back()->with('error', 'Gagal menyimpan perubahan user.');
         }
 
@@ -448,6 +454,7 @@ class UsersController extends Controller
             ]
         );
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'User diperbarui.']);
         return redirect()->route('admin.users.show', ['user' => $user->id])->with('success', 'User diperbarui.');
     }
 
@@ -457,10 +464,12 @@ class UsersController extends Controller
         $email = (string) ($user->email ?? '');
 
         if ($email !== '' && in_array(strtolower($email), $protectedEmails, true)) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Akun admin yang di-allowlist tidak bisa dihapus.']);
             return back()->with('error', 'Akun admin yang di-allowlist tidak bisa dihapus.');
         }
 
         if ((int) $request->user()?->id === (int) $user->id) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Tidak bisa menghapus akun sendiri.']);
             return back()->with('error', 'Tidak bisa menghapus akun sendiri.');
         }
 
@@ -471,6 +480,7 @@ class UsersController extends Controller
             $user->delete();
         } catch (Throwable $e) {
             report($e);
+            Inertia::flash('toast', ['type' => 'error', 'message' => 'Gagal menghapus user.']);
             return back()->with('error', 'Gagal menghapus user.');
         }
 
@@ -489,6 +499,7 @@ class UsersController extends Controller
             ]
         );
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'User dihapus.']);
         return redirect()->route('admin.users')->with('success', 'User dihapus.');
     }
 }

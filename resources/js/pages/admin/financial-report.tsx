@@ -126,22 +126,22 @@ export default function AdminFinancialReport() {
             setWalletOther(editing.wallet_other ?? 0);
             setCashOnHand(editing.cash_on_hand ?? 0);
             setTotalReceivables(editing.total_receivables ?? 0);
-        } else {
-            setReportDate(filters?.date_from ?? '');
-            const defaultMedanpedia = provider?.medanpedia?.configured ? Number(provider?.medanpedia?.balance ?? 0) : 0;
-            setVendorMedanpedia(sanitizeNonNegativeInt(defaultMedanpedia));
-            setBankBri(0);
-            setBankBni(0);
-            setBankBca(0);
-            setWalletOvo(0);
-            setWalletDana(0);
-            setWalletGojek(0);
-            setWalletOther(0);
-            setCashOnHand(0);
-            setTotalReceivables(0);
+            return;
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [editing?.id]);
+
+        setReportDate(filters?.date_from ?? '');
+        const defaultMedanpedia = provider?.medanpedia?.configured ? Number(provider?.medanpedia?.balance ?? 0) : 0;
+        setVendorMedanpedia(sanitizeNonNegativeInt(defaultMedanpedia));
+        setBankBri(0);
+        setBankBni(0);
+        setBankBca(0);
+        setWalletOvo(0);
+        setWalletDana(0);
+        setWalletGojek(0);
+        setWalletOther(0);
+        setCashOnHand(0);
+        setTotalReceivables(0);
+    }, [editing, filters?.date_from, provider?.medanpedia?.configured, provider?.medanpedia?.balance]);
 
     const totalFinancial =
         sanitizeNonNegativeInt(vendorMedanpedia) +

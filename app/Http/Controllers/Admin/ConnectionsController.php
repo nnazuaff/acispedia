@@ -64,6 +64,7 @@ class ConnectionsController extends Controller
             'markup_amount' => $value,
         ]);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Pengaturan berhasil disimpan.']);
         return back();
     }
 }

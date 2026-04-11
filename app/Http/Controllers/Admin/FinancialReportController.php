@@ -204,6 +204,7 @@ class FinancialReportController extends Controller
             'report_date' => $row->report_date?->format('Y-m-d'),
         ]);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Laporan keuangan berhasil ditambahkan.']);
         return back()->with('success', 'Laporan keuangan berhasil ditambahkan.');
     }
 
@@ -260,6 +261,7 @@ class FinancialReportController extends Controller
             ],
         ]);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Laporan keuangan berhasil diperbarui.']);
         return back()->with('success', 'Laporan keuangan berhasil diperbarui.');
     }
 
@@ -274,6 +276,7 @@ class FinancialReportController extends Controller
             'report_date' => $date,
         ]);
 
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Laporan keuangan dihapus.']);
         return back()->with('success', 'Laporan keuangan dihapus.');
     }
 }
