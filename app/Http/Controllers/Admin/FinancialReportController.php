@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deposit;
 use App\Models\FinancialReport;
+use App\Models\Order;
 use App\Models\UserBalance;
 use App\Services\MedanpediaClient;
 use App\Support\AdminActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -77,6 +80,10 @@ class FinancialReportController extends Controller
 
     public function index(Request $request, MedanpediaClient $medanpedia): Response
     {
+        $todayWib = now('Asia/Jakarta');
+        $todayStartUtc = $todayWib->copy()->startOfDay()->setTimezone('UTC');
+        $todayEndUtc = $todayWib->copy()->endOfDay()->setTimezone('UTC');
+
         $today = now()->toDateString();
         $dateFrom = trim((string) $request->query('date_from', $today));
         $dateTo = trim((string) $request->query('date_to', $today));
@@ -121,6 +128,27 @@ class FinancialReportController extends Controller
             }
         }
 
+        $todayDeposit = (int) Deposit::query()
+            ->where('status', 'success')
+            ->whereBetween('processed_at', [$todayStartUtc, $todayEndUtc])
+            ->sum('amount');
+
+        $todaySales = (int) Order::query()
+            ->where('status', 'Success')
+            ->whereBetween('created_at', [$todayStartUtc, $todayEndUtc])
+            ->sum('total_price');
+
+        $todayRevenueCost = Order::query()
+            ->where('status', 'Success')
+            ->whereBetween('created_at', [$todayStartUtc, $todayEndUtc])
+            ->select([
+                DB::raw('COALESCE(SUM(total_price), 0) as revenue'),
+                DB::raw('COALESCE(SUM(ROUND((base_price * quantity) / 1000)), 0) as cost'),
+            ])
+            ->first();
+
+        $todayNetProfit = (int) (data_get($todayRevenueCost, 'revenue', 0) - data_get($todayRevenueCost, 'cost', 0));
+
         return Inertia::render('admin/financial-report', [
             'filters' => [
                 'date_from' => $rangeStart->toDateString(),
@@ -133,6 +161,12 @@ class FinancialReportController extends Controller
                     'configured' => $medanpediaConfigured,
                     'balance' => $medanpediaBalance,
                 ],
+            ],
+            'today_sales' => [
+                'date_wib' => $todayWib->toDateString(),
+                'total_deposit' => $todayDeposit,
+                'total_sales' => $todaySales,
+                'net_profit' => $todayNetProfit,
             ],
             'records' => $records->map(fn (FinancialReport $r) => [
                 'id' => (int) $r->id,

@@ -47,17 +47,17 @@ const userMainNavItems: NavItem[] = [
 
 const adminMainNavItems: NavItem[] = [
     {
-        title: 'Dashboard Admin',
+        title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
     },
     {
-        title: 'Pesanan',
+        title: 'Riwayat Pesanan',
         href: '/orders',
         icon: ShoppingCart,
     },
     {
-        title: 'Deposit',
+        title: 'Riwayat Deposit',
         href: '/deposits',
         icon: CreditCard,
     },

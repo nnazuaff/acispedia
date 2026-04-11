@@ -89,9 +89,9 @@ class UsersController extends Controller
         $user->loadMissing(['balanceRow:user_id,balance,total_spent,total_deposit']);
 
         $allowedPerPage = [25, 50, 100, 200];
-        $ledgerPerPage = (int) $request->integer('ledger_per_page', 50);
+        $ledgerPerPage = (int) $request->integer('ledger_per_page', 25);
         if (! in_array($ledgerPerPage, $allowedPerPage, true)) {
-            $ledgerPerPage = 50;
+            $ledgerPerPage = 25;
         }
 
         $ledger = WalletLedger::query()
@@ -117,7 +117,7 @@ class UsersController extends Controller
                 'name' => (string) ($user->name ?? ''),
                 'email' => (string) ($user->email ?? ''),
                 'phone' => $user->phone !== null ? (string) $user->phone : null,
-                'is_email_verified' => (bool) $user->hasVerifiedEmail(),
+                'account_status' => (string) ($user->account_status ?? 'active'),
                 'created_at_wib' => $user->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'updated_at_wib' => $user->updated_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'last_login_at_wib' => $user->last_login_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
@@ -141,6 +141,7 @@ class UsersController extends Controller
                 'name' => (string) ($user->name ?? ''),
                 'email' => (string) ($user->email ?? ''),
                 'phone' => $user->phone !== null ? (string) $user->phone : null,
+                'account_status' => (string) ($user->account_status ?? 'active'),
             ],
         ]);
     }
@@ -336,6 +337,7 @@ class UsersController extends Controller
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore((int) $user->id)],
             'phone' => ['nullable', 'string', 'max:32'],
+            'account_status' => ['required', 'string', Rule::in(['active', 'inactive', 'banned'])],
         ]);
 
         $normalizedPhone = PhoneNormalizer::digitsOnly($validated['phone'] ?? null);
@@ -347,6 +349,7 @@ class UsersController extends Controller
             'name' => (string) ($user->name ?? ''),
             'email' => (string) ($user->email ?? ''),
             'phone' => $user->phone !== null ? (string) $user->phone : null,
+            'account_status' => (string) ($user->account_status ?? 'active'),
         ];
 
         try {
@@ -362,6 +365,7 @@ class UsersController extends Controller
                     $row->email_verified_at = now();
                 }
                 $row->phone = $normalizedPhone;
+                $row->account_status = (string) $validated['account_status'];
                 $row->save();
             });
         } catch (Throwable $e) {
@@ -384,6 +388,7 @@ class UsersController extends Controller
                     'name' => (string) ($user->name ?? ''),
                     'email' => (string) ($user->email ?? ''),
                     'phone' => $user->phone !== null ? (string) $user->phone : null,
+                    'account_status' => (string) ($user->account_status ?? 'active'),
                 ],
             ]
         );

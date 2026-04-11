@@ -29,7 +29,7 @@ type UserDetail = {
     name: string;
     email: string;
     phone: string | null;
-    is_email_verified: boolean;
+    account_status: 'active' | 'inactive' | 'banned' | string;
     created_at_wib: string | null;
     updated_at_wib: string | null;
     last_login_at_wib?: string | null;
@@ -81,11 +81,52 @@ export default function AdminUserDetail() {
     const ledgerRows = Array.isArray(ledger?.data) ? ledger.data : [];
 
     const [mode, setMode] = React.useState<'add' | 'subtract' | 'set'>('add');
-    const [ledgerPerPage, setLedgerPerPage] = React.useState<number>(Number(filters?.ledger_per_page ?? 50));
+    const [ledgerPerPage, setLedgerPerPage] = React.useState<number>(Number(filters?.ledger_per_page ?? 25));
 
     React.useEffect(() => {
-        setLedgerPerPage(Number(filters?.ledger_per_page ?? 50));
+        setLedgerPerPage(Number(filters?.ledger_per_page ?? 25));
     }, [filters?.ledger_per_page]);
+
+    function renderAccountStatusBadge(status: string) {
+        if (status === 'active') {
+            return (
+                <Badge
+                    variant="outline"
+                    className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                >
+                    {t('Aktif')}
+                </Badge>
+            );
+        }
+
+        if (status === 'inactive') {
+            return (
+                <Badge
+                    variant="outline"
+                    className="border-yellow-500/30 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300"
+                >
+                    {t('Nonaktif')}
+                </Badge>
+            );
+        }
+
+        if (status === 'banned') {
+            return (
+                <Badge
+                    variant="outline"
+                    className="border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300"
+                >
+                    {t('Banned')}
+                </Badge>
+            );
+        }
+
+        return (
+            <Badge variant="outline" className="text-muted-foreground">
+                {status || '-'}
+            </Badge>
+        );
+    }
 
     function applyFilters(next?: Partial<Filters> & { ledger_page?: number }) {
         router.get(
@@ -233,21 +274,7 @@ export default function AdminUserDetail() {
                                     <tr className="border-t">
                                         <td className="px-4 py-3">{t('Status')}</td>
                                         <td className="px-4 py-3">
-                                            {user?.is_email_verified ? (
-                                                <Badge
-                                                    variant="outline"
-                                                    className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                                                >
-                                                    {t('Terverifikasi')}
-                                                </Badge>
-                                            ) : (
-                                                <Badge
-                                                    variant="outline"
-                                                    className="border-yellow-500/30 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300"
-                                                >
-                                                    {t('Belum verifikasi')}
-                                                </Badge>
-                                            )}
+                                            {renderAccountStatusBadge((user?.account_status ?? 'active') as string)}
                                         </td>
                                     </tr>
                                     <tr className="border-t">
@@ -369,8 +396,20 @@ export default function AdminUserDetail() {
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(r.balance_before ?? 0))}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(r.balance_after ?? 0))}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
-                                                    {r.source_type}
-                                                    {r.source_id ? `#${r.source_id}` : ''}
+                                                    {r.source_type === 'order' && r.source_id ? (
+                                                        <Link href={`/orders/${r.source_id}`} className="font-medium hover:underline" prefetch>
+                                                            {t('Order')} #{r.source_id}
+                                                        </Link>
+                                                    ) : r.source_type === 'deposit' && r.source_id ? (
+                                                        <Link href={`/deposits/${r.source_id}`} className="font-medium hover:underline" prefetch>
+                                                            {t('Deposit')} #{r.source_id}
+                                                        </Link>
+                                                    ) : (
+                                                        <>
+                                                            {r.source_type}
+                                                            {r.source_id ? `#${r.source_id}` : ''}
+                                                        </>
+                                                    )}
                                                 </td>
                                                 <td className="px-4 py-3">{r.description || '-'}</td>
                                             </tr>

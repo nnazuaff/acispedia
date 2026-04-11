@@ -22,6 +22,13 @@ type ProviderState = {
     };
 };
 
+type TodaySales = {
+    date_wib: string;
+    total_deposit: number;
+    total_sales: number;
+    net_profit: number;
+};
+
 type RecordRow = {
     id: number;
     report_date: string;
@@ -83,12 +90,13 @@ export default function AdminFinancialReport() {
     const { t } = useI18n();
     const confirm = useConfirm();
 
-    const { filters, records, editing, customer_balance, provider } = usePage().props as any as {
+    const { filters, records, editing, customer_balance, provider, today_sales } = usePage().props as any as {
         filters: Filters;
         records: RecordRow[];
         editing: EditingRecord | null;
         customer_balance: number;
         provider: { medanpedia: ProviderState['medanpedia'] };
+        today_sales: TodaySales;
     };
 
     const [dateFrom, setDateFrom] = React.useState(filters?.date_from ?? '');
@@ -233,6 +241,36 @@ export default function AdminFinancialReport() {
             <Head title={t('Laporan Keuangan')} />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <Heading variant="small" title={t('Laporan Keuangan')} description={t('Kelola laporan keuangan harian seperti SMM-Panel.')} />
+
+                <div className="grid gap-3 md:grid-cols-3">
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {t('Total Deposit Hari Ini')}
+                            </div>
+                            <div className="mt-2 text-2xl font-semibold">Rp {formatNumber(today_sales?.total_deposit ?? 0)}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">{today_sales?.date_wib ?? ''} WIB</div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {t('Total Penjualan Hari Ini')}
+                            </div>
+                            <div className="mt-2 text-2xl font-semibold">Rp {formatNumber(today_sales?.total_sales ?? 0)}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">{today_sales?.date_wib ?? ''} WIB</div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {t('Laba Bersih Hari Ini')}
+                            </div>
+                            <div className="mt-2 text-2xl font-semibold">Rp {formatNumber(today_sales?.net_profit ?? 0)}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">{today_sales?.date_wib ?? ''} WIB</div>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <div className="grid gap-3 md:grid-cols-3">
                     <Card>

@@ -4,6 +4,8 @@ import * as React from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -39,6 +41,8 @@ type LogsPaginator = {
 };
 
 type Filters = {
+    q?: string | null;
+    user_id?: number | null;
     per_page: number;
 };
 
@@ -52,16 +56,30 @@ export default function AdminUserActivityLogs() {
     const rows = Array.isArray(logs?.data) ? logs.data : [];
 
     const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 25));
+    const [userId, setUserId] = React.useState<string>(filters?.user_id ? String(filters.user_id) : '');
+    const [q, setQ] = React.useState<string>(String(filters?.q ?? ''));
 
     React.useEffect(() => {
         setPerPage(Number(filters?.per_page ?? 25));
     }, [filters?.per_page]);
 
+    React.useEffect(() => {
+        setUserId(filters?.user_id ? String(filters.user_id) : '');
+    }, [filters?.user_id]);
+
+    React.useEffect(() => {
+        setQ(String(filters?.q ?? ''));
+    }, [filters?.q]);
+
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
+        const normalizedUserId = userId.trim() === '' ? undefined : Number(userId);
+
         router.get(
             '/user-activity-logs',
             {
                 per_page: perPage,
+                user_id: Number.isFinite(normalizedUserId as any) ? (normalizedUserId as any) : undefined,
+                q: q.trim() !== '' ? q.trim() : undefined,
                 ...(next ?? {}),
             } as any,
             {
@@ -81,8 +99,60 @@ export default function AdminUserActivityLogs() {
 
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                            <div className="text-sm font-semibold">{t('Aktivitas')}</div>
+                        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                            <div>
+                                <div className="text-sm font-semibold">{t('Aktivitas')}</div>
+                                <div className="mt-1 grid gap-2 md:grid-cols-2">
+                                    <div className="grid gap-1">
+                                        <Label htmlFor="user_id" className="text-xs text-muted-foreground">
+                                            {t('User ID')}
+                                        </Label>
+                                        <Input
+                                            id="user_id"
+                                            value={userId}
+                                            onChange={(e) => setUserId(e.target.value)}
+                                            inputMode="numeric"
+                                            placeholder="123"
+                                            className="h-9"
+                                        />
+                                    </div>
+                                    <div className="grid gap-1">
+                                        <Label htmlFor="q" className="text-xs text-muted-foreground">
+                                            {t('Kata kunci')}
+                                        </Label>
+                                        <Input
+                                            id="q"
+                                            value={q}
+                                            onChange={(e) => setQ(e.target.value)}
+                                            placeholder={t('contoh: login / order / email')}
+                                            className="h-9"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    <Button type="button" size="sm" onClick={() => applyFilters({ page: 1 })}>
+                                        {t('Terapkan')}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                            setUserId('');
+                                            setQ('');
+                                            router.get('/user-activity-logs', { per_page: perPage, page: 1 } as any, {
+                                                preserveScroll: true,
+                                                preserveState: true,
+                                                replace: true,
+                                            });
+                                        }}
+                                    >
+                                        {t('Reset')}
+                                    </Button>
+                                </div>
+                            </div>
+
                             <div className="flex items-center gap-2">
                                 <div className="text-xs text-muted-foreground">{t('Data')}</div>
                                 <Select

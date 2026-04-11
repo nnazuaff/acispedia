@@ -12,16 +12,36 @@ class UserActivityLogsController extends Controller
 {
     public function index(Request $request): Response
     {
+        $q = trim((string) $request->query('q', ''));
+        $userId = (int) $request->integer('user_id', 0);
+
         $perPage = (int) $request->query('per_page', 25);
         if (!in_array($perPage, [25, 50, 100, 200], true)) {
             $perPage = 25;
         }
 
-        $paginator = UserActivityLog::query()
+        $query = UserActivityLog::query()
             ->with(['user:id,name,email'])
-            ->orderByDesc('id')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->orderByDesc('id');
+
+        if ($userId > 0) {
+            $query->where('user_id', $userId);
+        }
+
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('action', 'like', "%{$q}%")
+                    ->orWhere('message', 'like', "%{$q}%")
+                    ->orWhere('ip', 'like', "%{$q}%")
+                    ->orWhereHas('user', function ($uq) use ($q) {
+                        $uq->where('name', 'like', "%{$q}%")
+                            ->orWhere('email', 'like', "%{$q}%")
+                            ->orWhere('id', $q);
+                    });
+            });
+        }
+
+        $paginator = $query->paginate($perPage)->withQueryString();
 
         $rows = $paginator->getCollection()->map(function (UserActivityLog $log) {
             return [
@@ -43,6 +63,8 @@ class UserActivityLogsController extends Controller
         return Inertia::render('admin/user-activity-logs', [
             'logs' => $paginator,
             'filters' => [
+                'q' => $q,
+                'user_id' => $userId > 0 ? $userId : null,
                 'per_page' => $perPage,
             ],
         ]);

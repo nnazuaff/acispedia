@@ -1,10 +1,18 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
+import * as React from 'react';
 
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useI18n } from '@/i18n/i18n-provider';
 
 type UserEdit = {
@@ -12,6 +20,7 @@ type UserEdit = {
     name: string;
     email: string;
     phone: string | null;
+    account_status: 'active' | 'inactive' | 'banned' | string;
 };
 
 export default function AdminUserEdit() {
@@ -20,6 +29,12 @@ export default function AdminUserEdit() {
     const { user } = usePage().props as any as {
         user: UserEdit;
     };
+
+    const [accountStatus, setAccountStatus] = React.useState<string>(String(user?.account_status ?? 'active'));
+
+    React.useEffect(() => {
+        setAccountStatus(String(user?.account_status ?? 'active'));
+    }, [user?.account_status]);
 
     return (
         <>
@@ -33,6 +48,8 @@ export default function AdminUserEdit() {
                         <Form action={`/users/${user.id}`} method="put" className="grid gap-4 md:max-w-xl">
                             {() => (
                                 <>
+                                    <input type="hidden" name="account_status" value={accountStatus} />
+
                                     <div className="grid gap-2">
                                         <Label htmlFor="name">{t('Nama')}</Label>
                                         <Input id="name" name="name" defaultValue={user?.name ?? ''} required />
@@ -46,6 +63,20 @@ export default function AdminUserEdit() {
                                     <div className="grid gap-2">
                                         <Label htmlFor="phone">{t('Telepon')}</Label>
                                         <Input id="phone" name="phone" defaultValue={user?.phone ?? ''} placeholder="08xxxxxxxxxx" />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label>{t('Status Akun')}</Label>
+                                        <Select value={accountStatus} onValueChange={setAccountStatus}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('Pilih')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="active">{t('Aktif')}</SelectItem>
+                                                <SelectItem value="inactive">{t('Nonaktif')}</SelectItem>
+                                                <SelectItem value="banned">{t('Banned')}</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 pt-2">
