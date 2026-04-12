@@ -23,7 +23,6 @@ type UserRow = {
     email: string;
     phone: string | null;
     account_status: string;
-    created_at_wib: string | null;
     last_activity_at_wib?: string | null;
     balance: number;
     total_spent: number;
@@ -177,7 +176,13 @@ export default function AdminUsers() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                             <div className="lg:col-span-2">
                                 <Label htmlFor="q">{t('Cari')}</Label>
-                                <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nama / email / no. hp / id')} />
+                                <Input
+                                    id="q"
+                                    className="mt-2 h-10"
+                                    value={q}
+                                    onChange={(e) => setQ(e.target.value)}
+                                    placeholder={t('nama / email / no. hp / id')}
+                                />
                             </div>
 
                             <div>
@@ -211,7 +216,6 @@ export default function AdminUsers() {
                                 <thead>
                                     <tr className="bg-muted/20">
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('ID')}</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Dibuat')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Nama')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Email')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Telepon')}</th>
@@ -226,7 +230,7 @@ export default function AdminUsers() {
                                 <tbody>
                                     {rows.length === 0 ? (
                                         <tr>
-                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={11}>
+                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={10}>
                                                 {t('Tidak ada data.')}
                                             </td>
                                         </tr>
@@ -234,7 +238,6 @@ export default function AdminUsers() {
                                         rows.map((row) => (
                                             <tr key={row.id} className="border-t">
                                                 <td className="px-4 py-3 whitespace-nowrap">#{row.id}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.created_at_wib ?? '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.name || '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.email || '-'}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.phone ?? '-'}</td>
