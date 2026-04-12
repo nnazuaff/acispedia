@@ -300,15 +300,27 @@ export default function AdminFinancialReport() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-                            <div>
-                                <Label htmlFor="date_from">{t('Dari Tanggal')}</Label>
-                                <Input id="date_from" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+                            <div className="lg:col-span-4">
+                                <Label htmlFor="date_from">{t('Rentang Tanggal')}</Label>
+                                <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                                    <Input
+                                        id="date_from"
+                                        type="date"
+                                        value={dateFrom}
+                                        onChange={(e) => setDateFrom(e.target.value)}
+                                        aria-label={t('Dari Tanggal')}
+                                    />
+                                    <span className="text-sm text-muted-foreground">s/d</span>
+                                    <Input
+                                        id="date_to"
+                                        type="date"
+                                        value={dateTo}
+                                        onChange={(e) => setDateTo(e.target.value)}
+                                        aria-label={t('Sampai Tanggal')}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <Label htmlFor="date_to">{t('Sampai Tanggal')}</Label>
-                                <Input id="date_to" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-                            </div>
-                            <div className="flex items-end">
+                            <div className="flex items-end lg:col-span-2">
                                 <Button onClick={applyDateFilter}>{t('Terapkan')}</Button>
                             </div>
                         </div>
