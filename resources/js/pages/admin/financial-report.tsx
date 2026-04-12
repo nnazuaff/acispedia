@@ -134,6 +134,7 @@ export default function AdminFinancialReport() {
     };
 
     const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
+    const [isSelectingDateEnd, setIsSelectingDateEnd] = React.useState(false);
 
     const [dateFrom, setDateFrom] = React.useState(() => {
         const from = String(filters?.date_from ?? '').trim();
@@ -372,7 +373,15 @@ export default function AdminFinancialReport() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                             <div className="lg:col-span-4">
                                 <Label htmlFor="date_from">{t('Rentang Tanggal')}</Label>
-                                <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                                <Popover
+                                    open={isDatePickerOpen}
+                                    onOpenChange={(open) => {
+                                        setIsDatePickerOpen(open);
+                                        if (open) {
+                                            setIsSelectingDateEnd(false);
+                                        }
+                                    }}
+                                >
                                     <PopoverTrigger asChild>
                                         <button
                                             type="button"
@@ -401,17 +410,26 @@ export default function AdminFinancialReport() {
                                             mode="range"
                                             numberOfMonths={2}
                                             selected={dateRange}
-                                            onSelect={(next: DateRange | undefined) => {
-                                                const prevHadEnd = Boolean(dateRange?.to);
+                                            onDayClick={(day) => {
+                                                const clicked = new Date(day.getFullYear(), day.getMonth(), day.getDate());
 
-                                                setDateRange(next);
-                                                setDateFrom(next?.from ? formatLocalDateToYmd(next.from) : '');
-                                                setDateTo(next?.to ? formatLocalDateToYmd(next.to) : '');
-
-                                                // Auto-close only when the user just picked the end date.
-                                                if (!prevHadEnd && next?.to) {
-                                                    setIsDatePickerOpen(false);
+                                                if (!isSelectingDateEnd) {
+                                                    setDateRange({ from: clicked, to: undefined });
+                                                    setDateFrom(formatLocalDateToYmd(clicked));
+                                                    setDateTo('');
+                                                    setIsSelectingDateEnd(true);
+                                                    return;
                                                 }
+
+                                                const start = dateRange?.from ?? clicked;
+                                                const from = clicked < start ? clicked : start;
+                                                const to = clicked < start ? start : clicked;
+
+                                                setDateRange({ from, to });
+                                                setDateFrom(formatLocalDateToYmd(from));
+                                                setDateTo(formatLocalDateToYmd(to));
+                                                setIsSelectingDateEnd(false);
+                                                setIsDatePickerOpen(false);
                                             }}
                                         />
                                     </PopoverContent>
