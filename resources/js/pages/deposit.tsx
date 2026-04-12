@@ -1,3 +1,17 @@
+function normalizeIdPhoneToLocalZero(input: string): string {
+    const raw = String(input ?? '').trim();
+    if (raw === '') return '';
+
+    const digits = raw.replace(/\D+/g, '');
+    if (digits === '') return '';
+
+    if (digits.startsWith('62')) {
+        const rest = digits.slice(2).replace(/^0+/, '');
+        return `0${rest}`;
+    }
+
+    return digits;
+}
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 import { toast } from 'sonner';
@@ -210,13 +224,19 @@ export default function DepositPage() {
         }
 
         if (methodCategory === 'konversi_saldo') {
-            const phone = acispayPhone.trim();
+            const phone = normalizeIdPhoneToLocalZero(acispayPhone);
             const username = acispayUsername.trim();
 
             if (!phone) {
                 toast.error(t('Nomor HP Acispay wajib diisi'));
                 return;
             }
+
+            if (phone.length < 10) {
+                toast.error(t('Nomor HP Acispay minimal 10 digit'));
+                return;
+            }
+
             if (!username) {
                 toast.error(t('Username Acispay wajib diisi'));
                 return;
@@ -529,10 +549,11 @@ export default function DepositPage() {
                                                         inputMode="numeric"
                                                         pattern="[0-9]*"
                                                         autoComplete="tel"
-                                                        maxLength={32}
+                                                        minLength={10}
+                                                        maxLength={16}
                                                         value={acispayPhone}
                                                         onChange={(e) => {
-                                                            const next = e.target.value.replace(/\D+/g, '');
+                                                            const next = normalizeIdPhoneToLocalZero(e.target.value);
                                                             setAcispayPhone(next);
                                                         }}
                                                         placeholder="08xxxxxxxxxx"

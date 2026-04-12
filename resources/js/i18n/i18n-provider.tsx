@@ -75,6 +75,7 @@ const dictionaries: Record<Locale, Dict> = {
         'Nomor HP Acispay': 'Acispay phone number',
         'Username Acispay': 'Acispay username',
         'Nomor HP Acispay wajib diisi': 'Acispay phone number is required',
+        'Nomor HP Acispay minimal 10 digit': 'Acispay phone number must be at least 10 digits',
         'Username Acispay wajib diisi': 'Acispay username is required',
         'Pastikan saldo Acispay mencukupi sesuai nominal yang dimasukkan.':
             'Make sure your Acispay balance is sufficient for the entered amount.',

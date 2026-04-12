@@ -10,6 +10,7 @@ use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Services\TelegramNotifier;
 use App\Services\TripayClient;
+use App\Support\PhoneNormalizer;
 use App\Support\UserActivity;
 use App\Support\WalletLedgerWriter;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,9 +29,13 @@ class DepositsController extends Controller
     {
         $user = $request->user();
 
+        $request->merge([
+            'acispay_phone' => PhoneNormalizer::normalizeIdPhoneToLocalZero($request->input('acispay_phone')),
+        ]);
+
         $validated = $request->validate([
             'amount' => ['required', 'integer', 'min:1000', 'max:200000000'],
-            'acispay_phone' => ['required', 'string', 'min:8', 'max:32', 'regex:/^[0-9]+$/'],
+            'acispay_phone' => ['required', 'string', 'regex:/^0[0-9]{9,15}$/'],
             'acispay_username' => ['required', 'string', 'min:3', 'max:64'],
         ]);
 
