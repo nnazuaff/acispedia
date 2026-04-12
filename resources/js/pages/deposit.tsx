@@ -10,13 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { canUseMidtransSnap, openMidtransSnapPopup } from '@/lib/midtrans-snap';
 
 function normalizeIdPhoneToLocalZero(input: string): string {
@@ -76,12 +69,10 @@ function getXsrfToken(): string | null {
 export default function DepositPage() {
     const { t, locale } = useI18n();
     const confirm = useConfirm();
-    const { auth, balance, tripay_enabled: tripayEnabled, midtrans_enabled: midtransEnabled, midtrans_admin_fee: midtransAdminFee, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl, active_pending: activePendingProp } = usePage().props as any as {
+    const { auth, balance, midtrans_enabled: midtransEnabled, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl, active_pending: activePendingProp } = usePage().props as any as {
         auth: { user?: { id?: number; phone?: string | null } };
         balance: number;
-        tripay_enabled: boolean;
         midtrans_enabled: boolean;
-        midtrans_admin_fee: number;
         midtrans_client_key: string;
         midtrans_snap_js_url: string;
         active_pending: {
@@ -98,17 +89,14 @@ export default function DepositPage() {
 
     const quickAmounts = React.useMemo(() => [1000, 5000, 10000, 20000, 50000, 100000, 200000], []);
     const [amount, setAmount] = React.useState<number>(0);
-    const [methodCategory, setMethodCategory] = React.useState<'qris' | 'ewallet' | 'konversi_saldo'>(
-        (midtransEnabled || tripayEnabled) ? 'qris' : 'konversi_saldo'
+    const [methodCategory, setMethodCategory] = React.useState<'qris' | 'konversi_saldo'>(
+        midtransEnabled ? 'qris' : 'konversi_saldo'
     );
-    const [ewalletCode, setEwalletCode] = React.useState<'OVO' | 'DANA' | 'SHOPEEPAY'>('OVO');
     const [acispayPhone, setAcispayPhone] = React.useState<string>('');
     const [acispayUsername, setAcispayUsername] = React.useState<string>('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [balanceState, setBalanceState] = React.useState<number>(Number(balance ?? 0));
     const [activePending, setActivePending] = React.useState<typeof activePendingProp>(activePendingProp);
-
-    const method = methodCategory === 'qris' ? 'QRIS2' : ewalletCode;
 
     React.useEffect(() => {
         setBalanceState(Number(balance ?? 0));
@@ -119,13 +107,7 @@ export default function DepositPage() {
     }, [activePendingProp]);
 
     React.useEffect(() => {
-        if ((methodCategory === 'qris' || methodCategory === 'ewallet') && tripayEnabled) {
-            if (methodCategory === 'ewallet') {
-                return;
-            }
-        }
-
-        if (methodCategory === 'qris' && (midtransEnabled || tripayEnabled)) {
+        if (methodCategory === 'qris' && midtransEnabled) {
             return;
         }
 
@@ -133,13 +115,13 @@ export default function DepositPage() {
             return;
         }
 
-        if (midtransEnabled || tripayEnabled) {
+        if (midtransEnabled) {
             setMethodCategory('qris');
             return;
         }
 
         setMethodCategory('konversi_saldo');
-    }, [midtransEnabled, tripayEnabled, methodCategory]);
+    }, [midtransEnabled, methodCategory]);
 
     React.useEffect(() => {
         const uid = Number(auth?.user?.id);
@@ -290,12 +272,7 @@ export default function DepositPage() {
                     onError: () => {
                         toast.error(t('Pembayaran gagal'));
                     },
-                    onClose: () => {
-                        toast.warning(t('Belum selesai'));
-                        if (options.redirectAfterClose) {
-                            redirectToDepositHistory();
-                        }
-                    },
+                    onClose: () => {},
                 });
                 return true;
             } catch (error) {
@@ -443,49 +420,7 @@ export default function DepositPage() {
                 return;
             }
 
-            const phone = typeof auth?.user?.phone === 'string' ? auth.user.phone : null;
-
-            const res = await fetch('/api/deposits/tripay', {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    ...(xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}),
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    amount: amt,
-                    method,
-                    ...(phone ? { customer_phone: phone } : {}),
-                }),
-            });
-
-            const json = (await res.json()) as any;
-
-            if (!res.ok || !json?.success) {
-                toast.error(json?.message ?? t('Gagal membuat deposit.'));
-                return;
-            }
-
-            toast.success(json?.message ?? t('Deposit dibuat.'));
-
-            const url = String(json?.checkout_url ?? '');
-            if (url) {
-                window.open(url, '_blank', 'noopener,noreferrer');
-            }
-
-            router.get(
-                '/history/deposit',
-                {
-                    page: 1,
-                    per_page: 25,
-                },
-                {
-                    preserveState: false,
-                    preserveScroll: false,
-                    replace: true,
-                }
-            );
+            toast.error(t('Metode pembayaran sedang tidak tersedia.'));
             return;
         } catch (e) {
             const msg = e instanceof Error ? e.message : t('Kesalahan tidak diketahui.');
@@ -548,23 +483,12 @@ export default function DepositPage() {
                             {t('Saldo saat ini')}: <span className="font-medium">Rp {formatRupiah(balanceState)}</span>
                         </div>
 
-                        {!tripayEnabled ? (
-                            <div className="mt-4 rounded-lg border border-sky-500/30 bg-sky-500/10 p-4 text-sm text-sky-900 dark:text-sky-100">
-                                <div className="font-semibold">{t('Tripay dinonaktifkan sementara')}</div>
-                                <div className="mt-1 text-muted-foreground">
-                                    {locale === 'en'
-                                        ? 'Tripay E-Wallet methods are temporarily unavailable during the migration to Midtrans.'
-                                        : 'Metode E-Wallet dari Tripay untuk sementara tidak tersedia saat proses migrasi ke Midtrans.'}
-                                </div>
-                            </div>
-                        ) : null}
-
                         <div className="mt-4 grid gap-6">
                             <div className="space-y-3">
                                 <div className="flex items-center gap-2 text-sm font-semibold">{t('Pilih Metode Pembayaran')}</div>
 
                                 <div className="space-y-3">
-                                    {(midtransEnabled || tripayEnabled) ? (
+                                    {midtransEnabled ? (
                                         <button
                                             type="button"
                                             className={
@@ -584,12 +508,8 @@ export default function DepositPage() {
                                                 <QrCode className="size-5" />
                                             </span>
                                             <div className="flex-1">
-                                                <div className="text-sm font-semibold">{midtransEnabled ? 'Midtrans' : 'QRIS'}</div>
-                                                <div className="text-xs text-muted-foreground">
-                                                    {midtransEnabled
-                                                        ? (locale === 'en' ? 'Choose an available payment method in the Midtrans popup' : 'Pilih metode pembayaran yang tersedia di popup Midtrans')
-                                                        : t('Pembayaran QRIS otomatis')}
-                                                </div>
+                                                <div className="text-sm font-semibold">{t('Isi Saldo')}</div>
+                                                <div className="text-xs text-muted-foreground">QRIS, VA Bank, GoPay, dan metode lainnya</div>
                                             </div>
                                             <span
                                                 className={
@@ -651,82 +571,6 @@ export default function DepositPage() {
                                             />
                                         </span>
                                     </button>
-
-                                    {tripayEnabled ? (
-                                        <button
-                                            type="button"
-                                            className={
-                                                'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ' +
-                                                (methodCategory === 'ewallet'
-                                                    ? 'border-teal-500/60 bg-teal-500/10'
-                                                    : 'border-border/60 bg-muted/10 hover:bg-muted/20')
-                                            }
-                                            onClick={() => setMethodCategory('ewallet')}
-                                        >
-                                            <span
-                                                className={
-                                                    'flex h-10 w-10 items-center justify-center rounded-lg ' +
-                                                    (methodCategory === 'ewallet' ? 'bg-teal-500 text-white' : 'bg-muted text-foreground')
-                                                }
-                                            >
-                                                <Wallet className="size-5" />
-                                            </span>
-                                            <div className="flex-1">
-                                                <div className="text-sm font-semibold">E-Wallet</div>
-                                                <div className="text-xs text-muted-foreground">{t('Pilih OVO / DANA / ShopeePay')}</div>
-                                            </div>
-                                            <span
-                                                className={
-                                                    'h-5 w-5 rounded-full border-2 ' +
-                                                    (methodCategory === 'ewallet' ? 'border-teal-500' : 'border-muted-foreground/40')
-                                                }
-                                            >
-                                                <span
-                                                    className={
-                                                        'block h-full w-full scale-50 rounded-full ' +
-                                                        (methodCategory === 'ewallet' ? 'bg-teal-500' : 'bg-transparent')
-                                                    }
-                                                />
-                                            </span>
-                                        </button>
-                                    ) : null}
-
-                                    {tripayEnabled && methodCategory === 'ewallet' ? (
-                                        <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
-                                            <Label className="text-sm font-semibold">{t('Pilih E-Wallet')}</Label>
-                                            <Select
-                                                value={ewalletCode}
-                                                onValueChange={(v) => setEwalletCode(v as any)}
-                                            >
-                                                <SelectTrigger className="mt-2 h-10">
-                                                    <SelectValue placeholder={t('Pilih')} />
-                                                </SelectTrigger>
-                                                <SelectContent align="end">
-                                                    <SelectItem value="OVO">OVO</SelectItem>
-                                                    <SelectItem value="DANA">DANA</SelectItem>
-                                                    <SelectItem value="SHOPEEPAY">ShopeePay</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    ) : null}
-
-                                    {methodCategory === 'qris' && midtransEnabled && Number(amount) > 0 ? (
-                                        <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
-                                                <div className="text-sm font-semibold">Midtrans Snap</div>
-                                            <div className="mt-2 text-xs text-muted-foreground">
-                                                {locale === 'en'
-                                                    ? 'The payment will be created through Midtrans Snap. You can continue by choosing one of the payment methods available in the popup.'
-                                                    : 'Pembayaran akan dibuat melalui Midtrans Snap. Lanjutkan dengan memilih salah satu metode pembayaran yang tersedia di popup.'}
-                                            </div>
-                                            {Number(midtransAdminFee) > 0 ? (
-                                                <div className="mt-2 text-xs text-muted-foreground">
-                                                    {locale === 'en'
-                                                        ? `An admin fee of Rp ${formatRupiah(Number(midtransAdminFee))} will be added automatically.`
-                                                        : `Biaya admin Rp ${formatRupiah(Number(midtransAdminFee))} akan ditambahkan otomatis.`}
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                    ) : null}
 
                                     {methodCategory === 'konversi_saldo' && Number(amount) > 0 ? (
                                         <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
@@ -794,59 +638,11 @@ export default function DepositPage() {
                                         );
                                     })}
                                 </div>
-
-                                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                                    <span className="inline-flex h-5 items-center rounded-md bg-muted px-1.5 text-[10px] text-foreground">
-                                        RP
-                                    </span>
-                                    <span>{t('ATAU MASUKKAN NOMINAL MANUAL')}</span>
+                                                <div className="text-sm font-semibold">{t('Isi Saldo')}</div>
+                                                <div className="text-xs text-muted-foreground">QRIS, VA Bank, GoPay, dan metode lainnya</div>
                                 </div>
 
                                 <div>
                                     <Label htmlFor="amount">{t('Nominal')}</Label>
-                                    <Input
-                                        id="amount"
-                                        className="mt-1"
-                                        type="number"
-                                        inputMode="numeric"
-                                        min={1000}
-                                        max={200000}
-                                        value={String(amount)}
-                                        onChange={(e) => setAmount(Number(e.target.value))}
-                                        placeholder={t('0')}
-                                    />
-                                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                                        <span>{t('Minimal')}: Rp 1.000</span>
-                                        <span>{t('Maksimal')}: Rp 200.000</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                            <Button asChild variant="outline">
-                                <Link href="/history/deposit" prefetch>
-                                    {t('Riwayat')}
-                                </Link>
-                            </Button>
-
-                            <Button type="button" onClick={createDeposit} disabled={isSubmitting || !!activePending}>
-                                <ArrowRight className="mr-2 h-4 w-4" />
-                                {isSubmitting ? t('Memproses...') : t('Lanjutkan')}
-                            </Button>
-                        </div>
-                    </CardHeader>
-                </Card>
-            </div>
-        </>
-    );
-}
-
-DepositPage.layout = {
-    breadcrumbs: [
-        {
-            title: 'Deposit Saldo',
-            href: '/deposit',
-        },
-    ],
-};
+                                            ) : null}

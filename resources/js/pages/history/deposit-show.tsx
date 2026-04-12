@@ -54,12 +54,20 @@ function methodLabel(row: { payment_method: string; tripay_method: string | null
         return 'QRIS';
     }
 
-    if (['OVO', 'DANA', 'SHOPEEPAY', 'GOPAY'].includes(upper)) {
-        return 'E-Wallet';
+    if (upper === 'GOPAY') {
+        return 'GoPay';
+    }
+
+    if (upper === 'SHOPEEPAY') {
+        return 'ShopeePay';
+    }
+
+    if (['OVO', 'DANA'].includes(upper)) {
+        return upper;
     }
 
     if (upper.endsWith('VA') || upper.endsWith('_TRANSFER') || upper.includes('TRANSFER')) {
-        return 'Virtual Account';
+        return 'VA Bank';
     }
 
     if (channel) {
@@ -71,13 +79,29 @@ function methodLabel(row: { payment_method: string; tripay_method: string | null
         return 'Konversi Saldo';
     }
     if (payment.toLowerCase() === 'midtrans') {
-        return 'Midtrans';
+        return 'Isi Saldo';
     }
     if (payment.toLowerCase() === 'tripay') {
         return 'Pembayaran';
     }
 
     return payment;
+}
+
+function providerStatusLabel(status: string | null | undefined): string {
+    const normalized = String(status ?? '').trim().toLowerCase();
+
+    if (normalized === '') return '-';
+    if (['settlement', 'capture', 'success', 'paid'].includes(normalized)) return 'Berhasil';
+    if (['pending', 'authorize'].includes(normalized)) return 'Menunggu Pembayaran';
+    if (['expire', 'expired'].includes(normalized)) return 'Kadaluarsa';
+    if (['cancel', 'cancelled'].includes(normalized)) return 'Dibatalkan';
+    if (['deny', 'failure', 'failed', 'error'].includes(normalized)) return 'Gagal';
+    if (normalized === 'refund') return 'Dikembalikan';
+    if (normalized === 'partial_refund') return 'Refund Sebagian';
+    if (normalized === 'challenge') return 'Perlu Verifikasi';
+
+    return normalized.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function getCookie(name: string): string | null {
@@ -189,16 +213,12 @@ export default function DepositShowPage() {
                     onError: () => {
                         toast.error('Terjadi masalah saat memproses pembayaran.');
                     },
-                    onClose: () => {
-                        toast.warning('Popup pembayaran ditutup sebelum selesai.');
-                    },
+                    onClose: () => {},
                 });
                 return;
             } catch (error) {
                 if (paymentUrl === '') {
-                    toast.error(error instanceof Error ? error.message : 'Gagal membuka popup Midtrans.');
-                } else {
-                    toast.warning('Popup Midtrans tidak bisa dimuat. Anda akan dialihkan ke halaman pembayaran.');
+                    toast.error(error instanceof Error ? error.message : 'Gagal membuka halaman pembayaran.');
                 }
             }
         }
@@ -282,19 +302,19 @@ export default function DepositShowPage() {
 
                                 <div className="mt-4 grid gap-2 text-sm">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">{t('Referensi provider')}</span>
+                                        <span className="text-muted-foreground">{t('Kode pembayaran')}</span>
                                         <span className="font-medium">{deposit.provider_reference ?? deposit.tripay_merchant_ref ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">{t('Transaction ID')}</span>
+                                        <span className="text-muted-foreground">{t('ID transaksi')}</span>
                                         <span className="font-medium">{deposit.provider_transaction_id ?? deposit.tripay_reference ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">{t('Channel')}</span>
-                                        <span className="font-medium">{deposit.payment_channel ?? deposit.tripay_pay_code ?? '-'}</span>
+                                        <span className="text-muted-foreground">{t('Metode pembayaran')}</span>
+                                        <span className="font-medium">{methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method, payment_channel: deposit.payment_channel })}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">{t('Checkout')}</span>
+                                        <span className="text-muted-foreground">{t('Lanjutkan pembayaran')}</span>
                                         {deposit.payment_url ? (
                                             <a
                                                 className="font-medium underline underline-offset-4"
@@ -310,11 +330,7 @@ export default function DepositShowPage() {
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
                                         <span className="text-muted-foreground">{t('Status pembayaran')}</span>
-                                        <span className="font-medium">{deposit.provider_status ?? deposit.tripay_status ?? '-'}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">{t('Tripay Pay code')}</span>
-                                        <span className="font-medium">{deposit.tripay_pay_code ?? '-'}</span>
+                                        <span className="font-medium">{providerStatusLabel(deposit.provider_status ?? deposit.tripay_status)}</span>
                                     </div>
                                 </div>
 

@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 import { Copy, MoreHorizontal } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { useConfirm } from '@/components/confirm-dialog-provider';
 import { useI18n } from '@/i18n/i18n-provider';
@@ -100,12 +101,20 @@ function methodLabel(row: { payment_method: string; tripay_method: string | null
         return 'QRIS';
     }
 
-    if (['OVO', 'DANA', 'SHOPEEPAY', 'GOPAY'].includes(upper)) {
-        return 'E-Wallet';
+    if (upper === 'GOPAY') {
+        return 'GoPay';
+    }
+
+    if (upper === 'SHOPEEPAY') {
+        return 'ShopeePay';
+    }
+
+    if (['OVO', 'DANA'].includes(upper)) {
+        return upper;
     }
 
     if (upper.endsWith('VA') || upper.endsWith('_TRANSFER') || upper.includes('TRANSFER')) {
-        return 'Virtual Account';
+        return 'VA Bank';
     }
 
     if (channel) {
@@ -117,7 +126,7 @@ function methodLabel(row: { payment_method: string; tripay_method: string | null
         return 'Konversi Saldo';
     }
     if (payment.toLowerCase() === 'midtrans') {
-        return 'Midtrans';
+        return 'Isi Saldo';
     }
     if (payment.toLowerCase() === 'tripay') {
         return 'Pembayaran';
@@ -134,6 +143,22 @@ function statusLabel(status: string): string {
     if (s === 'expired') return 'Kadaluarsa';
     if (s === 'canceled' || s === 'cancelled') return 'Dibatalkan';
     return status;
+}
+
+function providerStatusLabel(status: string | null | undefined): string {
+    const normalized = String(status ?? '').trim().toLowerCase();
+
+    if (normalized === '') return '-';
+    if (['settlement', 'capture', 'success', 'paid'].includes(normalized)) return 'Berhasil';
+    if (['pending', 'authorize'].includes(normalized)) return 'Menunggu Pembayaran';
+    if (['expire', 'expired'].includes(normalized)) return 'Kadaluarsa';
+    if (['cancel', 'cancelled'].includes(normalized)) return 'Dibatalkan';
+    if (['deny', 'failure', 'failed', 'error'].includes(normalized)) return 'Gagal';
+    if (normalized === 'refund') return 'Dikembalikan';
+    if (normalized === 'partial_refund') return 'Refund Sebagian';
+    if (normalized === 'challenge') return 'Perlu Verifikasi';
+
+    return normalized.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function getCookie(name: string): string | null {
@@ -216,13 +241,13 @@ async function cancelDeposit(id: number) {
 
         const json = (await res.json()) as any;
         if (!res.ok || !json?.success) {
-            alert(json?.message ?? 'Gagal membatalkan deposit.');
+            toast.error(json?.message ?? 'Gagal membatalkan deposit.');
             return;
         }
 
         // Refresh handled by caller to keep URL clean.
     } catch (e) {
-        alert(e instanceof Error ? e.message : 'Kesalahan tidak diketahui.');
+        toast.error(e instanceof Error ? e.message : 'Kesalahan tidak diketahui.');
     }
 }
 
@@ -293,6 +318,13 @@ export default function HistoryDepositPage() {
         setSelectedDeposit(null);
     }
 
+    function payFromDetail(row: Pick<DepositRow, 'payment_method' | 'payment_url' | 'snap_token'>) {
+        closeDetail();
+        window.setTimeout(() => {
+            void openPayment(row);
+        }, 0);
+    }
+
     async function openPayment(row: Pick<DepositRow, 'payment_method' | 'payment_url' | 'snap_token'>) {
         const paymentUrl = String(row.payment_url ?? '').trim();
         const snapToken = String(row.snap_token ?? '').trim();
@@ -305,26 +337,20 @@ export default function HistoryDepositPage() {
                     clientKey: midtransClientKey,
                     snapToken,
                     onSuccess: () => {
-                        alert('Pembayaran sukses. Status deposit akan diperbarui otomatis.');
                         router.reload({ preserveScroll: true } as any);
                     },
                     onPending: () => {
-                        alert('Pembayaran masih menunggu penyelesaian.');
                         router.reload({ preserveScroll: true } as any);
                     },
                     onError: () => {
-                        alert('Terjadi masalah saat memproses pembayaran.');
+                        toast.error('Terjadi masalah saat memproses pembayaran.');
                     },
-                    onClose: () => {
-                        alert('Popup pembayaran ditutup sebelum selesai.');
-                    },
+                    onClose: () => {},
                 });
                 return;
             } catch (error) {
                 if (paymentUrl === '') {
-                    alert(error instanceof Error ? error.message : 'Gagal membuka popup Midtrans.');
-                } else {
-                    alert('Popup Midtrans tidak bisa dimuat. Anda akan dialihkan ke halaman pembayaran.');
+                    toast.error(error instanceof Error ? error.message : 'Gagal membuka halaman pembayaran.');
                 }
             }
         }
@@ -512,7 +538,7 @@ export default function HistoryDepositPage() {
                                     <SelectContent align="end">
                                         <SelectItem value="all">{t('Semua')}</SelectItem>
                                         <SelectItem value="qris">QRIS</SelectItem>
-                                        <SelectItem value="midtrans">Midtrans</SelectItem>
+                                        <SelectItem value="midtrans">{t('Isi Saldo')}</SelectItem>
                                         <SelectItem value="ewallet">E-Wallet</SelectItem>
                                         <SelectItem value="konversi_saldo">{t('Konversi Saldo')}</SelectItem>
                                     </SelectContent>
@@ -933,7 +959,7 @@ export default function HistoryDepositPage() {
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                             {t('Status pembayaran')}
                                         </div>
-                                        <div className="text-sm font-medium">{selectedDeposit.provider_status}</div>
+                                        <div className="text-sm font-medium">{providerStatusLabel(selectedDeposit.provider_status)}</div>
                                     </div>
                                 ) : null}
 
@@ -942,7 +968,7 @@ export default function HistoryDepositPage() {
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            onClick={() => void openPayment(selectedDeposit)}
+                                            onClick={() => payFromDetail(selectedDeposit)}
                                         >
                                             {t('Bayar')}
                                         </Button>
