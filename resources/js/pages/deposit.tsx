@@ -69,12 +69,13 @@ function getXsrfToken(): string | null {
 export default function DepositPage() {
     const { t, locale } = useI18n();
     const confirm = useConfirm();
-    const { auth, balance, midtrans_enabled: midtransEnabled, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl, active_pending: activePendingProp } = usePage().props as any as {
+    const { auth, balance, midtrans_enabled: midtransEnabled, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl, midtrans_finish_url: midtransFinishUrl, active_pending: activePendingProp } = usePage().props as any as {
         auth: { user?: { id?: number; phone?: string | null } };
         balance: number;
         midtrans_enabled: boolean;
         midtrans_client_key: string;
         midtrans_snap_js_url: string;
+        midtrans_finish_url: string;
         active_pending: {
             id: number;
             status: string;
@@ -239,6 +240,16 @@ export default function DepositPage() {
         );
     }
 
+    function redirectToMidtransFinish() {
+        const finishUrl = String(midtransFinishUrl ?? '').trim();
+        if (finishUrl !== '') {
+            window.location.assign(finishUrl);
+            return;
+        }
+
+        redirectToDepositHistory();
+    }
+
     async function openMidtransPayment(options: { snapToken: string | null; paymentUrl?: string | null; redirectAfterClose?: boolean }) {
         const paymentUrl = String(options.paymentUrl ?? '').trim();
         const snapToken = String(options.snapToken ?? '').trim();
@@ -256,7 +267,7 @@ export default function DepositPage() {
                     onSuccess: () => {
                         toast.success(t('Pembayaran sukses'));
                         if (options.redirectAfterClose) {
-                            redirectToDepositHistory();
+                            redirectToMidtransFinish();
                         } else {
                             router.reload({ preserveScroll: true } as any);
                         }

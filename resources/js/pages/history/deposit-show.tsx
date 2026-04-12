@@ -182,14 +182,25 @@ async function cancelDeposit(id: number) {
 }
 
 export default function DepositShowPage() {
-    const { deposit, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl } = usePage().props as any as {
+    const { deposit, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl, midtrans_finish_url: midtransFinishUrl } = usePage().props as any as {
         deposit: DepositDetail;
         midtrans_client_key: string;
         midtrans_snap_js_url: string;
+        midtrans_finish_url: string;
     };
     const { t } = useI18n();
 
     const statusUpper = t(statusLabel(deposit.status)).toUpperCase();
+
+    function redirectToMidtransFinish() {
+        const finishUrl = String(midtransFinishUrl ?? '').trim();
+        if (finishUrl !== '') {
+            window.location.assign(finishUrl);
+            return;
+        }
+
+        router.reload();
+    }
 
     async function openPayment() {
         const paymentUrl = String(deposit.payment_url ?? '').trim();
@@ -204,7 +215,7 @@ export default function DepositShowPage() {
                     snapToken,
                     onSuccess: () => {
                         toast.success('Pembayaran sukses. Status deposit akan diperbarui otomatis.');
-                        router.reload();
+                        redirectToMidtransFinish();
                     },
                     onPending: () => {
                         toast.warning('Pembayaran masih menunggu penyelesaian.');

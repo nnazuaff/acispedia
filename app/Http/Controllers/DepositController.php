@@ -37,6 +37,7 @@ class DepositController extends Controller
             'midtrans_admin_fee' => max(0, (int) config('midtrans.admin_fee', 4000)),
             'midtrans_client_key' => (string) config('midtrans.client_key', ''),
             'midtrans_snap_js_url' => MidtransClient::snapJsUrl(),
+            'midtrans_finish_url' => trim((string) config('midtrans.finish_url', '')),
             'active_pending' => $activePending ? [
                 'id' => (int) $activePending->id,
                 'status' => (string) $activePending->status,

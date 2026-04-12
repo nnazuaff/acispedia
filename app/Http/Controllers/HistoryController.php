@@ -89,6 +89,7 @@ class HistoryController extends Controller
             ],
             'midtrans_client_key' => (string) config('midtrans.client_key', ''),
             'midtrans_snap_js_url' => MidtransClient::snapJsUrl(),
+            'midtrans_finish_url' => trim((string) config('midtrans.finish_url', '')),
         ]);
     }
 
@@ -305,6 +306,7 @@ class HistoryController extends Controller
             'deposits' => $deposits,
             'midtrans_client_key' => (string) config('midtrans.client_key', ''),
             'midtrans_snap_js_url' => MidtransClient::snapJsUrl(),
+            'midtrans_finish_url' => trim((string) config('midtrans.finish_url', '')),
             'filters' => [
                 'q' => $q,
                 'status' => $status !== '' ? $status : 'all',

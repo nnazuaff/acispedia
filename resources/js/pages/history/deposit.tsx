@@ -254,12 +254,13 @@ async function cancelDeposit(id: number) {
 export default function HistoryDepositPage() {
     const { t, locale } = useI18n();
     const confirm = useConfirm();
-    const { auth, deposits: depositsProp, filters: filtersProp, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl } = usePage().props as any as {
+    const { auth, deposits: depositsProp, filters: filtersProp, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl, midtrans_finish_url: midtransFinishUrl } = usePage().props as any as {
         auth: { user?: { id?: number } };
         deposits: DepositsPaginator;
         filters: Filters;
         midtrans_client_key: string;
         midtrans_snap_js_url: string;
+        midtrans_finish_url: string;
     };
 
     const [, copy] = useClipboard();
@@ -329,6 +330,16 @@ export default function HistoryDepositPage() {
         }, 0);
     }
 
+    function redirectToMidtransFinish() {
+        const finishUrl = String(midtransFinishUrl ?? '').trim();
+        if (finishUrl !== '') {
+            window.location.assign(finishUrl);
+            return;
+        }
+
+        router.reload({ preserveScroll: true } as any);
+    }
+
     async function openPayment(row: Pick<DepositRow, 'payment_method' | 'payment_url' | 'snap_token'>) {
         const paymentUrl = String(row.payment_url ?? '').trim();
         const snapToken = String(row.snap_token ?? '').trim();
@@ -341,7 +352,7 @@ export default function HistoryDepositPage() {
                     clientKey: midtransClientKey,
                     snapToken,
                     onSuccess: () => {
-                        router.reload({ preserveScroll: true } as any);
+                        redirectToMidtransFinish();
                     },
                     onPending: () => {
                         router.reload({ preserveScroll: true } as any);

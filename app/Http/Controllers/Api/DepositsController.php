@@ -398,11 +398,11 @@ class DepositsController extends Controller
                 );
             }
 
-            $detailUrl = '';
-            $appUrl = rtrim((string) config('app.url', ''), '/');
-            if ($appUrl !== '' && is_int($depositId)) {
-                $detailUrl = $appUrl.'/history/deposit/'.(int) $depositId;
-            }
+            $callbacks = array_filter([
+                'finish' => trim((string) config('midtrans.finish_url', '')),
+                'unfinish' => trim((string) config('midtrans.unfinish_url', '')),
+                'error' => trim((string) config('midtrans.error_url', '')),
+            ], static fn ($value) => $value !== '');
 
             $itemDetails = [[
                 'id' => 'DEPOSIT',
@@ -429,11 +429,7 @@ class DepositsController extends Controller
                     'phone' => (string) ($user->phone ?? ''),
                 ],
                 $itemDetails,
-                [
-                    'finish' => $detailUrl,
-                    'unfinish' => $detailUrl,
-                    'error' => $detailUrl,
-                ],
+                $callbacks,
                 $enabledPayments
             );
 
@@ -473,6 +469,7 @@ class DepositsController extends Controller
                 'amount' => $amount,
                 'final_amount' => $finalAmount,
                 'admin_fee' => $adminFee,
+                'finish_url' => $callbacks['finish'] ?? null,
             ]);
         } catch (RuntimeException $e) {
             if (is_int($depositId)) {
