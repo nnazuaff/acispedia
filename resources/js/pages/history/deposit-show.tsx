@@ -195,12 +195,16 @@ export default function DepositShowPage() {
                 });
                 return;
             } catch (error) {
-                toast.error(error instanceof Error ? error.message : 'Gagal membuka popup Midtrans.');
+                if (paymentUrl === '') {
+                    toast.error(error instanceof Error ? error.message : 'Gagal membuka popup Midtrans.');
+                } else {
+                    toast.warning('Popup Midtrans tidak bisa dimuat. Anda akan dialihkan ke halaman pembayaran.');
+                }
             }
         }
 
         if (paymentUrl !== '') {
-            window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+            window.location.assign(paymentUrl);
         }
     }
 
@@ -257,7 +261,7 @@ export default function DepositShowPage() {
                                 </div>
 
                                 <div className="mt-4 flex flex-wrap gap-2">
-                                    {deposit.status === 'pending' && deposit.payment_url ? (
+                                    {deposit.status === 'pending' && (deposit.payment_url || deposit.snap_token) ? (
                                         <Button type="button" variant="outline" onClick={() => void openPayment()}>
                                             {t('Bayar')}
                                         </Button>

@@ -321,12 +321,16 @@ export default function HistoryDepositPage() {
                 });
                 return;
             } catch (error) {
-                alert(error instanceof Error ? error.message : 'Gagal membuka popup Midtrans.');
+                if (paymentUrl === '') {
+                    alert(error instanceof Error ? error.message : 'Gagal membuka popup Midtrans.');
+                } else {
+                    alert('Popup Midtrans tidak bisa dimuat. Anda akan dialihkan ke halaman pembayaran.');
+                }
             }
         }
 
         if (paymentUrl !== '') {
-            window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+            window.location.assign(paymentUrl);
         }
     }
 
@@ -637,7 +641,7 @@ export default function HistoryDepositPage() {
                                                                     >
                                                                         {t('Detail')}
                                                                     </DropdownMenuItem>
-                                                                    {row.status === 'pending' && row.payment_url ? (
+                                                                    {row.status === 'pending' && (row.payment_url || row.snap_token) ? (
                                                                         <>
                                                                             <DropdownMenuSeparator />
                                                                             <DropdownMenuItem onClick={() => void openPayment(row)}>
@@ -933,7 +937,7 @@ export default function HistoryDepositPage() {
                                     </div>
                                 ) : null}
 
-                                {selectedDeposit.status === 'pending' && selectedDeposit.payment_url ? (
+                                {selectedDeposit.status === 'pending' && (selectedDeposit.payment_url || selectedDeposit.snap_token) ? (
                                     <div className="flex flex-wrap gap-2">
                                         <Button
                                             type="button"

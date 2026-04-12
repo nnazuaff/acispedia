@@ -959,9 +959,9 @@ class DepositsController extends Controller
 
         if (! $deposit) {
             return response()->json([
-                'success' => false,
-                'message' => 'Deposit not found.',
-            ], 404);
+                'success' => true,
+                'message' => 'Notification acknowledged. Deposit not found.',
+            ]);
         }
 
         $transactionStatus = strtolower((string) (Arr::get($payload, 'transaction_status') ?? ''));
