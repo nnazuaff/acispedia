@@ -44,6 +44,11 @@ class DepositsController extends Controller
         }
         $status = trim((string) $request->query('status', ''));
         $method = trim((string) $request->query('method', ''));
+        if ($method === 'midtrans') {
+            $method = 'isi_saldo';
+        } elseif ($method === 'tripay') {
+            $method = 'qris';
+        }
         $dateFrom = trim((string) $request->query('date_from', now()->toDateString()));
         $dateTo = trim((string) $request->query('date_to', now()->toDateString()));
 
@@ -114,12 +119,30 @@ class DepositsController extends Controller
         $methodKey = strtolower($method);
         if ($methodKey !== '') {
             if ($methodKey === 'qris') {
-                $query->whereNotNull('tripay_method')->where('tripay_method', 'like', '%QRIS%');
+                $query->where(function (Builder $filter) {
+                    $filter->where(function (Builder $tripay) {
+                        $tripay->whereNotNull('tripay_method')->where('tripay_method', 'like', '%QRIS%');
+                    })->orWhere(function (Builder $midtrans) {
+                        $midtrans->where('payment_method', 'midtrans')
+                            ->where(function (Builder $channel) {
+                                $channel->where(DB::raw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(provider_payload, '$.payment_type')), ''))"), 'qris')
+                                    ->orWhere(DB::raw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(provider_payload, '$.requested_channel')), ''))"), 'qris');
+                            });
+                    });
+                });
+            } elseif ($methodKey === 'va_bank') {
+                $query->where('payment_method', 'midtrans')
+                    ->where(DB::raw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(provider_payload, '$.payment_type')), ''))"), 'bank_transfer');
             } elseif ($methodKey === 'ewallet') {
-                $query->whereNotNull('tripay_method')->whereIn(DB::raw('UPPER(tripay_method)'), ['OVO', 'DANA', 'SHOPEEPAY']);
-            } elseif ($methodKey === 'tripay') {
-                $query->where('payment_method', 'tripay');
-            } elseif ($methodKey === 'midtrans') {
+                $query->where(function (Builder $filter) {
+                    $filter->where(function (Builder $tripay) {
+                        $tripay->whereNotNull('tripay_method')->whereIn(DB::raw('UPPER(tripay_method)'), ['OVO', 'DANA', 'SHOPEEPAY']);
+                    })->orWhere(function (Builder $midtrans) {
+                        $midtrans->where('payment_method', 'midtrans')
+                            ->whereIn(DB::raw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(provider_payload, '$.payment_type')), ''))"), ['gopay', 'shopeepay']);
+                    });
+                });
+            } elseif ($methodKey === 'isi_saldo') {
                 $query->where('payment_method', 'midtrans');
             } elseif ($methodKey === 'konversi_saldo') {
                 $query->where('payment_method', 'konversi_saldo');

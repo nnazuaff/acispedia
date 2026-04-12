@@ -1,7 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 import { toast } from 'sonner';
-import { ArrowRight, QrCode, Wallet } from 'lucide-react';
+import { ArrowLeftRight, ArrowRight, Wallet } from 'lucide-react';
 
 import { useConfirm } from '@/components/confirm-dialog-provider';
 import { useI18n } from '@/i18n/i18n-provider';
@@ -505,7 +505,7 @@ export default function DepositPage() {
                                                     (methodCategory === 'qris' ? 'bg-teal-500 text-white' : 'bg-muted text-foreground')
                                                 }
                                             >
-                                                <QrCode className="size-5" />
+                                                <Wallet className="size-5" />
                                             </span>
                                             <div className="flex-1">
                                                 <div className="text-sm font-semibold">{t('Isi Saldo')}</div>
@@ -545,7 +545,7 @@ export default function DepositPage() {
                                                     : 'bg-muted text-foreground')
                                             }
                                         >
-                                            <Wallet className="size-5" />
+                                            <ArrowLeftRight className="size-5" />
                                         </span>
                                         <div className="flex-1">
                                             <div className="text-sm font-semibold">{t('Konversi Saldo')}</div>

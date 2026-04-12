@@ -276,7 +276,11 @@ export default function HistoryDepositPage() {
     React.useEffect(() => {
         setQ(filtersProp?.q ?? '');
         setStatus(filtersProp?.status ?? 'all');
-        const nextMethod = filtersProp?.method === 'tripay' ? 'qris' : (filtersProp?.method ?? 'all');
+                const nextMethod = filtersProp?.method === 'tripay'
+                        ? 'qris'
+                        : filtersProp?.method === 'midtrans'
+                            ? 'isi_saldo'
+                            : (filtersProp?.method ?? 'all');
         setMethod(nextMethod);
         setEwalletCode(filtersProp?.ewallet_code ?? 'all');
         setYear(Number(filtersProp?.year ?? new Date().getFullYear()));
@@ -537,8 +541,9 @@ export default function HistoryDepositPage() {
                                     </SelectTrigger>
                                     <SelectContent align="end">
                                         <SelectItem value="all">{t('Semua')}</SelectItem>
+                                            <SelectItem value="isi_saldo">{t('Isi Saldo')}</SelectItem>
                                         <SelectItem value="qris">QRIS</SelectItem>
-                                        <SelectItem value="midtrans">{t('Isi Saldo')}</SelectItem>
+                                            <SelectItem value="va_bank">VA Bank</SelectItem>
                                         <SelectItem value="ewallet">E-Wallet</SelectItem>
                                         <SelectItem value="konversi_saldo">{t('Konversi Saldo')}</SelectItem>
                                     </SelectContent>

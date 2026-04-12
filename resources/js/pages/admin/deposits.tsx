@@ -52,12 +52,20 @@ function methodLabel(row: { payment_method: string; tripay_method: string | null
         return 'QRIS';
     }
 
-    if (['OVO', 'DANA', 'SHOPEEPAY', 'GOPAY'].includes(upper)) {
-        return 'E-Wallet';
+    if (upper === 'GOPAY') {
+        return 'GoPay';
+    }
+
+    if (upper === 'SHOPEEPAY') {
+        return 'ShopeePay';
+    }
+
+    if (['OVO', 'DANA'].includes(upper)) {
+        return upper;
     }
 
     if (upper.endsWith('VA') || upper.endsWith('_TRANSFER') || upper.includes('TRANSFER')) {
-        return 'Virtual Account';
+        return 'VA Bank';
     }
 
     if (channel) {
@@ -70,7 +78,7 @@ function methodLabel(row: { payment_method: string; tripay_method: string | null
     }
 
     if (payment.toLowerCase() === 'midtrans') {
-        return 'Midtrans';
+        return 'Isi Saldo';
     }
 
     return payment;
@@ -324,9 +332,9 @@ export default function AdminDeposits() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">{t('Semua')}</SelectItem>
-                                        <SelectItem value="tripay">Tripay</SelectItem>
-                                        <SelectItem value="midtrans">Midtrans</SelectItem>
+                                        <SelectItem value="isi_saldo">{t('Isi Saldo')}</SelectItem>
                                         <SelectItem value="qris">QRIS</SelectItem>
+                                        <SelectItem value="va_bank">VA Bank</SelectItem>
                                         <SelectItem value="ewallet">E-Wallet</SelectItem>
                                         <SelectItem value="konversi_saldo">{t('Konversi Saldo')}</SelectItem>
                                     </SelectContent>

@@ -1,16 +1,18 @@
 import * as React from 'react';
-import { Landmark, QrCode, Wallet } from 'lucide-react';
+import { ArrowLeftRight, Landmark, QrCode, Wallet } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 
-export type PaymentMethodKind = 'qris' | 'va' | 'ewallet' | 'other';
+export type PaymentMethodKind = 'qris' | 'va' | 'ewallet' | 'topup' | 'conversion' | 'other';
 
 export function getPaymentMethodKind(label: string): PaymentMethodKind {
     const normalized = String(label ?? '').trim().toLowerCase();
 
     if (normalized === 'qris') return 'qris';
-    if (normalized === 'e-wallet' || normalized === 'e wallet' || normalized === 'ewallet') return 'ewallet';
-    if (normalized === 'virtual account' || normalized === 'va') return 'va';
+    if (['e-wallet', 'e wallet', 'ewallet', 'ovo', 'dana', 'gopay', 'shopeepay'].includes(normalized)) return 'ewallet';
+    if (normalized === 'virtual account' || normalized === 'va' || normalized === 'va bank') return 'va';
+    if (normalized === 'isi saldo') return 'topup';
+    if (normalized === 'konversi saldo') return 'conversion';
 
     return 'other';
 }
@@ -27,7 +29,15 @@ export function PaymentMethodBadge({
     const kind = getPaymentMethodKind(label);
 
     const Icon =
-        kind === 'qris' ? QrCode : kind === 'ewallet' ? Wallet : kind === 'va' ? Landmark : null;
+                kind === 'qris'
+                        ? QrCode
+                        : kind === 'ewallet' || kind === 'topup'
+                            ? Wallet
+                            : kind === 'va'
+                                ? Landmark
+                                : kind === 'conversion'
+                                    ? ArrowLeftRight
+                                    : null;
 
     return (
         <Badge variant={variant} className={className}>
@@ -48,7 +58,15 @@ export function PaymentMethodInline({
 }) {
     const kind = getPaymentMethodKind(label);
     const Icon =
-        kind === 'qris' ? QrCode : kind === 'ewallet' ? Wallet : kind === 'va' ? Landmark : null;
+                kind === 'qris'
+                        ? QrCode
+                        : kind === 'ewallet' || kind === 'topup'
+                            ? Wallet
+                            : kind === 'va'
+                                ? Landmark
+                                : kind === 'conversion'
+                                    ? ArrowLeftRight
+                                    : null;
 
     return (
         <span className={className ?? 'inline-flex items-center gap-1.5'}>

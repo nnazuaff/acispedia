@@ -184,6 +184,8 @@ class HistoryController extends Controller
         $method = trim((string) $request->query('method', ''));
         if ($method === 'tripay') {
             $method = 'qris';
+        } elseif ($method === 'midtrans') {
+            $method = 'isi_saldo';
         }
         $ewalletCode = trim((string) $request->query('ewallet_code', ''));
         $year = (int) $request->query('year', (int) now()->format('Y'));
@@ -212,16 +214,41 @@ class HistoryController extends Controller
         // - We split them by tripay_method (OVO/DANA/SHOPEEPAY = E-Wallet; others = QRIS).
         if ($method !== '' && $method !== 'all') {
             if ($method === 'ewallet') {
-                $query->where('payment_method', 'tripay');
-                $query->whereIn(DB::raw("UPPER(COALESCE(tripay_method, ''))"), ['OVO', 'DANA', 'SHOPEEPAY']);
+                $query->where(function (Builder $filter) {
+                    $filter->where(function (Builder $tripay) {
+                        $tripay->where('payment_method', 'tripay')
+                            ->whereIn(DB::raw("UPPER(COALESCE(tripay_method, ''))"), ['OVO', 'DANA', 'SHOPEEPAY']);
+                    })->orWhere(function (Builder $midtrans) {
+                        $midtrans->where('payment_method', 'midtrans')
+                            ->whereIn(DB::raw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(provider_payload, '$.payment_type')), ''))"), ['gopay', 'shopeepay']);
+                    });
+                });
 
                 if ($ewalletCode !== '' && $ewalletCode !== 'all') {
-                    $query->where(DB::raw("UPPER(COALESCE(tripay_method, ''))"), strtoupper($ewalletCode));
+                    $upperCode = strtoupper($ewalletCode);
+                    $lowerCode = strtolower($ewalletCode);
+                    $query->where(function (Builder $wallet) use ($upperCode, $lowerCode) {
+                        $wallet->where(DB::raw("UPPER(COALESCE(tripay_method, ''))"), $upperCode)
+                            ->orWhere(DB::raw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(provider_payload, '$.payment_type')), ''))"), $lowerCode);
+                    });
                 }
             } elseif ($method === 'qris') {
-                $query->where('payment_method', 'tripay');
-                $query->whereNotIn(DB::raw("UPPER(COALESCE(tripay_method, ''))"), ['OVO', 'DANA', 'SHOPEEPAY']);
-            } elseif ($method === 'midtrans') {
+                $query->where(function (Builder $filter) {
+                    $filter->where(function (Builder $tripay) {
+                        $tripay->where('payment_method', 'tripay')
+                            ->whereNotIn(DB::raw("UPPER(COALESCE(tripay_method, ''))"), ['OVO', 'DANA', 'SHOPEEPAY']);
+                    })->orWhere(function (Builder $midtrans) {
+                        $midtrans->where('payment_method', 'midtrans')
+                            ->where(function (Builder $channel) {
+                                $channel->where(DB::raw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(provider_payload, '$.payment_type')), ''))"), 'qris')
+                                    ->orWhere(DB::raw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(provider_payload, '$.requested_channel')), ''))"), 'qris');
+                            });
+                    });
+                });
+            } elseif ($method === 'va_bank') {
+                $query->where('payment_method', 'midtrans')
+                    ->where(DB::raw("LOWER(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(provider_payload, '$.payment_type')), ''))"), 'bank_transfer');
+            } elseif ($method === 'isi_saldo') {
                 $query->where('payment_method', 'midtrans');
             } else {
                 $query->where('payment_method', $method);
