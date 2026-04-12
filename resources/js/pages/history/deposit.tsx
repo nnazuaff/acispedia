@@ -145,22 +145,6 @@ function statusLabel(status: string): string {
     return status;
 }
 
-function providerStatusLabel(status: string | null | undefined): string {
-    const normalized = String(status ?? '').trim().toLowerCase();
-
-    if (normalized === '') return '-';
-    if (['settlement', 'capture', 'success', 'paid'].includes(normalized)) return 'Berhasil';
-    if (['pending', 'authorize'].includes(normalized)) return 'Menunggu Pembayaran';
-    if (['expire', 'expired'].includes(normalized)) return 'Kadaluarsa';
-    if (['cancel', 'cancelled'].includes(normalized)) return 'Dibatalkan';
-    if (['deny', 'failure', 'failed', 'error'].includes(normalized)) return 'Gagal';
-    if (normalized === 'refund') return 'Dikembalikan';
-    if (normalized === 'partial_refund') return 'Refund Sebagian';
-    if (normalized === 'challenge') return 'Perlu Verifikasi';
-
-    return normalized.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
 function getCookie(name: string): string | null {
     const parts = document.cookie.split(';');
     for (const part of parts) {
@@ -949,35 +933,6 @@ export default function HistoryDepositPage() {
                                         </div>
                                     </div>
                                 </div>
-
-                                {selectedDeposit.provider_reference ? (
-                                    <div className="grid gap-1">
-                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            {t('Referensi provider')}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="text-sm font-medium">{selectedDeposit.provider_reference}</div>
-                                            <Button
-                                                type="button"
-                                                size="icon"
-                                                variant="outline"
-                                                onClick={() => copy(String(selectedDeposit.provider_reference))}
-                                                aria-label={t('Salin referensi')}
-                                            >
-                                                <Copy className="size-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ) : null}
-
-                                {selectedDeposit.provider_status ? (
-                                    <div className="grid gap-1">
-                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            {t('Status pembayaran')}
-                                        </div>
-                                        <div className="text-sm font-medium">{providerStatusLabel(selectedDeposit.provider_status)}</div>
-                                    </div>
-                                ) : null}
 
                                 {selectedDeposit.status === 'pending' && (selectedDeposit.payment_url || selectedDeposit.snap_token) ? (
                                     <div className="flex flex-wrap gap-2">

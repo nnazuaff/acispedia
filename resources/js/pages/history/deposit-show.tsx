@@ -88,22 +88,6 @@ function methodLabel(row: { payment_method: string; tripay_method: string | null
     return payment;
 }
 
-function providerStatusLabel(status: string | null | undefined): string {
-    const normalized = String(status ?? '').trim().toLowerCase();
-
-    if (normalized === '') return '-';
-    if (['settlement', 'capture', 'success', 'paid'].includes(normalized)) return 'Berhasil';
-    if (['pending', 'authorize'].includes(normalized)) return 'Menunggu Pembayaran';
-    if (['expire', 'expired'].includes(normalized)) return 'Kadaluarsa';
-    if (['cancel', 'cancelled'].includes(normalized)) return 'Dibatalkan';
-    if (['deny', 'failure', 'failed', 'error'].includes(normalized)) return 'Gagal';
-    if (normalized === 'refund') return 'Dikembalikan';
-    if (normalized === 'partial_refund') return 'Refund Sebagian';
-    if (normalized === 'challenge') return 'Perlu Verifikasi';
-
-    return normalized.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
 function getCookie(name: string): string | null {
     const parts = document.cookie.split(';');
     for (const part of parts) {
@@ -308,14 +292,10 @@ export default function DepositShowPage() {
 
                             <div className="rounded-lg border p-4">
                                 <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    {t('Referensi')}
+                                    {t('Informasi Pembayaran')}
                                 </div>
 
                                 <div className="mt-4 grid gap-2 text-sm">
-                                    <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">{t('Kode pembayaran')}</span>
-                                        <span className="font-medium">{deposit.provider_reference ?? deposit.tripay_merchant_ref ?? '-'}</span>
-                                    </div>
                                     <div className="flex items-center justify-between gap-3">
                                         <span className="text-muted-foreground">{t('ID transaksi')}</span>
                                         <span className="font-medium">{deposit.provider_transaction_id ?? deposit.tripay_reference ?? '-'}</span>
@@ -338,10 +318,6 @@ export default function DepositShowPage() {
                                         ) : (
                                             <span className="font-medium">-</span>
                                         )}
-                                    </div>
-                                    <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">{t('Status pembayaran')}</span>
-                                        <span className="font-medium">{providerStatusLabel(deposit.provider_status ?? deposit.tripay_status)}</span>
                                     </div>
                                 </div>
 
