@@ -355,21 +355,6 @@ class DepositsController extends Controller
         $orderId = 'DEP-'.(int) $user->id.'-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6));
         $enabledPayments = [];
 
-        if ($requestedChannel !== '') {
-            $channelMap = [
-                'qris' => ['qris'],
-            ];
-
-            if (! array_key_exists($requestedChannel, $channelMap)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Channel pembayaran Midtrans tidak tersedia.',
-                ], 422);
-            }
-
-            $enabledPayments = $channelMap[$requestedChannel];
-        }
-
         $depositId = null;
 
         try {
@@ -408,7 +393,7 @@ class DepositsController extends Controller
                         'amount' => (int) $amount,
                         'method' => 'midtrans',
                         'order_id' => (string) $orderId,
-                        'channel' => $requestedChannel !== '' ? $requestedChannel : null,
+                        'channel' => null,
                     ]
                 );
             }
@@ -464,7 +449,7 @@ class DepositsController extends Controller
                 $deposit->provider_payload = array_filter([
                     'provider' => 'midtrans',
                     'order_id' => $orderId,
-                    'requested_channel' => $requestedChannel !== '' ? $requestedChannel : null,
+                    'requested_channel' => null,
                     'snap_token' => $snapToken !== '' ? $snapToken : null,
                     'redirect_url' => $redirectUrl !== '' ? $redirectUrl : null,
                     'admin_fee' => $adminFee,
@@ -501,7 +486,7 @@ class DepositsController extends Controller
                             'provider_payload' => [
                                 'provider' => 'midtrans',
                                 'order_id' => $orderId,
-                                'requested_channel' => $requestedChannel !== '' ? $requestedChannel : null,
+                                'requested_channel' => null,
                                 'admin_fee' => $adminFee,
                                 'error' => $e->getMessage(),
                             ],

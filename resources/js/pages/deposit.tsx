@@ -419,7 +419,6 @@ export default function DepositPage() {
                     credentials: 'same-origin',
                     body: JSON.stringify({
                         amount: amt,
-                        channel: 'qris',
                     }),
                 });
 
@@ -585,10 +584,10 @@ export default function DepositPage() {
                                                 <QrCode className="size-5" />
                                             </span>
                                             <div className="flex-1">
-                                                <div className="text-sm font-semibold">QRIS</div>
+                                                <div className="text-sm font-semibold">{midtransEnabled ? 'Midtrans' : 'QRIS'}</div>
                                                 <div className="text-xs text-muted-foreground">
                                                     {midtransEnabled
-                                                        ? (locale === 'en' ? 'Automatic QRIS payment via Midtrans' : 'Pembayaran QRIS otomatis via Midtrans')
+                                                        ? (locale === 'en' ? 'Choose an available payment method in the Midtrans popup' : 'Pilih metode pembayaran yang tersedia di popup Midtrans')
                                                         : t('Pembayaran QRIS otomatis')}
                                                 </div>
                                             </div>
@@ -713,11 +712,11 @@ export default function DepositPage() {
 
                                     {methodCategory === 'qris' && midtransEnabled && Number(amount) > 0 ? (
                                         <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
-                                            <div className="text-sm font-semibold">QRIS via Midtrans</div>
+                                                <div className="text-sm font-semibold">Midtrans Snap</div>
                                             <div className="mt-2 text-xs text-muted-foreground">
                                                 {locale === 'en'
-                                                    ? 'The QRIS payment will be created through Midtrans Snap and redirected directly to the Midtrans payment page.'
-                                                    : 'Pembayaran QRIS akan dibuat melalui Midtrans Snap dan diarahkan langsung ke halaman pembayaran Midtrans.'}
+                                                    ? 'The payment will be created through Midtrans Snap. You can continue by choosing one of the payment methods available in the popup.'
+                                                    : 'Pembayaran akan dibuat melalui Midtrans Snap. Lanjutkan dengan memilih salah satu metode pembayaran yang tersedia di popup.'}
                                             </div>
                                             {Number(midtransAdminFee) > 0 ? (
                                                 <div className="mt-2 text-xs text-muted-foreground">
