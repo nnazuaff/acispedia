@@ -13,6 +13,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { getPaymentMethodLabel } from '@/components/payment-method-badge';
 import { useI18n } from '@/i18n/i18n-provider';
 
 type DepositDetail = {
@@ -43,46 +44,6 @@ type DepositDetail = {
     };
     provider_payload: unknown;
 };
-
-function methodLabel(row: { payment_method: string; tripay_method: string | null; payment_channel?: string | null }): string {
-    const channel = String(row.payment_channel ?? row.tripay_method ?? '').trim();
-    const upper = channel.toUpperCase();
-
-    if (upper === 'QRIS2' || upper.startsWith('QRIS')) {
-        return 'QRIS';
-    }
-
-    if (upper === 'GOPAY') {
-        return 'GoPay';
-    }
-
-    if (upper === 'SHOPEEPAY') {
-        return 'ShopeePay';
-    }
-
-    if (['OVO', 'DANA'].includes(upper)) {
-        return upper;
-    }
-
-    if (upper.endsWith('VA') || upper.endsWith('_TRANSFER') || upper.includes('TRANSFER')) {
-        return 'VA Bank';
-    }
-
-    if (channel) {
-        return channel;
-    }
-
-    const payment = String(row.payment_method ?? '').trim();
-    if (payment.toLowerCase() === 'konversi_saldo') {
-        return 'Konversi Saldo';
-    }
-
-    if (payment.toLowerCase() === 'midtrans') {
-        return 'Isi Saldo';
-    }
-
-    return payment;
-}
 
 function formatNumber(value: number): string {
     return new Intl.NumberFormat('id-ID').format(value);
@@ -223,7 +184,7 @@ export default function AdminDepositDetail() {
                                     </tr>
                                     <tr className="border-t">
                                         <td className="px-4 py-3">{t('Metode')}</td>
-                                        <td className="px-4 py-3">{methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method, payment_channel: deposit.payment_channel })}</td>
+                                        <td className="px-4 py-3">{t(getPaymentMethodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method, payment_channel: deposit.payment_channel }))}</td>
                                     </tr>
 
                                     {isMidtrans ? (

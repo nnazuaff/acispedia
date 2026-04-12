@@ -69,11 +69,10 @@ function getXsrfToken(): string | null {
 export default function DepositPage() {
     const { t, locale } = useI18n();
     const confirm = useConfirm();
-    const { auth, balance, midtrans_enabled: midtransEnabled, midtrans_admin_fee: midtransAdminFeeProp, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl, midtrans_finish_url: midtransFinishUrl, active_pending: activePendingProp } = usePage().props as any as {
+    const { auth, balance, midtrans_enabled: midtransEnabled, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl, midtrans_finish_url: midtransFinishUrl, active_pending: activePendingProp } = usePage().props as any as {
         auth: { user?: { id?: number; phone?: string | null } };
         balance: number;
         midtrans_enabled: boolean;
-        midtrans_admin_fee: number;
         midtrans_client_key: string;
         midtrans_snap_js_url: string;
         midtrans_finish_url: string;
@@ -99,10 +98,6 @@ export default function DepositPage() {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [balanceState, setBalanceState] = React.useState<number>(Number(balance ?? 0));
     const [activePending, setActivePending] = React.useState<typeof activePendingProp>(activePendingProp);
-    const midtransAdminFee = Math.max(0, Number(midtransAdminFeeProp ?? 0));
-    const appliedAdminFee = methodCategory === 'qris' && midtransEnabled ? midtransAdminFee : 0;
-    const normalizedAmount = Number.isFinite(Number(amount)) && Number(amount) > 0 ? Number(amount) : 0;
-    const totalPayable = normalizedAmount + appliedAdminFee;
 
     React.useEffect(() => {
         setBalanceState(Number(balance ?? 0));
@@ -293,9 +288,9 @@ export default function DepositPage() {
                 return true;
             } catch (error) {
                 if (paymentUrl === '') {
-                    toast.error(error instanceof Error ? error.message : t('Gagal membuka popup Midtrans.'));
+                    toast.error(error instanceof Error ? error.message : t('Gagal membuka popup pembayaran.'));
                 } else {
-                    toast.warning(t('Popup Midtrans tidak bisa dimuat. Dialihkan ke halaman pembayaran.'));
+                    toast.warning(t('Popup pembayaran tidak bisa dimuat. Dialihkan ke halaman pembayaran.'));
                 }
             }
         }
@@ -525,7 +520,7 @@ export default function DepositPage() {
                                             </span>
                                             <div className="flex-1">
                                                 <div className="text-sm font-semibold">{t('Isi Saldo')}</div>
-                                                <div className="text-xs text-muted-foreground">QRIS, VA Bank, GoPay, dan metode lainnya</div>
+                                                <div className="text-xs text-muted-foreground">{t('QRIS, VA Bank, GoPay, dan metode lainnya')}</div>
                                             </div>
                                             <span
                                                 className={
@@ -679,29 +674,6 @@ export default function DepositPage() {
                                         <span>{t('Minimal')}: Rp 1.000</span>
                                         <span>{t('Maksimal')}: Rp 200.000</span>
                                     </div>
-                                </div>
-
-                                <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
-                                    <div className="grid gap-2 text-sm">
-                                        <div className="flex items-center justify-between gap-3">
-                                            <span className="text-muted-foreground">{t('Nominal deposit')}</span>
-                                            <span className="font-medium">Rp {formatRupiah(normalizedAmount)}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between gap-3">
-                                            <span className="text-muted-foreground">{t('Biaya admin')}</span>
-                                            <span className="font-medium">Rp {formatRupiah(appliedAdminFee)}</span>
-                                        </div>
-                                        <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-2 text-base">
-                                            <span className="font-semibold">{t('Total bayar')}</span>
-                                            <span className="font-semibold">Rp {formatRupiah(totalPayable)}</span>
-                                        </div>
-                                    </div>
-
-                                    {methodCategory === 'qris' && midtransEnabled && appliedAdminFee === 0 ? (
-                                        <div className="mt-3 text-xs text-muted-foreground">
-                                            {t('Jika ada biaya tambahan dari channel Midtrans, nominal final akan ikut tersinkron setelah transaksi dibuat atau selesai.')}
-                                        </div>
-                                    ) : null}
                                 </div>
                             </div>
                         </div>

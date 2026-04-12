@@ -34,7 +34,6 @@ class DepositController extends Controller
             'balance' => (int) ($stats['balance'] ?? 0),
             'tripay_enabled' => TripayClient::isEnabled(),
             'midtrans_enabled' => MidtransClient::isEnabled(),
-            'midtrans_admin_fee' => max(0, (int) config('midtrans.admin_fee', 4000)),
             'midtrans_client_key' => (string) config('midtrans.client_key', ''),
             'midtrans_snap_js_url' => MidtransClient::snapJsUrl(),
             'midtrans_finish_url' => trim((string) config('midtrans.finish_url', '')),

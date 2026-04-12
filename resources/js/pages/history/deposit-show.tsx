@@ -6,7 +6,7 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { PaymentMethodInline } from '@/components/payment-method-badge';
+import { getPaymentMethodLabel, PaymentMethodInline } from '@/components/payment-method-badge';
 import { useI18n } from '@/i18n/i18n-provider';
 import { canUseMidtransSnap, openMidtransSnapPopup } from '@/lib/midtrans-snap';
 
@@ -44,48 +44,6 @@ function fmtDate(iso: string | null): string {
     } catch {
         return iso;
     }
-}
-
-function methodLabel(row: { payment_method: string; tripay_method: string | null; payment_channel?: string | null }): string {
-    const channel = String(row.payment_channel ?? row.tripay_method ?? '').trim();
-    const upper = channel.toUpperCase();
-
-    if (upper === 'QRIS2' || upper.startsWith('QRIS')) {
-        return 'QRIS';
-    }
-
-    if (upper === 'GOPAY') {
-        return 'GoPay';
-    }
-
-    if (upper === 'SHOPEEPAY') {
-        return 'ShopeePay';
-    }
-
-    if (['OVO', 'DANA'].includes(upper)) {
-        return upper;
-    }
-
-    if (upper.endsWith('VA') || upper.endsWith('_TRANSFER') || upper.includes('TRANSFER')) {
-        return 'VA Bank';
-    }
-
-    if (channel) {
-        return channel;
-    }
-
-    const payment = String(row.payment_method ?? '').trim();
-    if (payment.toLowerCase() === 'konversi_saldo') {
-        return 'Konversi Saldo';
-    }
-    if (payment.toLowerCase() === 'midtrans') {
-        return 'Isi Saldo';
-    }
-    if (payment.toLowerCase() === 'tripay') {
-        return 'Pembayaran';
-    }
-
-    return payment;
 }
 
 function getCookie(name: string): string | null {
@@ -270,7 +228,7 @@ export default function DepositShowPage() {
                                         <span className="text-muted-foreground">{t('Metode')}</span>
                                         <PaymentMethodInline
                                             className="font-medium"
-                                            label={methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method, payment_channel: deposit.payment_channel })}
+                                            label={t(getPaymentMethodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method, payment_channel: deposit.payment_channel }))}
                                         />
                                     </div>
                                 </div>
@@ -302,7 +260,7 @@ export default function DepositShowPage() {
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
                                         <span className="text-muted-foreground">{t('Metode pembayaran')}</span>
-                                        <span className="font-medium">{methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method, payment_channel: deposit.payment_channel })}</span>
+                                        <span className="font-medium">{t(getPaymentMethodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method, payment_channel: deposit.payment_channel }))}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
                                         <span className="text-muted-foreground">{t('Lanjutkan pembayaran')}</span>

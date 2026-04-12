@@ -15,6 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { getPaymentMethodLabel } from '@/components/payment-method-badge';
 import { useI18n } from '@/i18n/i18n-provider';
 
 type DepositRow = {
@@ -43,46 +44,6 @@ type DepositRow = {
         email: string | null;
     };
 };
-
-function methodLabel(row: { payment_method: string; tripay_method: string | null; payment_channel?: string | null }): string {
-    const channel = String(row.payment_channel ?? row.tripay_method ?? '').trim();
-    const upper = channel.toUpperCase();
-
-    if (upper === 'QRIS2' || upper.startsWith('QRIS')) {
-        return 'QRIS';
-    }
-
-    if (upper === 'GOPAY') {
-        return 'GoPay';
-    }
-
-    if (upper === 'SHOPEEPAY') {
-        return 'ShopeePay';
-    }
-
-    if (['OVO', 'DANA'].includes(upper)) {
-        return upper;
-    }
-
-    if (upper.endsWith('VA') || upper.endsWith('_TRANSFER') || upper.includes('TRANSFER')) {
-        return 'VA Bank';
-    }
-
-    if (channel) {
-        return channel;
-    }
-
-    const payment = String(row.payment_method ?? '').trim();
-    if (payment.toLowerCase() === 'konversi_saldo') {
-        return 'Konversi Saldo';
-    }
-
-    if (payment.toLowerCase() === 'midtrans') {
-        return 'Isi Saldo';
-    }
-
-    return payment;
-}
 
 type DepositsPaginator = {
     data: DepositRow[];
@@ -333,9 +294,9 @@ export default function AdminDeposits() {
                                     <SelectContent>
                                         <SelectItem value="all">{t('Semua')}</SelectItem>
                                         <SelectItem value="isi_saldo">{t('Isi Saldo')}</SelectItem>
-                                        <SelectItem value="qris">QRIS</SelectItem>
-                                        <SelectItem value="va_bank">VA Bank</SelectItem>
-                                        <SelectItem value="ewallet">E-Wallet</SelectItem>
+                                        <SelectItem value="qris">{t('QRIS')}</SelectItem>
+                                        <SelectItem value="va_bank">{t('VA Bank')}</SelectItem>
+                                        <SelectItem value="ewallet">{t('E-Wallet')}</SelectItem>
                                         <SelectItem value="konversi_saldo">{t('Konversi Saldo')}</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -406,7 +367,7 @@ export default function AdminDeposits() {
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(row.amount ?? 0))}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{methodLabel(row)}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{t(getPaymentMethodLabel(row))}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     {(() => {
                                                         const meta = depositStatusMeta(row.status, t);

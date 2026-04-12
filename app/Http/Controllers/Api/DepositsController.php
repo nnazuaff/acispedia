@@ -348,14 +348,14 @@ class DepositsController extends Controller
         if (! MidtransClient::isEnabled()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Metode pembayaran Midtrans sedang dinonaktifkan sementara.',
+                'message' => 'Metode pembayaran sedang dinonaktifkan sementara.',
             ], 422);
         }
 
         if (! MidtransClient::isConfigured()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Midtrans belum dikonfigurasi. Lengkapi Server Key terlebih dahulu.',
+                'message' => 'Metode pembayaran belum siap digunakan.',
             ], 422);
         }
 
@@ -366,7 +366,7 @@ class DepositsController extends Controller
 
         $amount = (int) $validated['amount'];
         $requestedChannel = strtolower(trim((string) ($validated['channel'] ?? '')));
-        $adminFee = max(0, (int) config('midtrans.admin_fee', 4000));
+        $adminFee = 0;
         $finalAmount = $amount + $adminFee;
         $orderId = 'DEP-'.(int) $user->id.'-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6));
         $enabledPayments = [];
@@ -551,7 +551,7 @@ class DepositsController extends Controller
         if (! TripayClient::isEnabled()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Metode pembayaran Tripay sedang dinonaktifkan sementara.',
+                'message' => 'Metode pembayaran sedang dinonaktifkan sementara.',
             ], 422);
         }
 
@@ -594,7 +594,7 @@ class DepositsController extends Controller
         if (! TripayClient::isConfigured()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Metode pembayaran belum dikonfigurasi. Lengkapi pengaturan gateway pembayaran.',
+                'message' => 'Metode pembayaran belum siap digunakan.',
             ], 422);
         }
 
@@ -929,7 +929,7 @@ class DepositsController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Midtrans belum dikonfigurasi.',
+                'message' => 'Metode pembayaran belum siap digunakan.',
             ], 500);
         }
 

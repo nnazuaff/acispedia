@@ -28,7 +28,7 @@ final class MidtransClient
         $serverKey = trim((string) config('midtrans.server_key', ''));
 
         if ($serverKey === '') {
-            throw new RuntimeException('Midtrans Server Key belum dikonfigurasi.');
+            throw new RuntimeException('Konfigurasi pembayaran server belum lengkap.');
         }
 
         return $serverKey;
@@ -69,11 +69,11 @@ final class MidtransClient
         array $enabledPayments = []
     ): array {
         if (! self::isEnabled()) {
-            throw new RuntimeException('Metode pembayaran Midtrans sedang dinonaktifkan sementara.');
+            throw new RuntimeException('Metode pembayaran sedang dinonaktifkan sementara.');
         }
 
         if (! self::isConfigured()) {
-            throw new RuntimeException('Midtrans belum dikonfigurasi.');
+            throw new RuntimeException('Metode pembayaran belum siap digunakan.');
         }
 
         $payload = [
@@ -119,12 +119,12 @@ final class MidtransClient
 
         $json = $response->json();
         if (! is_array($json)) {
-            throw new RuntimeException('Respon Midtrans tidak valid.');
+            throw new RuntimeException('Respon pembayaran tidak valid.');
         }
 
         if (! $response->successful()) {
-            $message = (string) (Arr::get($json, 'status_message') ?? Arr::get($json, 'message') ?? 'Midtrans error');
-            throw new RuntimeException('Midtrans error: '.$message);
+            $message = (string) (Arr::get($json, 'status_message') ?? Arr::get($json, 'message') ?? 'payment error');
+            throw new RuntimeException('Gagal memproses pembayaran: '.$message);
         }
 
         return $json;

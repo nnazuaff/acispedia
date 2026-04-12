@@ -35,7 +35,7 @@ export function canUseMidtransSnap(options: Partial<EnsureMidtransSnapOptions> &
 
 export async function ensureMidtransSnap({ snapJsUrl, clientKey }: EnsureMidtransSnapOptions): Promise<void> {
     if (!snapJsUrl || !clientKey) {
-        throw new Error('Konfigurasi Midtrans Snap belum lengkap.');
+        throw new Error('Konfigurasi pembayaran belum lengkap.');
     }
 
     const existingReady = (window as MidtransSnapWindow).snap;
@@ -51,7 +51,7 @@ export async function ensureMidtransSnap({ snapJsUrl, clientKey }: EnsureMidtran
         const existing = document.querySelector<HTMLScriptElement>('script[data-midtrans-snap="true"]');
         if (existing) {
             existing.addEventListener('load', () => resolve(), { once: true });
-            existing.addEventListener('error', () => reject(new Error('Gagal memuat Midtrans Snap.')), { once: true });
+            existing.addEventListener('error', () => reject(new Error('Gagal memuat modul pembayaran.')), { once: true });
             return;
         }
 
@@ -62,7 +62,7 @@ export async function ensureMidtransSnap({ snapJsUrl, clientKey }: EnsureMidtran
         script.dataset.midtransSnap = 'true';
         script.setAttribute('data-client-key', clientKey);
         script.addEventListener('load', () => resolve(), { once: true });
-        script.addEventListener('error', () => reject(new Error('Gagal memuat Midtrans Snap.')), { once: true });
+        script.addEventListener('error', () => reject(new Error('Gagal memuat modul pembayaran.')), { once: true });
         document.body.appendChild(script);
     }).catch((error) => {
         midtransScriptPromise = null;
@@ -85,7 +85,7 @@ export async function openMidtransSnapPopup({
 
     const snap = (window as MidtransSnapWindow).snap;
     if (!snap) {
-        throw new Error('Midtrans Snap belum siap.');
+        throw new Error('Modul pembayaran belum siap.');
     }
 
     snap.pay(snapToken, {
