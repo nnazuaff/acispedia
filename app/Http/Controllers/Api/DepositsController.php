@@ -254,6 +254,13 @@ class DepositsController extends Controller
     {
         $user = $request->user();
 
+        if (! TripayClient::isEnabled()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Metode pembayaran Tripay sedang dinonaktifkan sementara.',
+            ], 422);
+        }
+
         $validated = $request->validate([
             'amount' => ['required', 'integer', 'min:1000', 'max:200000000'],
             'method' => ['required', 'string', 'min:2', 'max:32'],

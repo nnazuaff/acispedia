@@ -95,6 +95,9 @@ const dictionaries: Record<Locale, Dict> = {
         'Belum ada data.': 'No data yet.',
         'Laporan Keuangan': 'Financial report',
         'Koneksi': 'Connections',
+        'Dinonaktifkan sementara': 'Temporarily disabled',
+        'Integrasi Tripay sedang dimatikan lewat konfigurasi aplikasi.':
+            'Tripay integration is currently disabled through the application configuration.',
         'Log Aktivitas': 'Activity logs',
         'Total Deposit Hari Ini': "Today's deposits",
         'Total Penjualan Hari Ini': "Today's sales",
@@ -368,6 +371,9 @@ const dictionaries: Record<Locale, Dict> = {
         'Gagal top up saldo.': 'Failed to top up balance.',
         'Saldo berhasil ditambahkan.': 'Balance added successfully.',
         'Pilih Metode Pembayaran': 'Choose payment method',
+        'Tripay dinonaktifkan sementara': 'Tripay is temporarily disabled',
+        'Metode QRIS dan E-Wallet dari Tripay untuk sementara tidak tersedia saat proses migrasi ke Midtrans.':
+            'Tripay QRIS and E-Wallet methods are temporarily unavailable during the migration to Midtrans.',
         'Pembayaran QRIS otomatis': 'Automatic QRIS payment',
         'Pilih OVO / DANA / ShopeePay': 'Choose OVO / DANA / ShopeePay',
         'Pilih E-Wallet': 'Choose e-wallet',

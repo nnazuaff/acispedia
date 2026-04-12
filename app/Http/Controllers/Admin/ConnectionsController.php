@@ -17,6 +17,7 @@ class ConnectionsController extends Controller
     public function index(Request $request, MedanpediaClient $medanpedia): Response
     {
         $medanpediaConfigured = $medanpedia->isConfigured();
+        $tripayEnabled = TripayClient::isEnabled();
         $tripayConfigured = TripayClient::isConfigured();
 
         $markupAmount = AppSetting::getInt('smm_markup_amount', (int) config('medanpedia.markup_amount', 200));
@@ -43,6 +44,7 @@ class ConnectionsController extends Controller
                     'profile' => $medanpediaProfile,
                 ],
                 'tripay' => [
+                    'enabled' => $tripayEnabled,
                     'configured' => $tripayConfigured,
                     'channels' => $tripayChannels,
                 ],

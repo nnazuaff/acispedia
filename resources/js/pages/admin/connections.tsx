@@ -15,6 +15,7 @@ type ConnectionsPayload = {
             profile: unknown;
         };
         tripay: {
+            enabled: boolean;
             configured: boolean;
             channels: unknown;
         };
@@ -98,8 +99,18 @@ export default function AdminConnections() {
                         <CardContent className="pt-6">
                             <div className="text-sm font-semibold">Tripay</div>
                             <div className="mt-2 text-sm">
-                                {t('Status')}: {connections?.tripay?.configured ? t('Terkonfigurasi') : t('Belum dikonfigurasi')}
+                                {t('Status')}: {!connections?.tripay?.enabled
+                                    ? t('Dinonaktifkan sementara')
+                                    : connections?.tripay?.configured
+                                        ? t('Terkonfigurasi')
+                                        : t('Belum dikonfigurasi')}
                             </div>
+
+                            {!connections?.tripay?.enabled ? (
+                                <div className="mt-4 text-xs text-muted-foreground">
+                                    {t('Integrasi Tripay sedang dimatikan lewat konfigurasi aplikasi.')}
+                                </div>
+                            ) : null}
 
                             {connections?.tripay?.channels ? (
                                 <pre className="mt-4 max-h-96 overflow-auto rounded-lg border bg-muted/20 p-3 text-xs">

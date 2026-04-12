@@ -74,9 +74,10 @@ function getXsrfToken(): string | null {
 export default function DepositPage() {
     const { t, locale } = useI18n();
     const confirm = useConfirm();
-    const { auth, balance, active_pending: activePendingProp } = usePage().props as any as {
+    const { auth, balance, tripay_enabled: tripayEnabled, active_pending: activePendingProp } = usePage().props as any as {
         auth: { user?: { id?: number; phone?: string | null } };
         balance: number;
+        tripay_enabled: boolean;
         active_pending: {
             id: number;
             status: string;
@@ -88,7 +89,7 @@ export default function DepositPage() {
 
     const quickAmounts = React.useMemo(() => [1000, 5000, 10000, 20000, 50000, 100000, 200000], []);
     const [amount, setAmount] = React.useState<number>(0);
-    const [methodCategory, setMethodCategory] = React.useState<'qris' | 'ewallet' | 'konversi_saldo'>('qris');
+    const [methodCategory, setMethodCategory] = React.useState<'qris' | 'ewallet' | 'konversi_saldo'>(tripayEnabled ? 'qris' : 'konversi_saldo');
     const [ewalletCode, setEwalletCode] = React.useState<'OVO' | 'DANA' | 'SHOPEEPAY'>('OVO');
     const [acispayPhone, setAcispayPhone] = React.useState<string>('');
     const [acispayUsername, setAcispayUsername] = React.useState<string>('');
@@ -105,6 +106,12 @@ export default function DepositPage() {
     React.useEffect(() => {
         setActivePending(activePendingProp);
     }, [activePendingProp]);
+
+    React.useEffect(() => {
+        if (!tripayEnabled && methodCategory !== 'konversi_saldo') {
+            setMethodCategory('konversi_saldo');
+        }
+    }, [tripayEnabled, methodCategory]);
 
     React.useEffect(() => {
         const uid = Number(auth?.user?.id);
@@ -393,47 +400,58 @@ export default function DepositPage() {
                             {t('Saldo saat ini')}: <span className="font-medium">Rp {formatRupiah(balanceState)}</span>
                         </div>
 
+                        {!tripayEnabled ? (
+                            <div className="mt-4 rounded-lg border border-sky-500/30 bg-sky-500/10 p-4 text-sm text-sky-900 dark:text-sky-100">
+                                <div className="font-semibold">{t('Tripay dinonaktifkan sementara')}</div>
+                                <div className="mt-1 text-muted-foreground">
+                                    {t('Metode QRIS dan E-Wallet dari Tripay untuk sementara tidak tersedia saat proses migrasi ke Midtrans.')}
+                                </div>
+                            </div>
+                        ) : null}
+
                         <div className="mt-4 grid gap-6">
                             <div className="space-y-3">
                                 <div className="flex items-center gap-2 text-sm font-semibold">{t('Pilih Metode Pembayaran')}</div>
 
                                 <div className="space-y-3">
-                                    <button
-                                        type="button"
-                                        className={
-                                            'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ' +
-                                            (methodCategory === 'qris'
-                                                ? 'border-teal-500/60 bg-teal-500/10'
-                                                : 'border-border/60 bg-muted/10 hover:bg-muted/20')
-                                        }
-                                        onClick={() => setMethodCategory('qris')}
-                                    >
-                                        <span
+                                    {tripayEnabled ? (
+                                        <button
+                                            type="button"
                                             className={
-                                                'flex h-10 w-10 items-center justify-center rounded-lg ' +
-                                                (methodCategory === 'qris' ? 'bg-teal-500 text-white' : 'bg-muted text-foreground')
+                                                'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ' +
+                                                (methodCategory === 'qris'
+                                                    ? 'border-teal-500/60 bg-teal-500/10'
+                                                    : 'border-border/60 bg-muted/10 hover:bg-muted/20')
                                             }
-                                        >
-                                            <QrCode className="size-5" />
-                                        </span>
-                                        <div className="flex-1">
-                                            <div className="text-sm font-semibold">QRIS</div>
-                                            <div className="text-xs text-muted-foreground">{t('Pembayaran QRIS otomatis')}</div>
-                                        </div>
-                                        <span
-                                            className={
-                                                'h-5 w-5 rounded-full border-2 ' +
-                                                (methodCategory === 'qris' ? 'border-teal-500' : 'border-muted-foreground/40')
-                                            }
+                                            onClick={() => setMethodCategory('qris')}
                                         >
                                             <span
                                                 className={
-                                                    'block h-full w-full scale-50 rounded-full ' +
-                                                    (methodCategory === 'qris' ? 'bg-teal-500' : 'bg-transparent')
+                                                    'flex h-10 w-10 items-center justify-center rounded-lg ' +
+                                                    (methodCategory === 'qris' ? 'bg-teal-500 text-white' : 'bg-muted text-foreground')
                                                 }
-                                            />
-                                        </span>
-                                    </button>
+                                            >
+                                                <QrCode className="size-5" />
+                                            </span>
+                                            <div className="flex-1">
+                                                <div className="text-sm font-semibold">QRIS</div>
+                                                <div className="text-xs text-muted-foreground">{t('Pembayaran QRIS otomatis')}</div>
+                                            </div>
+                                            <span
+                                                className={
+                                                    'h-5 w-5 rounded-full border-2 ' +
+                                                    (methodCategory === 'qris' ? 'border-teal-500' : 'border-muted-foreground/40')
+                                                }
+                                            >
+                                                <span
+                                                    className={
+                                                        'block h-full w-full scale-50 rounded-full ' +
+                                                        (methodCategory === 'qris' ? 'bg-teal-500' : 'bg-transparent')
+                                                    }
+                                                />
+                                            </span>
+                                        </button>
+                                    ) : null}
 
                                     <button
                                         type="button"
@@ -480,44 +498,46 @@ export default function DepositPage() {
                                         </span>
                                     </button>
 
-                                    <button
-                                        type="button"
-                                        className={
-                                            'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ' +
-                                            (methodCategory === 'ewallet'
-                                                ? 'border-teal-500/60 bg-teal-500/10'
-                                                : 'border-border/60 bg-muted/10 hover:bg-muted/20')
-                                        }
-                                        onClick={() => setMethodCategory('ewallet')}
-                                    >
-                                        <span
+                                    {tripayEnabled ? (
+                                        <button
+                                            type="button"
                                             className={
-                                                'flex h-10 w-10 items-center justify-center rounded-lg ' +
-                                                (methodCategory === 'ewallet' ? 'bg-teal-500 text-white' : 'bg-muted text-foreground')
+                                                'flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-colors ' +
+                                                (methodCategory === 'ewallet'
+                                                    ? 'border-teal-500/60 bg-teal-500/10'
+                                                    : 'border-border/60 bg-muted/10 hover:bg-muted/20')
                                             }
-                                        >
-                                            <Wallet className="size-5" />
-                                        </span>
-                                        <div className="flex-1">
-                                            <div className="text-sm font-semibold">E-Wallet</div>
-                                            <div className="text-xs text-muted-foreground">{t('Pilih OVO / DANA / ShopeePay')}</div>
-                                        </div>
-                                        <span
-                                            className={
-                                                'h-5 w-5 rounded-full border-2 ' +
-                                                (methodCategory === 'ewallet' ? 'border-teal-500' : 'border-muted-foreground/40')
-                                            }
+                                            onClick={() => setMethodCategory('ewallet')}
                                         >
                                             <span
                                                 className={
-                                                    'block h-full w-full scale-50 rounded-full ' +
-                                                    (methodCategory === 'ewallet' ? 'bg-teal-500' : 'bg-transparent')
+                                                    'flex h-10 w-10 items-center justify-center rounded-lg ' +
+                                                    (methodCategory === 'ewallet' ? 'bg-teal-500 text-white' : 'bg-muted text-foreground')
                                                 }
-                                            />
-                                        </span>
-                                    </button>
+                                            >
+                                                <Wallet className="size-5" />
+                                            </span>
+                                            <div className="flex-1">
+                                                <div className="text-sm font-semibold">E-Wallet</div>
+                                                <div className="text-xs text-muted-foreground">{t('Pilih OVO / DANA / ShopeePay')}</div>
+                                            </div>
+                                            <span
+                                                className={
+                                                    'h-5 w-5 rounded-full border-2 ' +
+                                                    (methodCategory === 'ewallet' ? 'border-teal-500' : 'border-muted-foreground/40')
+                                                }
+                                            >
+                                                <span
+                                                    className={
+                                                        'block h-full w-full scale-50 rounded-full ' +
+                                                        (methodCategory === 'ewallet' ? 'bg-teal-500' : 'bg-transparent')
+                                                    }
+                                                />
+                                            </span>
+                                        </button>
+                                    ) : null}
 
-                                    {methodCategory === 'ewallet' ? (
+                                    {tripayEnabled && methodCategory === 'ewallet' ? (
                                         <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
                                             <Label className="text-sm font-semibold">{t('Pilih E-Wallet')}</Label>
                                             <Select

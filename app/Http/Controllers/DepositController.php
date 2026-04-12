@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Deposit;
 use App\Services\DashboardStats;
+use App\Services\TripayClient;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -30,6 +31,7 @@ class DepositController extends Controller
 
         return Inertia::render('deposit', [
             'balance' => (int) ($stats['balance'] ?? 0),
+            'tripay_enabled' => TripayClient::isEnabled(),
             'active_pending' => $activePending ? [
                 'id' => (int) $activePending->id,
                 'status' => (string) $activePending->status,

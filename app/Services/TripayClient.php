@@ -8,6 +8,11 @@ use RuntimeException;
 
 final class TripayClient
 {
+    public static function isEnabled(): bool
+    {
+        return (bool) config('tripay.enabled', true);
+    }
+
     private static function maskVendorName(string $message): string
     {
         $message = trim($message);
@@ -72,6 +77,10 @@ final class TripayClient
      */
     public static function createTransaction(string $merchantRef, int $amount, string $method, array $customer, array $items): array
     {
+        if (! self::isEnabled()) {
+            throw new RuntimeException('Metode pembayaran ini sedang dinonaktifkan sementara.');
+        }
+
         if (! self::isConfigured()) {
             throw new RuntimeException('Payment gateway belum dikonfigurasi.');
         }
