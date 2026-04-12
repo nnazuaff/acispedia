@@ -2,6 +2,7 @@ import { Form, Head, Link, usePage } from '@inertiajs/react';
 import * as React from 'react';
 
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -46,23 +47,26 @@ export default function AdminUserEdit() {
                 <Card>
                     <CardContent className="pt-6">
                         <Form action={`/users/${user.id}`} method="put" className="grid gap-4 md:max-w-xl">
-                            {() => (
+                            {({ errors, processing }) => (
                                 <>
                                     <input type="hidden" name="account_status" value={accountStatus} />
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="name">{t('Nama')}</Label>
                                         <Input id="name" name="name" defaultValue={user?.name ?? ''} required />
+                                        <InputError message={errors.name} />
                                     </div>
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="email">{t('Email')}</Label>
                                         <Input id="email" name="email" defaultValue={user?.email ?? ''} required />
+                                        <InputError message={errors.email} />
                                     </div>
 
                                     <div className="grid gap-2">
                                         <Label htmlFor="phone">{t('Telepon')}</Label>
                                         <Input id="phone" name="phone" defaultValue={user?.phone ?? ''} placeholder="08xxxxxxxxxx" />
+                                        <InputError message={errors.phone} />
                                     </div>
 
                                     <div className="grid gap-2">
@@ -77,10 +81,13 @@ export default function AdminUserEdit() {
                                                 <SelectItem value="banned">{t('Banned')}</SelectItem>
                                             </SelectContent>
                                         </Select>
+                                        <InputError message={errors.account_status} />
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 pt-2">
-                                        <Button type="submit">{t('Simpan')}</Button>
+                                        <Button type="submit" disabled={processing}>
+                                            {t('Simpan')}
+                                        </Button>
                                         <Button asChild variant="outline">
                                             <Link href="/users" prefetch>
                                                 {t('Batal')}
