@@ -32,6 +32,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useClipboard } from '@/hooks/use-clipboard';
+import { canUseMidtransSnap, openMidtransSnapPopup } from '@/lib/midtrans-snap';
 
 type DepositRow = {
     id: number;
@@ -46,6 +47,7 @@ type DepositRow = {
     tripay_checkout_url: string | null;
     tripay_status: string | null;
     payment_url: string | null;
+    snap_token?: string | null;
     payment_channel: string | null;
     provider_reference: string | null;
     provider_transaction_id: string | null;
@@ -227,10 +229,12 @@ async function cancelDeposit(id: number) {
 export default function HistoryDepositPage() {
     const { t, locale } = useI18n();
     const confirm = useConfirm();
-    const { auth, deposits: depositsProp, filters: filtersProp } = usePage().props as any as {
+    const { auth, deposits: depositsProp, filters: filtersProp, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl } = usePage().props as any as {
         auth: { user?: { id?: number } };
         deposits: DepositsPaginator;
         filters: Filters;
+        midtrans_client_key: string;
+        midtrans_snap_js_url: string;
     };
 
     const [, copy] = useClipboard();
@@ -287,6 +291,43 @@ export default function HistoryDepositPage() {
     function closeDetail() {
         setOpenDetail(false);
         setSelectedDeposit(null);
+    }
+
+    async function openPayment(row: Pick<DepositRow, 'payment_method' | 'payment_url' | 'snap_token'>) {
+        const paymentUrl = String(row.payment_url ?? '').trim();
+        const snapToken = String(row.snap_token ?? '').trim();
+        const isMidtrans = String(row.payment_method ?? '').toLowerCase() === 'midtrans';
+
+        if (isMidtrans && canUseMidtransSnap({ snapJsUrl: midtransSnapJsUrl, clientKey: midtransClientKey, snapToken })) {
+            try {
+                await openMidtransSnapPopup({
+                    snapJsUrl: midtransSnapJsUrl,
+                    clientKey: midtransClientKey,
+                    snapToken,
+                    onSuccess: () => {
+                        alert('Pembayaran sukses. Status deposit akan diperbarui otomatis.');
+                        router.reload({ preserveScroll: true } as any);
+                    },
+                    onPending: () => {
+                        alert('Pembayaran masih menunggu penyelesaian.');
+                        router.reload({ preserveScroll: true } as any);
+                    },
+                    onError: () => {
+                        alert('Terjadi masalah saat memproses pembayaran.');
+                    },
+                    onClose: () => {
+                        alert('Popup pembayaran ditutup sebelum selesai.');
+                    },
+                });
+                return;
+            } catch (error) {
+                alert(error instanceof Error ? error.message : 'Gagal membuka popup Midtrans.');
+            }
+        }
+
+        if (paymentUrl !== '') {
+            window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+        }
     }
 
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
@@ -599,14 +640,8 @@ export default function HistoryDepositPage() {
                                                                     {row.status === 'pending' && row.payment_url ? (
                                                                         <>
                                                                             <DropdownMenuSeparator />
-                                                                            <DropdownMenuItem asChild>
-                                                                                <a
-                                                                                    href={row.payment_url}
-                                                                                    target="_blank"
-                                                                                    rel="noopener noreferrer"
-                                                                                >
-                                                                                    {t('Bayar')}
-                                                                                </a>
+                                                                            <DropdownMenuItem onClick={() => void openPayment(row)}>
+                                                                                {t('Bayar')}
                                                                             </DropdownMenuItem>
                                                                         </>
                                                                     ) : null}
@@ -900,14 +935,12 @@ export default function HistoryDepositPage() {
 
                                 {selectedDeposit.status === 'pending' && selectedDeposit.payment_url ? (
                                     <div className="flex flex-wrap gap-2">
-                                        <Button asChild variant="outline">
-                                            <a
-                                                href={selectedDeposit.payment_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                {t('Bayar')}
-                                            </a>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => void openPayment(selectedDeposit)}
+                                        >
+                                            {t('Bayar')}
                                         </Button>
                                         <Button
                                             type="button"

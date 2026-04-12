@@ -136,4 +136,18 @@ class Deposit extends Model
 
         return is_string($paymentType) && trim($paymentType) !== '' ? trim($paymentType) : null;
     }
+
+    public function snapToken(): ?string
+    {
+        $payload = is_array($this->provider_payload) ? $this->provider_payload : [];
+
+        foreach (['snap_token', 'token', 'snap_response.token'] as $path) {
+            $value = Arr::get($payload, $path);
+            if (is_string($value) && trim($value) !== '') {
+                return trim($value);
+            }
+        }
+
+        return null;
+    }
 }

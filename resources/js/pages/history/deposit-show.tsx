@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PaymentMethodInline } from '@/components/payment-method-badge';
 import { useI18n } from '@/i18n/i18n-provider';
+import { canUseMidtransSnap, openMidtransSnapPopup } from '@/lib/midtrans-snap';
 
 type DepositDetail = {
     id: number;
@@ -22,6 +23,7 @@ type DepositDetail = {
     tripay_checkout_url: string | null;
     tripay_status: string | null;
     payment_url: string | null;
+    snap_token?: string | null;
     payment_channel: string | null;
     provider_reference: string | null;
     provider_transaction_id: string | null;
@@ -156,10 +158,51 @@ async function cancelDeposit(id: number) {
 }
 
 export default function DepositShowPage() {
-    const { deposit } = usePage().props as any as { deposit: DepositDetail };
+    const { deposit, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl } = usePage().props as any as {
+        deposit: DepositDetail;
+        midtrans_client_key: string;
+        midtrans_snap_js_url: string;
+    };
     const { t } = useI18n();
 
     const statusUpper = t(statusLabel(deposit.status)).toUpperCase();
+
+    async function openPayment() {
+        const paymentUrl = String(deposit.payment_url ?? '').trim();
+        const snapToken = String(deposit.snap_token ?? '').trim();
+        const isMidtrans = String(deposit.payment_method ?? '').toLowerCase() === 'midtrans';
+
+        if (isMidtrans && canUseMidtransSnap({ snapJsUrl: midtransSnapJsUrl, clientKey: midtransClientKey, snapToken })) {
+            try {
+                await openMidtransSnapPopup({
+                    snapJsUrl: midtransSnapJsUrl,
+                    clientKey: midtransClientKey,
+                    snapToken,
+                    onSuccess: () => {
+                        toast.success('Pembayaran sukses. Status deposit akan diperbarui otomatis.');
+                        router.reload();
+                    },
+                    onPending: () => {
+                        toast.warning('Pembayaran masih menunggu penyelesaian.');
+                        router.reload();
+                    },
+                    onError: () => {
+                        toast.error('Terjadi masalah saat memproses pembayaran.');
+                    },
+                    onClose: () => {
+                        toast.warning('Popup pembayaran ditutup sebelum selesai.');
+                    },
+                });
+                return;
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : 'Gagal membuka popup Midtrans.');
+            }
+        }
+
+        if (paymentUrl !== '') {
+            window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+        }
+    }
 
     return (
         <>
@@ -215,10 +258,8 @@ export default function DepositShowPage() {
 
                                 <div className="mt-4 flex flex-wrap gap-2">
                                     {deposit.status === 'pending' && deposit.payment_url ? (
-                                        <Button asChild variant="outline">
-                                            <a href={deposit.payment_url} target="_blank" rel="noopener noreferrer">
-                                                {t('Bayar')}
-                                            </a>
+                                        <Button type="button" variant="outline" onClick={() => void openPayment()}>
+                                            {t('Bayar')}
                                         </Button>
                                     ) : null}
 

@@ -942,6 +942,13 @@ class DepositsController extends Controller
             ], 401);
         }
 
+        if (str_starts_with($orderId, 'payment_notif_test_')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Midtrans test notification acknowledged.',
+            ]);
+        }
+
         $deposit = Deposit::query()
             ->where('payment_method', 'midtrans')
             ->where(function (Builder $query) use ($orderId) {

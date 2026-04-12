@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Deposit;
 use App\Models\Order;
+use App\Services\MidtransClient;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -77,6 +78,7 @@ class HistoryController extends Controller
                 'tripay_checkout_url' => $deposit->tripay_checkout_url ? (string) $deposit->tripay_checkout_url : null,
                 'tripay_status' => $deposit->tripay_status ? (string) $deposit->tripay_status : null,
                 'payment_url' => $deposit->paymentUrl(),
+                'snap_token' => $deposit->snapToken(),
                 'payment_channel' => $deposit->paymentChannel(),
                 'provider_reference' => $deposit->providerReference(),
                 'provider_transaction_id' => $deposit->providerTransactionId(),
@@ -85,6 +87,8 @@ class HistoryController extends Controller
                 'expired_at' => $deposit->expired_at?->toISOString(),
                 'processed_at' => $deposit->processed_at?->toISOString(),
             ],
+            'midtrans_client_key' => (string) config('midtrans.client_key', ''),
+            'midtrans_snap_js_url' => MidtransClient::snapJsUrl(),
         ]);
     }
 
@@ -256,6 +260,7 @@ class HistoryController extends Controller
                     'tripay_checkout_url' => $deposit->tripay_checkout_url ? (string) $deposit->tripay_checkout_url : null,
                     'tripay_status' => $deposit->tripay_status ? (string) $deposit->tripay_status : null,
                     'payment_url' => $deposit->paymentUrl(),
+                    'snap_token' => $deposit->snapToken(),
                     'payment_channel' => $deposit->paymentChannel(),
                     'provider_reference' => $deposit->providerReference(),
                     'provider_transaction_id' => $deposit->providerTransactionId(),
@@ -271,6 +276,8 @@ class HistoryController extends Controller
 
         return Inertia::render('history/deposit', [
             'deposits' => $deposits,
+            'midtrans_client_key' => (string) config('midtrans.client_key', ''),
+            'midtrans_snap_js_url' => MidtransClient::snapJsUrl(),
             'filters' => [
                 'q' => $q,
                 'status' => $status !== '' ? $status : 'all',

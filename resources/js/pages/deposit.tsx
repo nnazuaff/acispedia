@@ -17,6 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { canUseMidtransSnap, openMidtransSnapPopup } from '@/lib/midtrans-snap';
 
 function normalizeIdPhoneToLocalZero(input: string): string {
     const raw = String(input ?? '').trim();
@@ -75,18 +76,21 @@ function getXsrfToken(): string | null {
 export default function DepositPage() {
     const { t, locale } = useI18n();
     const confirm = useConfirm();
-    const { auth, balance, tripay_enabled: tripayEnabled, midtrans_enabled: midtransEnabled, midtrans_admin_fee: midtransAdminFee, active_pending: activePendingProp } = usePage().props as any as {
+    const { auth, balance, tripay_enabled: tripayEnabled, midtrans_enabled: midtransEnabled, midtrans_admin_fee: midtransAdminFee, midtrans_client_key: midtransClientKey, midtrans_snap_js_url: midtransSnapJsUrl, active_pending: activePendingProp } = usePage().props as any as {
         auth: { user?: { id?: number; phone?: string | null } };
         balance: number;
         tripay_enabled: boolean;
         midtrans_enabled: boolean;
         midtrans_admin_fee: number;
+        midtrans_client_key: string;
+        midtrans_snap_js_url: string;
         active_pending: {
             id: number;
             status: string;
             payment_method: string;
             tripay_checkout_url: string | null;
             payment_url: string | null;
+            snap_token: string | null;
             created_at: string | null;
             expired_at: string | null;
         } | null;
@@ -175,6 +179,7 @@ export default function DepositPage() {
                     payment_method: String(deposit.payment_method ?? ''),
                     tripay_checkout_url: deposit.tripay_checkout_url ? String(deposit.tripay_checkout_url) : null,
                     payment_url: deposit.payment_url ? String(deposit.payment_url) : null,
+                    snap_token: deposit.snap_token ? String(deposit.snap_token) : null,
                     created_at: deposit.created_at ? String(deposit.created_at) : null,
                     expired_at: deposit.expired_at ? String(deposit.expired_at) : null,
                 });
@@ -235,6 +240,75 @@ export default function DepositPage() {
             const msg = e instanceof Error ? e.message : t('Kesalahan tidak diketahui.');
             toast.error(msg);
         }
+    }
+
+    function redirectToDepositHistory() {
+        router.get(
+            '/history/deposit',
+            {
+                page: 1,
+                per_page: 25,
+            },
+            {
+                preserveState: false,
+                preserveScroll: false,
+                replace: true,
+            }
+        );
+    }
+
+    async function openMidtransPayment(options: { snapToken: string | null; paymentUrl?: string | null; redirectAfterClose?: boolean }) {
+        const paymentUrl = String(options.paymentUrl ?? '').trim();
+        const snapToken = String(options.snapToken ?? '').trim();
+
+        if (canUseMidtransSnap({
+            snapJsUrl: midtransSnapJsUrl,
+            clientKey: midtransClientKey,
+            snapToken,
+        })) {
+            try {
+                await openMidtransSnapPopup({
+                    snapJsUrl: midtransSnapJsUrl,
+                    clientKey: midtransClientKey,
+                    snapToken,
+                    onSuccess: () => {
+                        toast.success(t('Pembayaran sukses'));
+                        if (options.redirectAfterClose) {
+                            redirectToDepositHistory();
+                        } else {
+                            router.reload({ preserveScroll: true } as any);
+                        }
+                    },
+                    onPending: () => {
+                        toast.warning(t('Menunggu pembayaran'));
+                        if (options.redirectAfterClose) {
+                            redirectToDepositHistory();
+                        } else {
+                            router.reload({ preserveScroll: true } as any);
+                        }
+                    },
+                    onError: () => {
+                        toast.error(t('Pembayaran gagal'));
+                    },
+                    onClose: () => {
+                        toast.warning(t('Belum selesai'));
+                        if (options.redirectAfterClose) {
+                            redirectToDepositHistory();
+                        }
+                    },
+                });
+                return true;
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : t('Gagal membuka popup Midtrans.'));
+            }
+        }
+
+        if (paymentUrl !== '') {
+            window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+            return true;
+        }
+
+        return false;
     }
 
     async function createDeposit() {
@@ -354,23 +428,15 @@ export default function DepositPage() {
 
                 toast.success(json?.message ?? t('Deposit dibuat.'));
 
-                const url = String(json?.payment_url ?? json?.checkout_url ?? '');
-                if (url) {
-                    window.open(url, '_blank', 'noopener,noreferrer');
-                }
+                const opened = await openMidtransPayment({
+                    snapToken: String(json?.snap_token ?? ''),
+                    paymentUrl: String(json?.payment_url ?? json?.checkout_url ?? ''),
+                    redirectAfterClose: true,
+                });
 
-                router.get(
-                    '/history/deposit',
-                    {
-                        page: 1,
-                        per_page: 25,
-                    },
-                    {
-                        preserveState: false,
-                        preserveScroll: false,
-                        replace: true,
-                    }
-                );
+                if (!opened) {
+                    redirectToDepositHistory();
+                }
                 return;
             }
 
@@ -452,10 +518,19 @@ export default function DepositPage() {
 
                                 <div className="mt-3 flex flex-wrap gap-2">
                                     {activePending.payment_url ? (
-                                        <Button asChild size="sm" variant="outline">
-                                            <a href={activePending.payment_url} target="_blank" rel="noopener noreferrer">
-                                                {t('Bayar')}
-                                            </a>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            type="button"
+                                            onClick={() => {
+                                                void openMidtransPayment({
+                                                    snapToken: activePending.snap_token,
+                                                    paymentUrl: activePending.payment_url,
+                                                    redirectAfterClose: false,
+                                                });
+                                            }}
+                                        >
+                                            {t('Bayar')}
                                         </Button>
                                     ) : null}
 

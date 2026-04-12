@@ -54,6 +54,7 @@ class DepositStatusUpdated implements ShouldBroadcastNow
                 'tripay_checkout_url' => $this->deposit->tripay_checkout_url ? (string) $this->deposit->tripay_checkout_url : null,
                 'tripay_status' => $this->deposit->tripay_status ? (string) $this->deposit->tripay_status : null,
                 'payment_url' => $this->deposit->paymentUrl(),
+                'snap_token' => $this->deposit->snapToken(),
                 'payment_channel' => $this->deposit->paymentChannel(),
                 'provider_reference' => $this->deposit->providerReference(),
                 'provider_transaction_id' => $this->deposit->providerTransactionId(),
