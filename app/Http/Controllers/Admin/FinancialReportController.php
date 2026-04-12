@@ -80,29 +80,32 @@ class FinancialReportController extends Controller
 
     public function index(Request $request, MedanpediaClient $medanpedia): Response
     {
-        $todayWib = now('Asia/Jakarta');
-        $todayStartUtc = $todayWib->copy()->startOfDay()->setTimezone('UTC');
-        $todayEndUtc = $todayWib->copy()->endOfDay()->setTimezone('UTC');
-
         $today = now()->toDateString();
         $dateFrom = trim((string) $request->query('date_from', $today));
         $dateTo = trim((string) $request->query('date_to', $today));
         $editId = (int) $request->query('id', 0);
 
         try {
-            $rangeStart = Carbon::parse($dateFrom)->startOfDay();
+            $rangeStartWib = Carbon::parse($dateFrom, 'Asia/Jakarta')->startOfDay();
         } catch (Throwable) {
-            $rangeStart = now()->startOfDay();
+            $rangeStartWib = now('Asia/Jakarta')->startOfDay();
         }
 
         try {
-            $rangeEnd = Carbon::parse($dateTo)->endOfDay();
+            $rangeEndWib = Carbon::parse($dateTo, 'Asia/Jakarta')->endOfDay();
         } catch (Throwable) {
-            $rangeEnd = now()->endOfDay();
+            $rangeEndWib = now('Asia/Jakarta')->endOfDay();
+        }
+
+        $rangeStartUtc = $rangeStartWib->copy()->setTimezone('UTC');
+        $rangeEndUtc = $rangeEndWib->copy()->setTimezone('UTC');
+
+        $salesDateLabelWib = $rangeStartWib->toDateString();
+        if ($rangeStartWib->toDateString() !== $rangeEndWib->toDateString()) {
+            $salesDateLabelWib = $rangeStartWib->toDateString().' s/d '.$rangeEndWib->toDateString();
         }
 
         $records = FinancialReport::query()
-            ->whereBetween('report_date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
             ->orderByDesc('report_date')
             ->orderByDesc('id')
             ->get();
@@ -130,17 +133,17 @@ class FinancialReportController extends Controller
 
         $todayDeposit = (int) Deposit::query()
             ->where('status', 'success')
-            ->whereBetween('processed_at', [$todayStartUtc, $todayEndUtc])
+            ->whereBetween('processed_at', [$rangeStartUtc, $rangeEndUtc])
             ->sum('amount');
 
         $todaySales = (int) Order::query()
             ->where('status', 'Success')
-            ->whereBetween('created_at', [$todayStartUtc, $todayEndUtc])
+            ->whereBetween('created_at', [$rangeStartUtc, $rangeEndUtc])
             ->sum('total_price');
 
         $todayRevenueCost = Order::query()
             ->where('status', 'Success')
-            ->whereBetween('created_at', [$todayStartUtc, $todayEndUtc])
+            ->whereBetween('created_at', [$rangeStartUtc, $rangeEndUtc])
             ->select([
                 DB::raw('COALESCE(SUM(total_price), 0) as revenue'),
                 DB::raw('COALESCE(SUM(ROUND((base_price * quantity) / 1000)), 0) as cost'),
@@ -151,8 +154,8 @@ class FinancialReportController extends Controller
 
         return Inertia::render('admin/financial-report', [
             'filters' => [
-                'date_from' => $rangeStart->toDateString(),
-                'date_to' => $rangeEnd->toDateString(),
+                'date_from' => $rangeStartWib->toDateString(),
+                'date_to' => $rangeEndWib->toDateString(),
                 'id' => $editing?->id,
             ],
             'customer_balance' => $customerBalance,
@@ -163,7 +166,7 @@ class FinancialReportController extends Controller
                 ],
             ],
             'today_sales' => [
-                'date_wib' => $todayWib->toDateString(),
+                'date_wib' => $salesDateLabelWib,
                 'total_deposit' => $todayDeposit,
                 'total_sales' => $todaySales,
                 'net_profit' => $todayNetProfit,
