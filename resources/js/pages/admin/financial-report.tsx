@@ -1,13 +1,18 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
+import type { DateRange } from 'react-day-picker';
+import { CalendarIcon } from 'lucide-react';
 
 import Heading from '@/components/heading';
 import { useConfirm } from '@/components/confirm-dialog-provider';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useI18n } from '@/i18n/i18n-provider';
+import { cn } from '@/lib/utils';
 
 type Filters = {
     date_from: string;
@@ -86,6 +91,30 @@ function parseMoneyLikeToInt(value: unknown): number {
     return Math.round(n);
 }
 
+function parseYmdToLocalDate(value: string): Date | undefined {
+    const raw = String(value ?? '').trim();
+    if (raw === '') return undefined;
+
+    const parts = raw.split('-');
+    if (parts.length !== 3) return undefined;
+
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    const day = Number(parts[2]);
+
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return undefined;
+    if (year < 1900 || month < 1 || month > 12 || day < 1 || day > 31) return undefined;
+
+    return new Date(year, month - 1, day);
+}
+
+function formatLocalDateToYmd(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
 export default function AdminFinancialReport() {
     const { t } = useI18n();
     const confirm = useConfirm();
@@ -101,10 +130,23 @@ export default function AdminFinancialReport() {
 
     const [dateFrom, setDateFrom] = React.useState(filters?.date_from ?? '');
     const [dateTo, setDateTo] = React.useState(filters?.date_to ?? '');
+    const [dateRange, setDateRange] = React.useState<DateRange | undefined>(() => {
+        const from = parseYmdToLocalDate(filters?.date_from ?? '');
+        const to = parseYmdToLocalDate(filters?.date_to ?? '');
+        if (!from && !to) return undefined;
+        return { from: from, to: to };
+    });
 
     React.useEffect(() => {
         setDateFrom(filters?.date_from ?? '');
         setDateTo(filters?.date_to ?? '');
+        const from = parseYmdToLocalDate(filters?.date_from ?? '');
+        const to = parseYmdToLocalDate(filters?.date_to ?? '');
+        if (!from && !to) {
+            setDateRange(undefined);
+            return;
+        }
+        setDateRange({ from, to });
     }, [filters?.date_from, filters?.date_to]);
 
     const isEditing = Boolean(editing?.id);
@@ -302,23 +344,40 @@ export default function AdminFinancialReport() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                             <div className="lg:col-span-4">
                                 <Label htmlFor="date_from">{t('Rentang Tanggal')}</Label>
-                                <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
-                                    <Input
-                                        id="date_from"
-                                        type="date"
-                                        value={dateFrom}
-                                        onChange={(e) => setDateFrom(e.target.value)}
-                                        aria-label={t('Dari Tanggal')}
-                                    />
-                                    <span className="text-sm text-muted-foreground">s/d</span>
-                                    <Input
-                                        id="date_to"
-                                        type="date"
-                                        value={dateTo}
-                                        onChange={(e) => setDateTo(e.target.value)}
-                                        aria-label={t('Sampai Tanggal')}
-                                    />
-                                </div>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className={cn(
+                                                'mt-2 w-full justify-start text-left font-normal',
+                                                !dateFrom && !dateTo ? 'text-muted-foreground' : ''
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 size-4" />
+                                            {dateFrom || dateTo ? (
+                                                dateFrom && dateTo ? (
+                                                    `${dateFrom} s/d ${dateTo}`
+                                                ) : (
+                                                    dateFrom || dateTo
+                                                )
+                                            ) : (
+                                                <span>{t('Pilih tanggal')}</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="range"
+                                            numberOfMonths={2}
+                                            selected={dateRange}
+                                            onSelect={(next: DateRange | undefined) => {
+                                                setDateRange(next);
+                                                setDateFrom(next?.from ? formatLocalDateToYmd(next.from) : '');
+                                                setDateTo(next?.to ? formatLocalDateToYmd(next.to) : '');
+                                            }}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                             <div className="flex items-end lg:col-span-2">
                                 <Button onClick={applyDateFilter}>{t('Terapkan')}</Button>
