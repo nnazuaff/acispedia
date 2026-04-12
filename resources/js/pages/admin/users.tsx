@@ -82,13 +82,15 @@ export default function AdminUsers() {
         filters: Filters;
     };
 
+    const STATUS_ALL = 'all';
+
     const [q, setQ] = React.useState(filters?.q ?? '');
-    const [status, setStatus] = React.useState<string>(filters?.status ?? '');
+    const [status, setStatus] = React.useState<string>(filters?.status ? filters.status : STATUS_ALL);
     const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 25));
 
     React.useEffect(() => {
         setQ(filters?.q ?? '');
-        setStatus(filters?.status ?? '');
+        setStatus(filters?.status ? filters.status : STATUS_ALL);
         setPerPage(Number(filters?.per_page ?? 25));
     }, [filters?.q, filters?.status, filters?.per_page]);
 
@@ -100,7 +102,12 @@ export default function AdminUsers() {
             ...(next ?? {}),
         };
 
-        router.get('/users', merged as any, {
+        const payload = {
+            ...merged,
+            status: merged.status === STATUS_ALL ? '' : merged.status,
+        };
+
+        router.get('/users', payload as any, {
             preserveScroll: true,
             preserveState: true,
             replace: true,
@@ -109,7 +116,7 @@ export default function AdminUsers() {
 
     function resetFilters() {
         setQ('');
-        setStatus('');
+        setStatus(STATUS_ALL);
         setPerPage(25);
         router.get('/users', { q: '', status: '', per_page: 25 } as any, {
             preserveScroll: true,
@@ -180,14 +187,13 @@ export default function AdminUsers() {
                                         <SelectValue placeholder={t('Semua')} />
                                     </SelectTrigger>
                                     <SelectContent align="end">
-                                        <SelectItem value="">{t('Semua')}</SelectItem>
+                                        <SelectItem value={STATUS_ALL}>{t('Semua')}</SelectItem>
                                         <SelectItem value="active">{t('Aktif')}</SelectItem>
                                         <SelectItem value="inactive">{t('Nonaktif')}</SelectItem>
                                         <SelectItem value="banned">{t('Banned')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
-
                             <div className="flex items-end gap-2">
                                 <Button onClick={() => applyFilters({ page: 1 })}>{t('Filter')}</Button>
                                 <Button variant="outline" onClick={resetFilters}>
