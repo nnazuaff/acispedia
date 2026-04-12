@@ -257,6 +257,22 @@ class DepositsController extends Controller
         };
     }
 
+    private static function parseMidtransGrossAmount(string $grossAmount): ?int
+    {
+        $normalized = trim($grossAmount);
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (! is_numeric($normalized)) {
+            return null;
+        }
+
+        $parsed = (int) round((float) $normalized);
+
+        return $parsed > 0 ? $parsed : null;
+    }
+
     public function cancel(Request $request, Deposit $deposit): JsonResponse
     {
         $user = $request->user();
@@ -951,12 +967,13 @@ class DepositsController extends Controller
         $fraudStatus = strtolower((string) (Arr::get($payload, 'fraud_status') ?? ''));
         $transactionId = trim((string) (Arr::get($payload, 'transaction_id') ?? ''));
         $newStatus = self::mapMidtransStatus($transactionStatus, $fraudStatus);
+        $grossAmountValue = self::parseMidtransGrossAmount($grossAmount);
 
         $shouldBroadcastStats = false;
         $shouldBroadcastDeposit = false;
 
         try {
-            DB::transaction(function () use ($deposit, $payload, $orderId, $transactionId, $paymentType, $transactionStatus, $fraudStatus, $newStatus, &$shouldBroadcastStats, &$shouldBroadcastDeposit) {
+            DB::transaction(function () use ($deposit, $payload, $orderId, $transactionId, $paymentType, $transactionStatus, $fraudStatus, $newStatus, $grossAmountValue, &$shouldBroadcastStats, &$shouldBroadcastDeposit) {
                 $row = Deposit::query()->lockForUpdate()->find((int) $deposit->id);
                 if (! $row) {
                     return;
@@ -969,6 +986,11 @@ class DepositsController extends Controller
                 $providerPayload['payment_type'] = $paymentType !== '' ? $paymentType : ($providerPayload['payment_type'] ?? null);
                 $providerPayload['transaction_status'] = $transactionStatus !== '' ? $transactionStatus : ($providerPayload['transaction_status'] ?? null);
                 $providerPayload['fraud_status'] = $fraudStatus !== '' ? $fraudStatus : ($providerPayload['fraud_status'] ?? null);
+                $providerPayload['gross_amount'] = $grossAmountValue ?? ($providerPayload['gross_amount'] ?? null);
+                if ($grossAmountValue !== null && $grossAmountValue >= (int) $row->amount) {
+                    $providerPayload['admin_fee'] = max(0, $grossAmountValue - (int) $row->amount);
+                    $row->final_amount = $grossAmountValue;
+                }
                 $providerPayload['last_notification'] = $payload;
                 $row->provider_payload = $providerPayload;
 
