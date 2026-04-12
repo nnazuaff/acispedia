@@ -277,6 +277,7 @@ Route::get('api/services', [MedanpediaController::class, 'services'])->name('api
 
 // Tripay callback (no auth; CSRF excluded in bootstrap/app.php)
 Route::post('api/tripay/callback', [DepositsController::class, 'tripayCallback'])->name('api.tripay.callback');
+Route::post('api/midtrans/callback', [DepositsController::class, 'midtransCallback'])->name('api.midtrans.callback');
 
 Route::middleware(['auth'])->group(function () {
     Broadcast::routes();
@@ -306,6 +307,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('deposit', [DepositController::class, 'index'])->name('deposit');
 
+    Route::post('api/deposits/midtrans', [DepositsController::class, 'storeMidtrans'])->name('api.deposits.midtrans.store');
     Route::post('api/deposits/tripay', [DepositsController::class, 'storeTripay'])->name('api.deposits.tripay.store');
     Route::post('api/deposits/konversi-saldo', [DepositsController::class, 'storeKonversiSaldo'])->name('api.deposits.konversi_saldo.store');
     Route::post('api/deposits/{deposit}/cancel', [DepositsController::class, 'cancel'])->name('api.deposits.cancel');

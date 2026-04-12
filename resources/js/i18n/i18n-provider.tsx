@@ -77,6 +77,14 @@ const dictionaries: Record<Locale, Dict> = {
         'Nomor HP Acispay wajib diisi': 'Acispay phone number is required',
         'Nomor HP Acispay minimal 10 digit': 'Acispay phone number must be at least 10 digits',
         'Username Acispay wajib diisi': 'Acispay username is required',
+        'Pembayaran otomatis via Midtrans': 'Automatic payment via Midtrans',
+        'Pembayaran akan diarahkan ke halaman Midtrans untuk menyelesaikan transaksi secara otomatis.':
+            'Payment will redirect to Midtrans to complete the transaction automatically.',
+        'Biaya admin Rp 4.000 akan ditambahkan otomatis.': 'An admin fee of Rp 4,000 will be added automatically.',
+        'Referensi provider': 'Provider reference',
+        'Status pembayaran': 'Payment status',
+        'Transaction ID': 'Transaction ID',
+        'Channel': 'Channel',
         'Pastikan saldo Acispay mencukupi sesuai nominal yang dimasukkan.':
             'Make sure your Acispay balance is sufficient for the entered amount.',
         'Masih ada deposit pending. Selesaikan atau batalkan deposit sebelumnya.':

@@ -29,6 +29,11 @@ type DepositRow = {
     tripay_pay_code: string | null;
     tripay_checkout_url: string | null;
     tripay_status: string | null;
+    payment_url: string | null;
+    payment_channel: string | null;
+    provider_reference: string | null;
+    provider_transaction_id: string | null;
+    provider_status: string | null;
     created_at_wib: string | null;
     expired_at_wib: string | null;
     processed_at_wib: string | null;
@@ -39,29 +44,33 @@ type DepositRow = {
     };
 };
 
-function methodLabel(row: { payment_method: string; tripay_method: string | null }): string {
-    const tripay = String(row.tripay_method ?? '').trim();
-    const upper = tripay.toUpperCase();
+function methodLabel(row: { payment_method: string; tripay_method: string | null; payment_channel?: string | null }): string {
+    const channel = String(row.payment_channel ?? row.tripay_method ?? '').trim();
+    const upper = channel.toUpperCase();
 
     if (upper === 'QRIS2' || upper.startsWith('QRIS')) {
         return 'QRIS';
     }
 
-    if (['OVO', 'DANA', 'SHOPEEPAY'].includes(upper)) {
+    if (['OVO', 'DANA', 'SHOPEEPAY', 'GOPAY'].includes(upper)) {
         return 'E-Wallet';
     }
 
-    if (upper.endsWith('VA')) {
+    if (upper.endsWith('VA') || upper.endsWith('_TRANSFER') || upper.includes('TRANSFER')) {
         return 'Virtual Account';
     }
 
-    if (tripay) {
-        return tripay;
+    if (channel) {
+        return channel;
     }
 
     const payment = String(row.payment_method ?? '').trim();
     if (payment.toLowerCase() === 'konversi_saldo') {
         return 'Konversi Saldo';
+    }
+
+    if (payment.toLowerCase() === 'midtrans') {
+        return 'Midtrans';
     }
 
     return payment;
@@ -316,6 +325,7 @@ export default function AdminDeposits() {
                                     <SelectContent>
                                         <SelectItem value="all">{t('Semua')}</SelectItem>
                                         <SelectItem value="tripay">Tripay</SelectItem>
+                                        <SelectItem value="midtrans">Midtrans</SelectItem>
                                         <SelectItem value="qris">QRIS</SelectItem>
                                         <SelectItem value="ewallet">E-Wallet</SelectItem>
                                         <SelectItem value="konversi_saldo">{t('Konversi Saldo')}</SelectItem>

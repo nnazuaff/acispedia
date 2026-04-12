@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->preventRequestForgery(except: [
             'api/tripay/callback',
+            'api/midtrans/callback',
         ]);
 
         $middleware->web(append: [

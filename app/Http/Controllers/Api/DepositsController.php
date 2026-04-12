@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\UserBalance;
 use App\Services\DashboardStats;
+use App\Services\MidtransClient;
 use App\Services\TelegramNotifier;
 use App\Services\TripayClient;
 use App\Support\PhoneNormalizer;
@@ -179,7 +180,81 @@ class DepositsController extends Controller
         }
 
         $len = strlen($phone);
+
         return $len >= 10 && $len <= 18;
+    }
+
+    private function creditSuccessfulDeposit(Deposit $row, string $description, array $context = []): void
+    {
+        UserBalance::query()->firstOrCreate([
+            'user_id' => (int) $row->user_id,
+        ], [
+            'balance' => 0,
+            'total_spent' => 0,
+            'total_deposit' => 0,
+        ]);
+
+        $bal = UserBalance::query()
+            ->where('user_id', (int) $row->user_id)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $bal) {
+            return;
+        }
+
+        $balanceBefore = (int) $bal->balance;
+        $balanceAfter = $balanceBefore + (int) $row->amount;
+
+        $bal->balance = $balanceAfter;
+        $bal->total_deposit = (int) $bal->total_deposit + (int) $row->amount;
+        $bal->save();
+
+        WalletLedgerWriter::record(
+            (int) $row->user_id,
+            'credit',
+            (int) $row->amount,
+            (int) $balanceBefore,
+            (int) $balanceAfter,
+            'deposit',
+            (string) $row->id,
+            $description,
+            $context,
+            $row->processed_at,
+        );
+    }
+
+    private function broadcastDepositUpdate(int $depositId): void
+    {
+        try {
+            $fresh = Deposit::query()->find($depositId);
+            if ($fresh) {
+                broadcast(new DepositStatusUpdated($fresh));
+            }
+        } catch (Throwable) {
+            // best-effort
+        }
+    }
+
+    private function broadcastUserStats(int $userId): void
+    {
+        try {
+            $stats = DashboardStats::forUser($userId);
+            broadcast(new DashboardStatsUpdated($userId, $stats));
+        } catch (Throwable) {
+            // best-effort
+        }
+    }
+
+    private static function mapMidtransStatus(string $transactionStatus, string $fraudStatus): string
+    {
+        return match ($transactionStatus) {
+            'settlement' => 'success',
+            'capture' => ($fraudStatus === '' || $fraudStatus === 'accept') ? 'success' : 'pending',
+            'expire', 'expired' => 'expired',
+            'cancel', 'deny', 'failure' => 'failed',
+            default => 'pending',
+        };
     }
 
     public function cancel(Request $request, Deposit $deposit): JsonResponse
@@ -246,6 +321,227 @@ class DepositsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage() !== '' ? $e->getMessage() : 'Gagal membatalkan deposit.',
+            ], 500);
+        }
+    }
+
+    public function storeMidtrans(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! MidtransClient::isEnabled()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Metode pembayaran Midtrans sedang dinonaktifkan sementara.',
+            ], 422);
+        }
+
+        if (! MidtransClient::isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Midtrans belum dikonfigurasi. Lengkapi Server Key terlebih dahulu.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'amount' => ['required', 'integer', 'min:1000', 'max:200000000'],
+            'channel' => ['nullable', 'string', 'min:2', 'max:32'],
+        ]);
+
+        $amount = (int) $validated['amount'];
+        $requestedChannel = strtolower(trim((string) ($validated['channel'] ?? '')));
+        $adminFee = max(0, (int) config('midtrans.admin_fee', 4000));
+        $finalAmount = $amount + $adminFee;
+        $orderId = 'DEP-'.(int) $user->id.'-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6));
+        $enabledPayments = [];
+
+        if ($requestedChannel !== '') {
+            $channelMap = [
+                'qris' => ['qris'],
+            ];
+
+            if (! array_key_exists($requestedChannel, $channelMap)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Channel pembayaran Midtrans tidak tersedia.',
+                ], 422);
+            }
+
+            $enabledPayments = $channelMap[$requestedChannel];
+        }
+
+        $depositId = null;
+
+        try {
+            $depositId = DB::transaction(function () use ($user, $amount, $finalAmount) {
+                $activePending = Deposit::query()
+                    ->where('user_id', (int) $user->id)
+                    ->where('status', 'pending')
+                    ->where(function (Builder $q) {
+                        $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
+                    })
+                    ->exists();
+
+                if ($activePending) {
+                    throw new RuntimeException('Masih ada deposit pending. Selesaikan atau tunggu expired.');
+                }
+
+                $deposit = Deposit::query()->create([
+                    'user_id' => (int) $user->id,
+                    'amount' => $amount,
+                    'final_amount' => $finalAmount,
+                    'payment_method' => 'midtrans',
+                    'status' => 'pending',
+                    'expired_at' => now()->addDay(),
+                ]);
+
+                return (int) $deposit->id;
+            });
+
+            if ($depositId !== null) {
+                UserActivity::log(
+                    $user,
+                    'deposit_create',
+                    'Buat deposit',
+                    [
+                        'deposit_id' => (int) $depositId,
+                        'amount' => (int) $amount,
+                        'method' => 'midtrans',
+                        'order_id' => (string) $orderId,
+                        'channel' => $requestedChannel !== '' ? $requestedChannel : null,
+                    ]
+                );
+            }
+
+            $detailUrl = '';
+            $appUrl = rtrim((string) config('app.url', ''), '/');
+            if ($appUrl !== '' && is_int($depositId)) {
+                $detailUrl = $appUrl.'/history/deposit/'.(int) $depositId;
+            }
+
+            $itemDetails = [[
+                'id' => 'DEPOSIT',
+                'name' => 'Deposit Saldo',
+                'price' => $amount,
+                'quantity' => 1,
+            ]];
+
+            if ($adminFee > 0) {
+                $itemDetails[] = [
+                    'id' => 'MIDTRANS-FEE',
+                    'name' => 'Biaya Admin',
+                    'price' => $adminFee,
+                    'quantity' => 1,
+                ];
+            }
+
+            $json = MidtransClient::createTransaction(
+                $orderId,
+                $finalAmount,
+                [
+                    'first_name' => (string) ($user->name ?? 'Customer'),
+                    'email' => (string) ($user->email ?? ''),
+                    'phone' => (string) ($user->phone ?? ''),
+                ],
+                $itemDetails,
+                [
+                    'finish' => $detailUrl,
+                    'unfinish' => $detailUrl,
+                    'error' => $detailUrl,
+                ],
+                $enabledPayments
+            );
+
+            $snapToken = (string) (Arr::get($json, 'token') ?? '');
+            $redirectUrl = (string) (Arr::get($json, 'redirect_url') ?? '');
+
+            DB::transaction(function () use ($depositId, $json, $orderId, $requestedChannel, $adminFee, $redirectUrl, $snapToken) {
+                $deposit = Deposit::query()->lockForUpdate()->find($depositId);
+                if (! $deposit) {
+                    return;
+                }
+
+                $deposit->provider_payload = array_filter([
+                    'provider' => 'midtrans',
+                    'order_id' => $orderId,
+                    'requested_channel' => $requestedChannel !== '' ? $requestedChannel : null,
+                    'snap_token' => $snapToken !== '' ? $snapToken : null,
+                    'redirect_url' => $redirectUrl !== '' ? $redirectUrl : null,
+                    'admin_fee' => $adminFee,
+                    'snap_response' => $json,
+                ], static fn ($value) => $value !== null && $value !== '');
+
+                $deposit->save();
+            });
+
+            if (is_int($depositId)) {
+                $this->broadcastDepositUpdate((int) $depositId);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Deposit dibuat. Silakan lanjutkan pembayaran.',
+                'payment_url' => $redirectUrl,
+                'checkout_url' => $redirectUrl,
+                'reference' => $orderId,
+                'snap_token' => $snapToken,
+                'amount' => $amount,
+                'final_amount' => $finalAmount,
+                'admin_fee' => $adminFee,
+            ]);
+        } catch (RuntimeException $e) {
+            if (is_int($depositId)) {
+                try {
+                    Deposit::query()
+                        ->where('id', $depositId)
+                        ->where('status', 'pending')
+                        ->update([
+                            'status' => 'failed',
+                            'processed_at' => now(),
+                            'provider_payload' => [
+                                'provider' => 'midtrans',
+                                'order_id' => $orderId,
+                                'requested_channel' => $requestedChannel !== '' ? $requestedChannel : null,
+                                'admin_fee' => $adminFee,
+                                'error' => $e->getMessage(),
+                            ],
+                        ]);
+                } catch (Throwable) {
+                    // ignore
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (Throwable $e) {
+            report($e);
+
+            if (is_int($depositId)) {
+                try {
+                    Deposit::query()
+                        ->where('id', $depositId)
+                        ->where('status', 'pending')
+                        ->update([
+                            'status' => 'failed',
+                            'processed_at' => now(),
+                            'provider_payload' => [
+                                'provider' => 'midtrans',
+                                'order_id' => $orderId,
+                                'requested_channel' => $requestedChannel !== '' ? $requestedChannel : null,
+                                'admin_fee' => $adminFee,
+                                'error' => 'Gagal membuat transaksi pembayaran.',
+                            ],
+                        ]);
+                } catch (Throwable) {
+                    // ignore
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat deposit.',
             ], 500);
         }
     }
@@ -572,46 +868,13 @@ class DepositsController extends Controller
                 $shouldBroadcastDeposit = true;
 
                 if ($newStatus === 'success') {
-                    UserBalance::query()->firstOrCreate([
-                        'user_id' => (int) $row->user_id,
-                    ], [
-                        'balance' => 0,
-                        'total_spent' => 0,
-                        'total_deposit' => 0,
+                    $this->creditSuccessfulDeposit($row, 'Deposit sukses', [
+                        'deposit_id' => (int) $row->id,
+                        'payment_method' => (string) ($row->payment_method ?? ''),
+                        'tripay_method' => $row->tripay_method !== null ? (string) $row->tripay_method : null,
+                        'tripay_reference' => $row->tripay_reference !== null ? (string) $row->tripay_reference : null,
+                        'tripay_merchant_ref' => $row->tripay_merchant_ref !== null ? (string) $row->tripay_merchant_ref : null,
                     ]);
-
-                    $bal = UserBalance::query()
-                        ->where('user_id', (int) $row->user_id)
-                        ->lockForUpdate()
-                        ->first();
-
-                    if ($bal) {
-                        $balanceBefore = (int) $bal->balance;
-                        $balanceAfter = $balanceBefore + (int) $row->amount;
-
-                        $bal->balance = $balanceAfter;
-                        $bal->total_deposit = (int) $bal->total_deposit + (int) $row->amount;
-                        $bal->save();
-
-                        WalletLedgerWriter::record(
-                            (int) $row->user_id,
-                            'credit',
-                            (int) $row->amount,
-                            (int) $balanceBefore,
-                            (int) $balanceAfter,
-                            'deposit',
-                            (string) $row->id,
-                            'Deposit sukses',
-                            [
-                                'deposit_id' => (int) $row->id,
-                                'payment_method' => (string) ($row->payment_method ?? ''),
-                                'tripay_method' => $row->tripay_method !== null ? (string) $row->tripay_method : null,
-                                'tripay_reference' => $row->tripay_reference !== null ? (string) $row->tripay_reference : null,
-                                'tripay_merchant_ref' => $row->tripay_merchant_ref !== null ? (string) $row->tripay_merchant_ref : null,
-                            ],
-                            $row->processed_at,
-                        );
-                    }
 
                     $shouldBroadcastStats = true;
                 }
@@ -626,23 +889,142 @@ class DepositsController extends Controller
         }
 
         if ($shouldBroadcastDeposit) {
-            try {
-                $fresh = Deposit::query()->find((int) $deposit->id);
-                if ($fresh) {
-                    broadcast(new DepositStatusUpdated($fresh));
-                }
-            } catch (Throwable) {
-                // best-effort
-            }
+            $this->broadcastDepositUpdate((int) $deposit->id);
         }
 
         if ($shouldBroadcastStats) {
-            try {
-                $stats = DashboardStats::forUser((int) $deposit->user_id);
-                broadcast(new DashboardStatsUpdated((int) $deposit->user_id, $stats));
-            } catch (Throwable) {
-                // best-effort
-            }
+            $this->broadcastUserStats((int) $deposit->user_id);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OK',
+        ]);
+    }
+
+    public function midtransCallback(Request $request): JsonResponse
+    {
+        $payload = $request->json()->all();
+        if (! is_array($payload)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid payload.',
+            ], 400);
+        }
+
+        $orderId = trim((string) (Arr::get($payload, 'order_id') ?? ''));
+        $statusCode = trim((string) (Arr::get($payload, 'status_code') ?? ''));
+        $grossAmount = trim((string) (Arr::get($payload, 'gross_amount') ?? ''));
+        $signature = trim((string) (Arr::get($payload, 'signature_key') ?? ''));
+
+        if ($orderId === '' || $statusCode === '' || $grossAmount === '' || $signature === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing callback fields.',
+            ], 400);
+        }
+
+        try {
+            $expected = MidtransClient::notificationExpectedSignature($orderId, $statusCode, $grossAmount);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Midtrans belum dikonfigurasi.',
+            ], 500);
+        }
+
+        if (! hash_equals($expected, $signature)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid signature.',
+            ], 401);
+        }
+
+        $deposit = Deposit::query()
+            ->where('payment_method', 'midtrans')
+            ->where(function (Builder $query) use ($orderId) {
+                $query->where('provider_payload->order_id', $orderId)
+                    ->orWhere('provider_payload', 'like', '%'.$orderId.'%');
+            })
+            ->first();
+
+        if (! $deposit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Deposit not found.',
+            ], 404);
+        }
+
+        $transactionStatus = strtolower((string) (Arr::get($payload, 'transaction_status') ?? ''));
+        $paymentType = strtolower((string) (Arr::get($payload, 'payment_type') ?? ''));
+        $fraudStatus = strtolower((string) (Arr::get($payload, 'fraud_status') ?? ''));
+        $transactionId = trim((string) (Arr::get($payload, 'transaction_id') ?? ''));
+        $newStatus = self::mapMidtransStatus($transactionStatus, $fraudStatus);
+
+        $shouldBroadcastStats = false;
+        $shouldBroadcastDeposit = false;
+
+        try {
+            DB::transaction(function () use ($deposit, $payload, $orderId, $transactionId, $paymentType, $transactionStatus, $fraudStatus, $newStatus, &$shouldBroadcastStats, &$shouldBroadcastDeposit) {
+                $row = Deposit::query()->lockForUpdate()->find((int) $deposit->id);
+                if (! $row) {
+                    return;
+                }
+
+                $providerPayload = is_array($row->provider_payload) ? $row->provider_payload : [];
+                $providerPayload['provider'] = 'midtrans';
+                $providerPayload['order_id'] = $orderId;
+                $providerPayload['transaction_id'] = $transactionId !== '' ? $transactionId : ($providerPayload['transaction_id'] ?? null);
+                $providerPayload['payment_type'] = $paymentType !== '' ? $paymentType : ($providerPayload['payment_type'] ?? null);
+                $providerPayload['transaction_status'] = $transactionStatus !== '' ? $transactionStatus : ($providerPayload['transaction_status'] ?? null);
+                $providerPayload['fraud_status'] = $fraudStatus !== '' ? $fraudStatus : ($providerPayload['fraud_status'] ?? null);
+                $providerPayload['last_notification'] = $payload;
+                $row->provider_payload = $providerPayload;
+
+                if (in_array($row->status, ['success', 'failed', 'expired'], true)) {
+                    $row->save();
+                    $shouldBroadcastDeposit = true;
+
+                    return;
+                }
+
+                if ($newStatus !== 'pending') {
+                    $row->status = $newStatus;
+                    $row->processed_at = now();
+                }
+
+                $row->save();
+                $shouldBroadcastDeposit = true;
+
+                if ($newStatus === 'success') {
+                    $this->creditSuccessfulDeposit($row, 'Deposit sukses', [
+                        'deposit_id' => (int) $row->id,
+                        'payment_method' => (string) ($row->payment_method ?? ''),
+                        'payment_type' => $paymentType !== '' ? $paymentType : null,
+                        'provider_reference' => $orderId,
+                        'provider_transaction_id' => $transactionId !== '' ? $transactionId : null,
+                    ]);
+
+                    $shouldBroadcastStats = true;
+                }
+            });
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process callback.',
+            ], 500);
+        }
+
+        if ($shouldBroadcastDeposit) {
+            $this->broadcastDepositUpdate((int) $deposit->id);
+        }
+
+        if ($shouldBroadcastStats) {
+            $this->broadcastUserStats((int) $deposit->user_id);
         }
 
         return response()->json([

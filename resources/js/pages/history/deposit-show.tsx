@@ -21,6 +21,11 @@ type DepositDetail = {
     tripay_pay_code: string | null;
     tripay_checkout_url: string | null;
     tripay_status: string | null;
+    payment_url: string | null;
+    payment_channel: string | null;
+    provider_reference: string | null;
+    provider_transaction_id: string | null;
+    provider_status: string | null;
     created_at: string | null;
     expired_at: string | null;
     processed_at: string | null;
@@ -39,29 +44,32 @@ function fmtDate(iso: string | null): string {
     }
 }
 
-function methodLabel(row: { payment_method: string; tripay_method: string | null }): string {
-    const tripay = String(row.tripay_method ?? '').trim();
-    const upper = tripay.toUpperCase();
+function methodLabel(row: { payment_method: string; tripay_method: string | null; payment_channel?: string | null }): string {
+    const channel = String(row.payment_channel ?? row.tripay_method ?? '').trim();
+    const upper = channel.toUpperCase();
 
     if (upper === 'QRIS2' || upper.startsWith('QRIS')) {
         return 'QRIS';
     }
 
-    if (['OVO', 'DANA', 'SHOPEEPAY'].includes(upper)) {
+    if (['OVO', 'DANA', 'SHOPEEPAY', 'GOPAY'].includes(upper)) {
         return 'E-Wallet';
     }
 
-    if (upper.endsWith('VA')) {
+    if (upper.endsWith('VA') || upper.endsWith('_TRANSFER') || upper.includes('TRANSFER')) {
         return 'Virtual Account';
     }
 
-    if (tripay) {
-        return tripay;
+    if (channel) {
+        return channel;
     }
 
     const payment = String(row.payment_method ?? '').trim();
     if (payment.toLowerCase() === 'konversi_saldo') {
         return 'Konversi Saldo';
+    }
+    if (payment.toLowerCase() === 'midtrans') {
+        return 'Midtrans';
     }
     if (payment.toLowerCase() === 'tripay') {
         return 'Pembayaran';
@@ -200,15 +208,15 @@ export default function DepositShowPage() {
                                         <span className="text-muted-foreground">{t('Metode')}</span>
                                         <PaymentMethodInline
                                             className="font-medium"
-                                            label={methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method })}
+                                            label={methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method, payment_channel: deposit.payment_channel })}
                                         />
                                     </div>
                                 </div>
 
                                 <div className="mt-4 flex flex-wrap gap-2">
-                                    {deposit.status === 'pending' && deposit.tripay_checkout_url ? (
+                                    {deposit.status === 'pending' && deposit.payment_url ? (
                                         <Button asChild variant="outline">
-                                            <a href={deposit.tripay_checkout_url} target="_blank" rel="noopener noreferrer">
+                                            <a href={deposit.payment_url} target="_blank" rel="noopener noreferrer">
                                                 {t('Bayar')}
                                             </a>
                                         </Button>
@@ -229,23 +237,23 @@ export default function DepositShowPage() {
 
                                 <div className="mt-4 grid gap-2 text-sm">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">{t('Merchant ref')}</span>
-                                        <span className="font-medium">{deposit.tripay_merchant_ref ?? '-'}</span>
+                                        <span className="text-muted-foreground">{t('Referensi provider')}</span>
+                                        <span className="font-medium">{deposit.provider_reference ?? deposit.tripay_merchant_ref ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">{t('Reference')}</span>
-                                        <span className="font-medium">{deposit.tripay_reference ?? '-'}</span>
+                                        <span className="text-muted-foreground">{t('Transaction ID')}</span>
+                                        <span className="font-medium">{deposit.provider_transaction_id ?? deposit.tripay_reference ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">{t('Pay code')}</span>
-                                        <span className="font-medium">{deposit.tripay_pay_code ?? '-'}</span>
+                                        <span className="text-muted-foreground">{t('Channel')}</span>
+                                        <span className="font-medium">{deposit.payment_channel ?? deposit.tripay_pay_code ?? '-'}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
                                         <span className="text-muted-foreground">{t('Checkout')}</span>
-                                        {deposit.tripay_checkout_url ? (
+                                        {deposit.payment_url ? (
                                             <a
                                                 className="font-medium underline underline-offset-4"
-                                                href={deposit.tripay_checkout_url}
+                                                href={deposit.payment_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
@@ -257,7 +265,11 @@ export default function DepositShowPage() {
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
                                         <span className="text-muted-foreground">{t('Status pembayaran')}</span>
-                                        <span className="font-medium">{deposit.tripay_status ?? '-'}</span>
+                                        <span className="font-medium">{deposit.provider_status ?? deposit.tripay_status ?? '-'}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className="text-muted-foreground">{t('Tripay Pay code')}</span>
+                                        <span className="font-medium">{deposit.tripay_pay_code ?? '-'}</span>
                                     </div>
                                 </div>
 

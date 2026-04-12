@@ -27,6 +27,11 @@ type DepositDetail = {
     tripay_pay_code: string | null;
     tripay_checkout_url: string | null;
     tripay_status: string | null;
+    payment_url: string | null;
+    payment_channel: string | null;
+    provider_reference: string | null;
+    provider_transaction_id: string | null;
+    provider_status: string | null;
     expired_at_wib: string | null;
     processed_at_wib: string | null;
     created_at_wib: string | null;
@@ -39,29 +44,33 @@ type DepositDetail = {
     provider_payload: unknown;
 };
 
-function methodLabel(row: { payment_method: string; tripay_method: string | null }): string {
-    const tripay = String(row.tripay_method ?? '').trim();
-    const upper = tripay.toUpperCase();
+function methodLabel(row: { payment_method: string; tripay_method: string | null; payment_channel?: string | null }): string {
+    const channel = String(row.payment_channel ?? row.tripay_method ?? '').trim();
+    const upper = channel.toUpperCase();
 
     if (upper === 'QRIS2' || upper.startsWith('QRIS')) {
         return 'QRIS';
     }
 
-    if (['OVO', 'DANA', 'SHOPEEPAY'].includes(upper)) {
+    if (['OVO', 'DANA', 'SHOPEEPAY', 'GOPAY'].includes(upper)) {
         return 'E-Wallet';
     }
 
-    if (upper.endsWith('VA')) {
+    if (upper.endsWith('VA') || upper.endsWith('_TRANSFER') || upper.includes('TRANSFER')) {
         return 'Virtual Account';
     }
 
-    if (tripay) {
-        return tripay;
+    if (channel) {
+        return channel;
     }
 
     const payment = String(row.payment_method ?? '').trim();
     if (payment.toLowerCase() === 'konversi_saldo') {
         return 'Konversi Saldo';
+    }
+
+    if (payment.toLowerCase() === 'midtrans') {
+        return 'Midtrans';
     }
 
     return payment;
@@ -93,6 +102,7 @@ export default function AdminDepositDetail() {
     const isTripay =
         paymentMethod === 'tripay' ||
         Boolean(deposit.tripay_method || deposit.tripay_reference || deposit.tripay_merchant_ref || deposit.tripay_checkout_url);
+    const isMidtrans = paymentMethod === 'midtrans';
     const isKonversiSaldo = paymentMethod === 'konversi_saldo';
 
     const providerPayload = deposit.provider_payload && typeof deposit.provider_payload === 'object' ? (deposit.provider_payload as any) : null;
@@ -205,8 +215,46 @@ export default function AdminDepositDetail() {
                                     </tr>
                                     <tr className="border-t">
                                         <td className="px-4 py-3">{t('Metode')}</td>
-                                        <td className="px-4 py-3">{methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method })}</td>
+                                        <td className="px-4 py-3">{methodLabel({ payment_method: deposit.payment_method, tripay_method: deposit.tripay_method, payment_channel: deposit.payment_channel })}</td>
                                     </tr>
+
+                                    {isMidtrans ? (
+                                        <>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Referensi provider')}</td>
+                                                <td className="px-4 py-3">{deposit.provider_reference ?? '-'}</td>
+                                            </tr>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Transaction ID')}</td>
+                                                <td className="px-4 py-3">{deposit.provider_transaction_id ?? '-'}</td>
+                                            </tr>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Channel')}</td>
+                                                <td className="px-4 py-3">{deposit.payment_channel ?? '-'}</td>
+                                            </tr>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Checkout URL')}</td>
+                                                <td className="px-4 py-3">
+                                                    {deposit.payment_url ? (
+                                                        <a
+                                                            href={deposit.payment_url}
+                                                            className="break-all underline"
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                        >
+                                                            {deposit.payment_url}
+                                                        </a>
+                                                    ) : (
+                                                        '-'
+                                                    )}
+                                                </td>
+                                            </tr>
+                                            <tr className="border-t">
+                                                <td className="px-4 py-3">{t('Status pembayaran')}</td>
+                                                <td className="px-4 py-3">{deposit.provider_status ?? '-'}</td>
+                                            </tr>
+                                        </>
+                                    ) : null}
 
                                     {isTripay ? (
                                         <>

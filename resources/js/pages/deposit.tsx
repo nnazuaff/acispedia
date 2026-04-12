@@ -1,17 +1,3 @@
-function normalizeIdPhoneToLocalZero(input: string): string {
-    const raw = String(input ?? '').trim();
-    if (raw === '') return '';
-
-    const digits = raw.replace(/\D+/g, '');
-    if (digits === '') return '';
-
-    if (digits.startsWith('62')) {
-        const rest = digits.slice(2).replace(/^0+/, '');
-        return `0${rest}`;
-    }
-
-    return digits;
-}
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 import { toast } from 'sonner';
@@ -31,6 +17,21 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+
+function normalizeIdPhoneToLocalZero(input: string): string {
+    const raw = String(input ?? '').trim();
+    if (raw === '') return '';
+
+    const digits = raw.replace(/\D+/g, '');
+    if (digits === '') return '';
+
+    if (digits.startsWith('62')) {
+        const rest = digits.slice(2).replace(/^0+/, '');
+        return `0${rest}`;
+    }
+
+    return digits;
+}
 
 function formatRupiah(value: number): string {
     return new Intl.NumberFormat('id-ID').format(value);
@@ -74,14 +75,18 @@ function getXsrfToken(): string | null {
 export default function DepositPage() {
     const { t, locale } = useI18n();
     const confirm = useConfirm();
-    const { auth, balance, tripay_enabled: tripayEnabled, active_pending: activePendingProp } = usePage().props as any as {
+    const { auth, balance, tripay_enabled: tripayEnabled, midtrans_enabled: midtransEnabled, midtrans_admin_fee: midtransAdminFee, active_pending: activePendingProp } = usePage().props as any as {
         auth: { user?: { id?: number; phone?: string | null } };
         balance: number;
         tripay_enabled: boolean;
+        midtrans_enabled: boolean;
+        midtrans_admin_fee: number;
         active_pending: {
             id: number;
             status: string;
+            payment_method: string;
             tripay_checkout_url: string | null;
+            payment_url: string | null;
             created_at: string | null;
             expired_at: string | null;
         } | null;
@@ -89,7 +94,9 @@ export default function DepositPage() {
 
     const quickAmounts = React.useMemo(() => [1000, 5000, 10000, 20000, 50000, 100000, 200000], []);
     const [amount, setAmount] = React.useState<number>(0);
-    const [methodCategory, setMethodCategory] = React.useState<'qris' | 'ewallet' | 'konversi_saldo'>(tripayEnabled ? 'qris' : 'konversi_saldo');
+    const [methodCategory, setMethodCategory] = React.useState<'qris' | 'ewallet' | 'konversi_saldo'>(
+        (midtransEnabled || tripayEnabled) ? 'qris' : 'konversi_saldo'
+    );
     const [ewalletCode, setEwalletCode] = React.useState<'OVO' | 'DANA' | 'SHOPEEPAY'>('OVO');
     const [acispayPhone, setAcispayPhone] = React.useState<string>('');
     const [acispayUsername, setAcispayUsername] = React.useState<string>('');
@@ -108,10 +115,27 @@ export default function DepositPage() {
     }, [activePendingProp]);
 
     React.useEffect(() => {
-        if (!tripayEnabled && methodCategory !== 'konversi_saldo') {
-            setMethodCategory('konversi_saldo');
+        if ((methodCategory === 'qris' || methodCategory === 'ewallet') && tripayEnabled) {
+            if (methodCategory === 'ewallet') {
+                return;
+            }
         }
-    }, [tripayEnabled, methodCategory]);
+
+        if (methodCategory === 'qris' && (midtransEnabled || tripayEnabled)) {
+            return;
+        }
+
+        if (methodCategory === 'konversi_saldo') {
+            return;
+        }
+
+        if (midtransEnabled || tripayEnabled) {
+            setMethodCategory('qris');
+            return;
+        }
+
+        setMethodCategory('konversi_saldo');
+    }, [midtransEnabled, tripayEnabled, methodCategory]);
 
     React.useEffect(() => {
         const uid = Number(auth?.user?.id);
@@ -148,7 +172,9 @@ export default function DepositPage() {
                 setActivePending({
                     id: Number(deposit.id),
                     status: String(deposit.status ?? 'pending'),
+                    payment_method: String(deposit.payment_method ?? ''),
                     tripay_checkout_url: deposit.tripay_checkout_url ? String(deposit.tripay_checkout_url) : null,
+                    payment_url: deposit.payment_url ? String(deposit.payment_url) : null,
                     created_at: deposit.created_at ? String(deposit.created_at) : null,
                     expired_at: deposit.expired_at ? String(deposit.expired_at) : null,
                 });
@@ -304,6 +330,50 @@ export default function DepositPage() {
 
         try {
             const xsrf = getXsrfToken();
+            if (methodCategory === 'qris' && midtransEnabled) {
+                const res = await fetch('/api/deposits/midtrans', {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        ...(xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}),
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        amount: amt,
+                        channel: 'qris',
+                    }),
+                });
+
+                const json = (await res.json()) as any;
+
+                if (!res.ok || !json?.success) {
+                    toast.error(json?.message ?? t('Gagal membuat deposit.'));
+                    return;
+                }
+
+                toast.success(json?.message ?? t('Deposit dibuat.'));
+
+                const url = String(json?.payment_url ?? json?.checkout_url ?? '');
+                if (url) {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                }
+
+                router.get(
+                    '/history/deposit',
+                    {
+                        page: 1,
+                        per_page: 25,
+                    },
+                    {
+                        preserveState: false,
+                        preserveScroll: false,
+                        replace: true,
+                    }
+                );
+                return;
+            }
+
             const phone = typeof auth?.user?.phone === 'string' ? auth.user.phone : null;
 
             const res = await fetch('/api/deposits/tripay', {
@@ -381,9 +451,9 @@ export default function DepositPage() {
                                 </div>
 
                                 <div className="mt-3 flex flex-wrap gap-2">
-                                    {activePending.tripay_checkout_url ? (
+                                    {activePending.payment_url ? (
                                         <Button asChild size="sm" variant="outline">
-                                            <a href={activePending.tripay_checkout_url} target="_blank" rel="noopener noreferrer">
+                                            <a href={activePending.payment_url} target="_blank" rel="noopener noreferrer">
                                                 {t('Bayar')}
                                             </a>
                                         </Button>
@@ -404,7 +474,9 @@ export default function DepositPage() {
                             <div className="mt-4 rounded-lg border border-sky-500/30 bg-sky-500/10 p-4 text-sm text-sky-900 dark:text-sky-100">
                                 <div className="font-semibold">{t('Tripay dinonaktifkan sementara')}</div>
                                 <div className="mt-1 text-muted-foreground">
-                                    {t('Metode QRIS dan E-Wallet dari Tripay untuk sementara tidak tersedia saat proses migrasi ke Midtrans.')}
+                                    {locale === 'en'
+                                        ? 'Tripay E-Wallet methods are temporarily unavailable during the migration to Midtrans.'
+                                        : 'Metode E-Wallet dari Tripay untuk sementara tidak tersedia saat proses migrasi ke Midtrans.'}
                                 </div>
                             </div>
                         ) : null}
@@ -414,7 +486,7 @@ export default function DepositPage() {
                                 <div className="flex items-center gap-2 text-sm font-semibold">{t('Pilih Metode Pembayaran')}</div>
 
                                 <div className="space-y-3">
-                                    {tripayEnabled ? (
+                                    {(midtransEnabled || tripayEnabled) ? (
                                         <button
                                             type="button"
                                             className={
@@ -435,7 +507,11 @@ export default function DepositPage() {
                                             </span>
                                             <div className="flex-1">
                                                 <div className="text-sm font-semibold">QRIS</div>
-                                                <div className="text-xs text-muted-foreground">{t('Pembayaran QRIS otomatis')}</div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {midtransEnabled
+                                                        ? (locale === 'en' ? 'Automatic QRIS payment via Midtrans' : 'Pembayaran QRIS otomatis via Midtrans')
+                                                        : t('Pembayaran QRIS otomatis')}
+                                                </div>
                                             </div>
                                             <span
                                                 className={
@@ -553,6 +629,24 @@ export default function DepositPage() {
                                                     <SelectItem value="SHOPEEPAY">ShopeePay</SelectItem>
                                                 </SelectContent>
                                             </Select>
+                                        </div>
+                                    ) : null}
+
+                                    {methodCategory === 'qris' && midtransEnabled && Number(amount) > 0 ? (
+                                        <div className="rounded-xl border border-border/60 bg-muted/10 p-4">
+                                            <div className="text-sm font-semibold">QRIS via Midtrans</div>
+                                            <div className="mt-2 text-xs text-muted-foreground">
+                                                {locale === 'en'
+                                                    ? 'The QRIS payment will be created through Midtrans Snap and redirected directly to the Midtrans payment page.'
+                                                    : 'Pembayaran QRIS akan dibuat melalui Midtrans Snap dan diarahkan langsung ke halaman pembayaran Midtrans.'}
+                                            </div>
+                                            {Number(midtransAdminFee) > 0 ? (
+                                                <div className="mt-2 text-xs text-muted-foreground">
+                                                    {locale === 'en'
+                                                        ? `An admin fee of Rp ${formatRupiah(Number(midtransAdminFee))} will be added automatically.`
+                                                        : `Biaya admin Rp ${formatRupiah(Number(midtransAdminFee))} akan ditambahkan otomatis.`}
+                                                </div>
+                                            ) : null}
                                         </div>
                                     ) : null}
 

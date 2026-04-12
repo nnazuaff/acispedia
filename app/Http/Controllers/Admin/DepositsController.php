@@ -95,6 +95,12 @@ class DepositsController extends Controller
                         ->orWhere('amount', $qInt)
                         ->orWhere('final_amount', $qInt);
                 }
+
+                $sub->orWhere('tripay_merchant_ref', 'like', "%{$q}%")
+                    ->orWhere('tripay_reference', 'like', "%{$q}%")
+                    ->orWhere('tripay_pay_code', 'like', "%{$q}%")
+                    ->orWhere('tripay_method', 'like', "%{$q}%")
+                    ->orWhere('provider_payload', 'like', "%{$q}%");
             });
         }
 
@@ -113,6 +119,8 @@ class DepositsController extends Controller
                 $query->whereNotNull('tripay_method')->whereIn(DB::raw('UPPER(tripay_method)'), ['OVO', 'DANA', 'SHOPEEPAY']);
             } elseif ($methodKey === 'tripay') {
                 $query->where('payment_method', 'tripay');
+            } elseif ($methodKey === 'midtrans') {
+                $query->where('payment_method', 'midtrans');
             } elseif ($methodKey === 'konversi_saldo') {
                 $query->where('payment_method', 'konversi_saldo');
             } else {
@@ -140,6 +148,11 @@ class DepositsController extends Controller
                 'tripay_pay_code' => $deposit->tripay_pay_code !== null ? (string) $deposit->tripay_pay_code : null,
                 'tripay_checkout_url' => $deposit->tripay_checkout_url !== null ? (string) $deposit->tripay_checkout_url : null,
                 'tripay_status' => $deposit->tripay_status !== null ? (string) $deposit->tripay_status : null,
+                'payment_url' => $deposit->paymentUrl(),
+                'payment_channel' => $deposit->paymentChannel(),
+                'provider_reference' => $deposit->providerReference(),
+                'provider_transaction_id' => $deposit->providerTransactionId(),
+                'provider_status' => $deposit->providerStatus(),
                 'created_at' => $deposit->created_at?->toISOString(),
                 'created_at_wib' => $deposit->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'expired_at' => $deposit->expired_at?->toISOString(),
@@ -192,6 +205,11 @@ class DepositsController extends Controller
                 'tripay_pay_code' => $deposit->tripay_pay_code,
                 'tripay_checkout_url' => $deposit->tripay_checkout_url,
                 'tripay_status' => $deposit->tripay_status,
+                'payment_url' => $deposit->paymentUrl(),
+                'payment_channel' => $deposit->paymentChannel(),
+                'provider_reference' => $deposit->providerReference(),
+                'provider_transaction_id' => $deposit->providerTransactionId(),
+                'provider_status' => $deposit->providerStatus(),
                 'expired_at_wib' => $deposit->expired_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'processed_at_wib' => $deposit->processed_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'created_at_wib' => $deposit->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),

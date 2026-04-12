@@ -45,6 +45,11 @@ type DepositRow = {
     tripay_pay_code: string | null;
     tripay_checkout_url: string | null;
     tripay_status: string | null;
+    payment_url: string | null;
+    payment_channel: string | null;
+    provider_reference: string | null;
+    provider_transaction_id: string | null;
+    provider_status: string | null;
     created_at: string | null;
     created_at_wib: string | null;
     expired_at: string | null;
@@ -85,29 +90,32 @@ function adminFee(amount: number, finalAmount: number): number {
     return fee > 0 ? fee : 0;
 }
 
-function methodLabel(row: { payment_method: string; tripay_method: string | null }): string {
-    const tripay = String(row.tripay_method ?? '').trim();
-    const upper = tripay.toUpperCase();
+function methodLabel(row: { payment_method: string; tripay_method: string | null; payment_channel?: string | null }): string {
+    const channel = String(row.payment_channel ?? row.tripay_method ?? '').trim();
+    const upper = channel.toUpperCase();
 
     if (upper === 'QRIS2' || upper.startsWith('QRIS')) {
         return 'QRIS';
     }
 
-    if (['OVO', 'DANA', 'SHOPEEPAY'].includes(upper)) {
+    if (['OVO', 'DANA', 'SHOPEEPAY', 'GOPAY'].includes(upper)) {
         return 'E-Wallet';
     }
 
-    if (upper.endsWith('VA')) {
+    if (upper.endsWith('VA') || upper.endsWith('_TRANSFER') || upper.includes('TRANSFER')) {
         return 'Virtual Account';
     }
 
-    if (tripay) {
-        return tripay;
+    if (channel) {
+        return channel;
     }
 
     const payment = String(row.payment_method ?? '').trim();
     if (payment.toLowerCase() === 'konversi_saldo') {
         return 'Konversi Saldo';
+    }
+    if (payment.toLowerCase() === 'midtrans') {
+        return 'Midtrans';
     }
     if (payment.toLowerCase() === 'tripay') {
         return 'Pembayaran';
@@ -459,6 +467,7 @@ export default function HistoryDepositPage() {
                                     <SelectContent align="end">
                                         <SelectItem value="all">{t('Semua')}</SelectItem>
                                         <SelectItem value="qris">QRIS</SelectItem>
+                                        <SelectItem value="midtrans">Midtrans</SelectItem>
                                         <SelectItem value="ewallet">E-Wallet</SelectItem>
                                         <SelectItem value="konversi_saldo">{t('Konversi Saldo')}</SelectItem>
                                     </SelectContent>
@@ -587,12 +596,12 @@ export default function HistoryDepositPage() {
                                                                     >
                                                                         {t('Detail')}
                                                                     </DropdownMenuItem>
-                                                                    {row.status === 'pending' && row.tripay_checkout_url ? (
+                                                                    {row.status === 'pending' && row.payment_url ? (
                                                                         <>
                                                                             <DropdownMenuSeparator />
                                                                             <DropdownMenuItem asChild>
                                                                                 <a
-                                                                                    href={row.tripay_checkout_url}
+                                                                                    href={row.payment_url}
                                                                                     target="_blank"
                                                                                     rel="noopener noreferrer"
                                                                                 >
@@ -860,11 +869,40 @@ export default function HistoryDepositPage() {
                                     </div>
                                 </div>
 
-                                {selectedDeposit.status === 'pending' && selectedDeposit.tripay_checkout_url ? (
+                                {selectedDeposit.provider_reference ? (
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Referensi provider')}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="text-sm font-medium">{selectedDeposit.provider_reference}</div>
+                                            <Button
+                                                type="button"
+                                                size="icon"
+                                                variant="outline"
+                                                onClick={() => copy(String(selectedDeposit.provider_reference))}
+                                                aria-label={t('Salin referensi')}
+                                            >
+                                                <Copy className="size-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : null}
+
+                                {selectedDeposit.provider_status ? (
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Status pembayaran')}
+                                        </div>
+                                        <div className="text-sm font-medium">{selectedDeposit.provider_status}</div>
+                                    </div>
+                                ) : null}
+
+                                {selectedDeposit.status === 'pending' && selectedDeposit.payment_url ? (
                                     <div className="flex flex-wrap gap-2">
                                         <Button asChild variant="outline">
                                             <a
-                                                href={selectedDeposit.tripay_checkout_url}
+                                                href={selectedDeposit.payment_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >

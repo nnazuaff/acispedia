@@ -14,6 +14,11 @@ type ConnectionsPayload = {
             configured: boolean;
             profile: unknown;
         };
+        midtrans: {
+            enabled: boolean;
+            configured: boolean;
+            environment: string;
+        };
         tripay: {
             enabled: boolean;
             configured: boolean;
@@ -92,6 +97,23 @@ export default function AdminConnections() {
                             ) : (
                                 <div className="mt-4 text-xs text-muted-foreground">{t('Profil tidak tersedia.')}</div>
                             )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-sm font-semibold">Midtrans</div>
+                            <div className="mt-2 text-sm">
+                                {t('Status')}: {!connections?.midtrans?.enabled
+                                    ? t('Dinonaktifkan sementara')
+                                    : connections?.midtrans?.configured
+                                        ? t('Terkonfigurasi')
+                                        : t('Belum dikonfigurasi')}
+                            </div>
+
+                            <div className="mt-4 text-xs text-muted-foreground">
+                                Env: {connections?.midtrans?.environment ?? 'sandbox'}
+                            </div>
                         </CardContent>
                     </Card>
 

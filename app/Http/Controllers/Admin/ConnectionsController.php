@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Services\MedanpediaClient;
+use App\Services\MidtransClient;
 use App\Services\TripayClient;
 use App\Support\AdminActivity;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ class ConnectionsController extends Controller
     public function index(Request $request, MedanpediaClient $medanpedia): Response
     {
         $medanpediaConfigured = $medanpedia->isConfigured();
+        $midtransEnabled = MidtransClient::isEnabled();
+        $midtransConfigured = MidtransClient::isConfigured();
         $tripayEnabled = TripayClient::isEnabled();
         $tripayConfigured = TripayClient::isConfigured();
 
@@ -42,6 +45,11 @@ class ConnectionsController extends Controller
                 'medanpedia' => [
                     'configured' => $medanpediaConfigured,
                     'profile' => $medanpediaProfile,
+                ],
+                'midtrans' => [
+                    'enabled' => $midtransEnabled,
+                    'configured' => $midtransConfigured,
+                    'environment' => MidtransClient::isProduction() ? 'production' : 'sandbox',
                 ],
                 'tripay' => [
                     'enabled' => $tripayEnabled,

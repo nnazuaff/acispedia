@@ -76,6 +76,11 @@ class HistoryController extends Controller
                 'tripay_pay_code' => $deposit->tripay_pay_code ? (string) $deposit->tripay_pay_code : null,
                 'tripay_checkout_url' => $deposit->tripay_checkout_url ? (string) $deposit->tripay_checkout_url : null,
                 'tripay_status' => $deposit->tripay_status ? (string) $deposit->tripay_status : null,
+                'payment_url' => $deposit->paymentUrl(),
+                'payment_channel' => $deposit->paymentChannel(),
+                'provider_reference' => $deposit->providerReference(),
+                'provider_transaction_id' => $deposit->providerTransactionId(),
+                'provider_status' => $deposit->providerStatus(),
                 'created_at' => $deposit->created_at?->toISOString(),
                 'expired_at' => $deposit->expired_at?->toISOString(),
                 'processed_at' => $deposit->processed_at?->toISOString(),
@@ -212,6 +217,8 @@ class HistoryController extends Controller
             } elseif ($method === 'qris') {
                 $query->where('payment_method', 'tripay');
                 $query->whereNotIn(DB::raw("UPPER(COALESCE(tripay_method, ''))"), ['OVO', 'DANA', 'SHOPEEPAY']);
+            } elseif ($method === 'midtrans') {
+                $query->where('payment_method', 'midtrans');
             } else {
                 $query->where('payment_method', $method);
             }
@@ -227,7 +234,8 @@ class HistoryController extends Controller
                     ->where('tripay_merchant_ref', 'like', '%'.$q.'%')
                     ->orWhere('tripay_reference', 'like', '%'.$q.'%')
                     ->orWhere('tripay_pay_code', 'like', '%'.$q.'%')
-                    ->orWhere('tripay_method', 'like', '%'.$q.'%');
+                    ->orWhere('tripay_method', 'like', '%'.$q.'%')
+                    ->orWhere('provider_payload', 'like', '%'.$q.'%');
             });
         }
 
@@ -247,6 +255,11 @@ class HistoryController extends Controller
                     'tripay_pay_code' => $deposit->tripay_pay_code ? (string) $deposit->tripay_pay_code : null,
                     'tripay_checkout_url' => $deposit->tripay_checkout_url ? (string) $deposit->tripay_checkout_url : null,
                     'tripay_status' => $deposit->tripay_status ? (string) $deposit->tripay_status : null,
+                    'payment_url' => $deposit->paymentUrl(),
+                    'payment_channel' => $deposit->paymentChannel(),
+                    'provider_reference' => $deposit->providerReference(),
+                    'provider_transaction_id' => $deposit->providerTransactionId(),
+                    'provider_status' => $deposit->providerStatus(),
                     'created_at' => $deposit->created_at?->toISOString(),
                     'created_at_wib' => $this->fmtWib($deposit->created_at),
                     'expired_at' => $deposit->expired_at?->toISOString(),
