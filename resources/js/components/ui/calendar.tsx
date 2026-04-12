@@ -30,8 +30,8 @@ function Calendar({
         [UI.Months]: "flex flex-col sm:flex-row gap-3",
         [UI.Month]: "space-y-2",
         [UI.MonthCaption]: "relative flex items-center justify-center px-1 pt-1",
-        [UI.CaptionLabel]: "text-sm font-medium",
-        [UI.Nav]: "absolute inset-x-1 top-1 flex items-center justify-between",
+        [UI.CaptionLabel]: "pointer-events-none text-sm font-medium",
+        [UI.Nav]: "absolute inset-x-1 top-1 z-10 flex items-center justify-between",
         [UI.PreviousMonthButton]: cn(
           buttonVariants({ variant: "outline", size: "icon" }),
           "size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
@@ -61,11 +61,11 @@ function Calendar({
 
         // Range selection states (apply to Day cell; we style the inner button via selectors)
         [SelectionState.range_start]:
-          "rounded-l-md bg-accent [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
+          "rounded-l-md bg-emerald-500/15 [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
         [SelectionState.range_end]:
-          "rounded-r-md bg-accent [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
+          "rounded-r-md bg-emerald-500/15 [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
         [SelectionState.range_middle]:
-          "bg-accent [&>button]:bg-transparent [&>button]:text-accent-foreground [&>button]:hover:bg-transparent",
+          "bg-emerald-500/15 [&>button]:bg-transparent [&>button]:text-foreground [&>button]:hover:bg-transparent",
         [SelectionState.selected]:
           "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
 

@@ -134,7 +134,6 @@ export default function AdminFinancialReport() {
     };
 
     const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
-    const [dateAnchor, setDateAnchor] = React.useState<Date>(() => getTodayLocalDate());
 
     const [dateFrom, setDateFrom] = React.useState(() => {
         const from = String(filters?.date_from ?? '').trim();
@@ -373,23 +372,7 @@ export default function AdminFinancialReport() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                             <div className="lg:col-span-4">
                                 <Label htmlFor="date_from">{t('Rentang Tanggal')}</Label>
-                                <Popover
-                                    open={isDatePickerOpen}
-                                    onOpenChange={(open) => {
-                                        setIsDatePickerOpen(open);
-                                        if (!open) return;
-
-                                        const anchor = dateRange?.from ?? getTodayLocalDate();
-                                        setDateAnchor(anchor);
-
-                                        if (!dateRange?.from && !dateRange?.to) {
-                                            const ymd = formatLocalDateToYmd(anchor);
-                                            setDateFrom(ymd);
-                                            setDateTo(ymd);
-                                            setDateRange({ from: anchor, to: anchor });
-                                        }
-                                    }}
-                                >
+                                <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
                                     <PopoverTrigger asChild>
                                         <button
                                             type="button"
@@ -418,17 +401,14 @@ export default function AdminFinancialReport() {
                                             mode="range"
                                             numberOfMonths={2}
                                             selected={dateRange}
-                                            onDayClick={(day) => {
-                                                const clicked = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-                                                const anchor = dateAnchor ?? getTodayLocalDate();
+                                            onSelect={(next: DateRange | undefined) => {
+                                                setDateRange(next);
+                                                setDateFrom(next?.from ? formatLocalDateToYmd(next.from) : '');
+                                                setDateTo(next?.to ? formatLocalDateToYmd(next.to) : '');
 
-                                                const from = clicked < anchor ? clicked : anchor;
-                                                const to = clicked < anchor ? anchor : clicked;
-
-                                                setDateRange({ from, to });
-                                                setDateFrom(formatLocalDateToYmd(from));
-                                                setDateTo(formatLocalDateToYmd(to));
-                                                setIsDatePickerOpen(false);
+                                                if (next?.from && next?.to) {
+                                                    setIsDatePickerOpen(false);
+                                                }
                                             }}
                                         />
                                     </PopoverContent>
