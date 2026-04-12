@@ -402,11 +402,14 @@ export default function AdminFinancialReport() {
                                             numberOfMonths={2}
                                             selected={dateRange}
                                             onSelect={(next: DateRange | undefined) => {
+                                                const prevHadEnd = Boolean(dateRange?.to);
+
                                                 setDateRange(next);
                                                 setDateFrom(next?.from ? formatLocalDateToYmd(next.from) : '');
                                                 setDateTo(next?.to ? formatLocalDateToYmd(next.to) : '');
 
-                                                if (next?.from && next?.to) {
+                                                // Auto-close only when the user just picked the end date.
+                                                if (!prevHadEnd && next?.to) {
                                                     setIsDatePickerOpen(false);
                                                 }
                                             }}

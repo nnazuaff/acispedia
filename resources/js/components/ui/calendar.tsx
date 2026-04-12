@@ -61,11 +61,11 @@ function Calendar({
 
         // Range selection states (apply to Day cell; we style the inner button via selectors)
         [SelectionState.range_start]:
-          "rounded-l-md bg-emerald-500/15 [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
+          "rounded-l-md bg-emerald-500/20 [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
         [SelectionState.range_end]:
-          "rounded-r-md bg-emerald-500/15 [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
+          "rounded-r-md bg-emerald-500/20 [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
         [SelectionState.range_middle]:
-          "bg-emerald-500/15 [&>button]:bg-transparent [&>button]:text-foreground [&>button]:hover:bg-transparent",
+          "bg-emerald-500/20 [&>button]:bg-transparent [&>button]:text-foreground [&>button]:hover:bg-transparent",
         [SelectionState.selected]:
           "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground",
 
