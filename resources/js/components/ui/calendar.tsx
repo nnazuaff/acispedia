@@ -25,32 +25,32 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-2", className)}
       classNames={{
-        [UI.Months]: "flex flex-col sm:flex-row gap-4",
-        [UI.Month]: "space-y-4",
-        [UI.MonthCaption]: "flex justify-center pt-1 relative items-center",
+        [UI.Months]: "flex flex-col sm:flex-row gap-3",
+        [UI.Month]: "space-y-2",
+        [UI.MonthCaption]: "relative flex items-center justify-center px-1 pt-1",
         [UI.CaptionLabel]: "text-sm font-medium",
-        [UI.Nav]: "flex items-center gap-1",
+        [UI.Nav]: "absolute inset-x-1 top-1 flex items-center justify-between",
         [UI.PreviousMonthButton]: cn(
           buttonVariants({ variant: "outline", size: "icon" }),
-          "absolute left-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
         [UI.NextMonthButton]: cn(
           buttonVariants({ variant: "outline", size: "icon" }),
-          "absolute right-1 size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
         [UI.MonthGrid]: "w-full border-collapse space-y-1",
         [UI.Weekdays]: "flex",
         [UI.Weekday]:
-          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+          "text-muted-foreground rounded-md w-8 font-normal text-[0.75rem]",
         [UI.Weeks]: "flex flex-col",
-        [UI.Week]: "flex w-full mt-2",
+        [UI.Week]: "flex w-full mt-1.5",
         [UI.Day]:
-          "relative flex h-9 w-9 items-center justify-center p-0 text-center text-sm focus-within:relative focus-within:z-20",
+          "relative flex h-8 w-8 items-center justify-center p-0 text-center text-sm focus-within:relative focus-within:z-20",
         [UI.DayButton]: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal"
+          "h-8 w-8 p-0 text-[0.82rem] font-normal"
         ),
 
         // Flags

@@ -115,6 +115,11 @@ function formatLocalDateToYmd(date: Date): string {
     return `${y}-${m}-${d}`;
 }
 
+function getTodayLocalDate(): Date {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
 export default function AdminFinancialReport() {
     const { t } = useI18n();
     const confirm = useConfirm();
@@ -128,25 +133,49 @@ export default function AdminFinancialReport() {
         today_sales: TodaySales;
     };
 
-    const [dateFrom, setDateFrom] = React.useState(filters?.date_from ?? '');
-    const [dateTo, setDateTo] = React.useState(filters?.date_to ?? '');
+    const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
+    const [dateAnchor, setDateAnchor] = React.useState<Date>(() => getTodayLocalDate());
+
+    const [dateFrom, setDateFrom] = React.useState(() => {
+        const from = String(filters?.date_from ?? '').trim();
+        return from !== '' ? from : formatLocalDateToYmd(getTodayLocalDate());
+    });
+    const [dateTo, setDateTo] = React.useState(() => {
+        const to = String(filters?.date_to ?? '').trim();
+        return to !== '' ? to : formatLocalDateToYmd(getTodayLocalDate());
+    });
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>(() => {
         const from = parseYmdToLocalDate(filters?.date_from ?? '');
         const to = parseYmdToLocalDate(filters?.date_to ?? '');
-        if (!from && !to) return undefined;
-        return { from: from, to: to };
+        if (!from && !to) {
+            const today = getTodayLocalDate();
+            return { from: today, to: today };
+        }
+        return { from: from ?? to, to: to ?? from };
     });
 
     React.useEffect(() => {
-        setDateFrom(filters?.date_from ?? '');
-        setDateTo(filters?.date_to ?? '');
-        const from = parseYmdToLocalDate(filters?.date_from ?? '');
-        const to = parseYmdToLocalDate(filters?.date_to ?? '');
+        const fromRaw = String(filters?.date_from ?? '').trim();
+        const toRaw = String(filters?.date_to ?? '').trim();
+
+        const from = parseYmdToLocalDate(fromRaw);
+        const to = parseYmdToLocalDate(toRaw);
+
         if (!from && !to) {
-            setDateRange(undefined);
+            const today = getTodayLocalDate();
+            const todayYmd = formatLocalDateToYmd(today);
+            setDateFrom(todayYmd);
+            setDateTo(todayYmd);
+            setDateRange({ from: today, to: today });
             return;
         }
-        setDateRange({ from, to });
+
+        const resolvedFrom = from ?? to;
+        const resolvedTo = to ?? from;
+
+        setDateFrom(resolvedFrom ? formatLocalDateToYmd(resolvedFrom) : '');
+        setDateTo(resolvedTo ? formatLocalDateToYmd(resolvedTo) : '');
+        setDateRange({ from: resolvedFrom, to: resolvedTo });
     }, [filters?.date_from, filters?.date_to]);
 
     const isEditing = Boolean(editing?.id);
@@ -344,7 +373,23 @@ export default function AdminFinancialReport() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                             <div className="lg:col-span-4">
                                 <Label htmlFor="date_from">{t('Rentang Tanggal')}</Label>
-                                <Popover>
+                                <Popover
+                                    open={isDatePickerOpen}
+                                    onOpenChange={(open) => {
+                                        setIsDatePickerOpen(open);
+                                        if (!open) return;
+
+                                        const anchor = dateRange?.from ?? getTodayLocalDate();
+                                        setDateAnchor(anchor);
+
+                                        if (!dateRange?.from && !dateRange?.to) {
+                                            const ymd = formatLocalDateToYmd(anchor);
+                                            setDateFrom(ymd);
+                                            setDateTo(ymd);
+                                            setDateRange({ from: anchor, to: anchor });
+                                        }
+                                    }}
+                                >
                                     <PopoverTrigger asChild>
                                         <button
                                             type="button"
@@ -373,10 +418,17 @@ export default function AdminFinancialReport() {
                                             mode="range"
                                             numberOfMonths={2}
                                             selected={dateRange}
-                                            onSelect={(next: DateRange | undefined) => {
-                                                setDateRange(next);
-                                                setDateFrom(next?.from ? formatLocalDateToYmd(next.from) : '');
-                                                setDateTo(next?.to ? formatLocalDateToYmd(next.to) : '');
+                                            onDayClick={(day) => {
+                                                const clicked = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+                                                const anchor = dateAnchor ?? getTodayLocalDate();
+
+                                                const from = clicked < anchor ? clicked : anchor;
+                                                const to = clicked < anchor ? anchor : clicked;
+
+                                                setDateRange({ from, to });
+                                                setDateFrom(formatLocalDateToYmd(from));
+                                                setDateTo(formatLocalDateToYmd(to));
+                                                setIsDatePickerOpen(false);
                                             }}
                                         />
                                     </PopoverContent>
