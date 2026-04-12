@@ -208,9 +208,11 @@ class UsersController extends Controller
                     'email' => $validated['email'],
                     'phone' => $normalizedPhone,
                     'password' => Hash::make((string) $validated['password']),
-                    // Admin-created accounts are considered ready-to-use.
-                    'email_verified_at' => now(),
                 ]);
+
+                // Admin-created accounts are considered ready-to-use.
+                // `email_verified_at` is not fillable, so set it explicitly.
+                $user->forceFill(['email_verified_at' => now()])->save();
 
                 UserBalance::query()->create([
                     'user_id' => (int) $user->id,

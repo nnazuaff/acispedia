@@ -37,6 +37,14 @@ class OrdersController extends Controller
         } else {
             $id = '';
         }
+
+        $userId = trim((string) $request->query('user_id', ''));
+        $userIdInt = null;
+        if ($userId !== '' && ctype_digit($userId)) {
+            $userIdInt = (int) $userId;
+        } else {
+            $userId = '';
+        }
         $status = trim((string) $request->query('status', ''));
         $target = trim((string) $request->query('target', ''));
         $dateFrom = trim((string) $request->query('date_from', now()->toDateString()));
@@ -54,7 +62,13 @@ class OrdersController extends Controller
 
         if ($idInt !== null) {
             $query->where('id', $idInt);
-        } else {
+        }
+
+        if ($userIdInt !== null) {
+            $query->where('user_id', $userIdInt);
+        }
+
+        if ($idInt === null && $userIdInt === null) {
             $query->whereBetween('created_at', [$rangeStart, $rangeEnd]);
         }
 
@@ -131,6 +145,7 @@ class OrdersController extends Controller
             'filters' => [
                 'q' => $q,
                 'id' => $id,
+                'user_id' => $userId,
                 'status' => $status,
                 'target' => $target,
                 'date_from' => $rangeStart->toDateString(),

@@ -34,6 +34,14 @@ class DepositsController extends Controller
         } else {
             $id = '';
         }
+
+        $userId = trim((string) $request->query('user_id', ''));
+        $userIdInt = null;
+        if ($userId !== '' && ctype_digit($userId)) {
+            $userIdInt = (int) $userId;
+        } else {
+            $userId = '';
+        }
         $status = trim((string) $request->query('status', ''));
         $method = trim((string) $request->query('method', ''));
         $dateFrom = trim((string) $request->query('date_from', now()->toDateString()));
@@ -60,7 +68,13 @@ class DepositsController extends Controller
 
         if ($idInt !== null) {
             $query->where('id', $idInt);
-        } else {
+        }
+
+        if ($userIdInt !== null) {
+            $query->where('user_id', $userIdInt);
+        }
+
+        if ($idInt === null && $userIdInt === null) {
             $query->whereBetween('created_at', [$rangeStart, $rangeEnd]);
         }
 
@@ -150,6 +164,7 @@ class DepositsController extends Controller
             'filters' => [
                 'q' => $q,
                 'id' => $id,
+                'user_id' => $userId,
                 'status' => $status,
                 'method' => $method,
                 'date_from' => $rangeStart->toDateString(),

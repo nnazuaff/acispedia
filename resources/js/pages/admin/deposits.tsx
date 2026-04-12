@@ -90,6 +90,7 @@ type Stats = {
 type Filters = {
     q: string;
     id: string;
+    user_id: string;
     status: string;
     method: string;
     date_from: string;
@@ -122,6 +123,7 @@ export default function AdminDeposits() {
 
     const [q, setQ] = React.useState(filters?.q ?? '');
     const [id, setId] = React.useState(filters?.id ?? '');
+    const [userId, setUserId] = React.useState(filters?.user_id ?? '');
     const [status, setStatus] = React.useState(filters?.status ?? '');
     const [method, setMethod] = React.useState(filters?.method ?? '');
     const [dateFrom, setDateFrom] = React.useState(filters?.date_from ?? '');
@@ -131,17 +133,19 @@ export default function AdminDeposits() {
     React.useEffect(() => {
         setQ(filters?.q ?? '');
         setId(filters?.id ?? '');
+        setUserId(filters?.user_id ?? '');
         setStatus(filters?.status ?? '');
         setMethod(filters?.method ?? '');
         setDateFrom(filters?.date_from ?? '');
         setDateTo(filters?.date_to ?? '');
         setPerPage(Number(filters?.per_page ?? 25));
-    }, [filters?.q, filters?.id, filters?.status, filters?.method, filters?.date_from, filters?.date_to, filters?.per_page]);
+    }, [filters?.q, filters?.id, filters?.user_id, filters?.status, filters?.method, filters?.date_from, filters?.date_to, filters?.per_page]);
 
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
         const merged = {
             q,
             id,
+            user_id: userId,
             status,
             method,
             date_from: dateFrom,
@@ -150,16 +154,25 @@ export default function AdminDeposits() {
             ...(next ?? {}),
         };
 
-        router.get('/deposits', { ...merged, id: String(merged.id ?? '').trim() } as any, {
+        router.get(
+            '/deposits',
+            {
+                ...merged,
+                id: String(merged.id ?? '').trim(),
+                user_id: String(merged.user_id ?? '').trim(),
+            } as any,
+            {
             preserveScroll: true,
             preserveState: true,
             replace: true,
-        });
+            }
+        );
     }
 
     function resetFilters() {
         setQ('');
         setId('');
+        setUserId('');
         setStatus('');
         setMethod('');
         const today = new Date().toISOString().slice(0, 10);
@@ -172,6 +185,7 @@ export default function AdminDeposits() {
             {
                 q: '',
                 id: '',
+                user_id: '',
                 status: '',
                 method: '',
                 date_from: today,
@@ -245,18 +259,30 @@ export default function AdminDeposits() {
 
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-8">
                             <div className="lg:col-span-2">
                                 <Label htmlFor="q">{t('Cari')}</Label>
                                 <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nama / email / ID deposit / nominal')} />
                             </div>
 
                             <div>
-                                <Label htmlFor="id">{t('ID')}</Label>
+                                <Label htmlFor="id">{t('ID Deposit')}</Label>
                                 <Input
                                     id="id"
                                     value={id}
                                     onChange={(e) => setId(e.target.value.replace(/\D+/g, ''))}
+                                    placeholder="123"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="user_id">{t('User ID')}</Label>
+                                <Input
+                                    id="user_id"
+                                    value={userId}
+                                    onChange={(e) => setUserId(e.target.value.replace(/\D+/g, ''))}
                                     placeholder="123"
                                     inputMode="numeric"
                                     pattern="[0-9]*"

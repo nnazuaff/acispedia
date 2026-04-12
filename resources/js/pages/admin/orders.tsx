@@ -54,6 +54,7 @@ type Stats = {
 type Filters = {
     q: string;
     id: string;
+    user_id: string;
     status: string;
     target: string;
     date_from: string;
@@ -87,6 +88,7 @@ export default function AdminOrders() {
 
     const [q, setQ] = React.useState(filters?.q ?? '');
     const [id, setId] = React.useState(filters?.id ?? '');
+    const [userId, setUserId] = React.useState(filters?.user_id ?? '');
     const [status, setStatus] = React.useState(filters?.status ?? '');
     const [target, setTarget] = React.useState(filters?.target ?? '');
     const [dateFrom, setDateFrom] = React.useState(filters?.date_from ?? '');
@@ -96,17 +98,19 @@ export default function AdminOrders() {
     React.useEffect(() => {
         setQ(filters?.q ?? '');
         setId(filters?.id ?? '');
+        setUserId(filters?.user_id ?? '');
         setStatus(filters?.status ?? '');
         setTarget(filters?.target ?? '');
         setDateFrom(filters?.date_from ?? '');
         setDateTo(filters?.date_to ?? '');
         setPerPage(Number(filters?.per_page ?? 25));
-    }, [filters?.q, filters?.id, filters?.status, filters?.target, filters?.date_from, filters?.date_to, filters?.per_page]);
+    }, [filters?.q, filters?.id, filters?.user_id, filters?.status, filters?.target, filters?.date_from, filters?.date_to, filters?.per_page]);
 
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
         const merged = {
             q,
             id,
+            user_id: userId,
             status,
             target,
             date_from: dateFrom,
@@ -115,16 +119,25 @@ export default function AdminOrders() {
             ...(next ?? {}),
         };
 
-        router.get('/orders', { ...merged, id: String(merged.id ?? '').trim() } as any, {
+        router.get(
+            '/orders',
+            {
+                ...merged,
+                id: String(merged.id ?? '').trim(),
+                user_id: String(merged.user_id ?? '').trim(),
+            } as any,
+            {
             preserveScroll: true,
             preserveState: true,
             replace: true,
-        });
+            }
+        );
     }
 
     function resetFilters() {
         setQ('');
         setId('');
+        setUserId('');
         setStatus('');
         setTarget('');
         const today = new Date().toISOString().slice(0, 10);
@@ -137,6 +150,7 @@ export default function AdminOrders() {
             {
                 q: '',
                 id: '',
+                user_id: '',
                 status: '',
                 target: '',
                 date_from: today,
@@ -212,7 +226,7 @@ export default function AdminOrders() {
 
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-8">
                             <div className="lg:col-span-2">
                                 <Label htmlFor="q">{t('Cari')}</Label>
                                 <Input
@@ -224,11 +238,23 @@ export default function AdminOrders() {
                             </div>
 
                             <div>
-                                <Label htmlFor="id">{t('ID')}</Label>
+                                <Label htmlFor="id">{t('ID Pesanan')}</Label>
                                 <Input
                                     id="id"
                                     value={id}
                                     onChange={(e) => setId(e.target.value.replace(/\D+/g, ''))}
+                                    placeholder="123"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="user_id">{t('User ID')}</Label>
+                                <Input
+                                    id="user_id"
+                                    value={userId}
+                                    onChange={(e) => setUserId(e.target.value.replace(/\D+/g, ''))}
                                     placeholder="123"
                                     inputMode="numeric"
                                     pattern="[0-9]*"
