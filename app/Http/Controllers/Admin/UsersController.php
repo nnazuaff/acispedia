@@ -27,6 +27,11 @@ class UsersController extends Controller
     public function index(Request $request): Response
     {
         $q = trim((string) $request->query('q', ''));
+        $status = strtolower(trim((string) $request->query('status', '')));
+        if (! in_array($status, ['active', 'inactive', 'banned'], true)) {
+            $status = '';
+        }
+
         $perPage = (int) $request->query('per_page', 25);
         if (!in_array($perPage, [25, 50, 100, 200], true)) {
             $perPage = 25;
@@ -41,6 +46,18 @@ class UsersController extends Controller
                     ->orWhere('phone', 'like', "%{$q}%")
                     ->orWhere('id', $q);
             });
+        }
+
+        if ($status !== '') {
+            if ($status === 'active') {
+                $query->where(function (Builder $sq) {
+                    $sq->whereNull('account_status')
+                        ->orWhere('account_status', '')
+                        ->orWhere('account_status', 'active');
+                });
+            } else {
+                $query->where('account_status', $status);
+            }
         }
 
         $protectedEmails = array_map('strtolower', (array) config('admin.emails', []));
@@ -59,6 +76,7 @@ class UsersController extends Controller
                 'name' => (string) ($user->name ?? ''),
                 'email' => $email,
                 'phone' => $user->phone !== null ? (string) $user->phone : null,
+                'account_status' => (string) ($user->account_status ?? 'active'),
                 'created_at_wib' => $user->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'last_activity_at_wib' => $user->last_activity_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
                 'balance' => (int) ($user->balanceRow?->balance ?? 0),
@@ -80,6 +98,7 @@ class UsersController extends Controller
             'stats' => $stats,
             'filters' => [
                 'q' => $q,
+                'status' => $status,
                 'per_page' => $perPage,
             ],
         ]);

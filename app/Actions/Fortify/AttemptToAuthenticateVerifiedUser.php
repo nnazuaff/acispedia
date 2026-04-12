@@ -65,6 +65,23 @@ class AttemptToAuthenticateVerifiedUser
             ]);
         }
 
+        $status = Str::lower(trim((string) ($user->account_status ?? 'active')));
+        if ($status === 'banned') {
+            $limiter->increment($request);
+
+            throw ValidationException::withMessages([
+                $usernameField => __('auth.account_banned'),
+            ]);
+        }
+
+        if ($status === 'inactive') {
+            $limiter->increment($request);
+
+            throw ValidationException::withMessages([
+                $usernameField => __('auth.account_inactive'),
+            ]);
+        }
+
         $guard->login($user, $remember);
         $limiter->clear($request);
     }

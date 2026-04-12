@@ -4,6 +4,7 @@ import * as React from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -21,6 +22,7 @@ type UserRow = {
     name: string;
     email: string;
     phone: string | null;
+    account_status: string;
     created_at_wib: string | null;
     last_activity_at_wib?: string | null;
     balance: number;
@@ -43,6 +45,7 @@ type UsersPaginator = {
 
 type Filters = {
     q: string;
+    status: string;
     per_page: number;
 };
 
@@ -55,6 +58,21 @@ function formatNumber(value: number): string {
     return new Intl.NumberFormat('id-ID').format(value);
 }
 
+function statusMeta(status: string, t: (key: string) => string): { label: string; className: string } {
+    const key = String(status ?? '').toLowerCase();
+    if (key === 'active' || key === '') {
+        return { label: t('Aktif'), className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' };
+    }
+    if (key === 'inactive') {
+        return { label: t('Nonaktif'), className: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300' };
+    }
+    if (key === 'banned') {
+        return { label: t('Banned'), className: 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300' };
+    }
+
+    return { label: status || '-', className: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300' };
+}
+
 export default function AdminUsers() {
     const { t } = useI18n();
     const confirm = useConfirm();
@@ -65,16 +83,19 @@ export default function AdminUsers() {
     };
 
     const [q, setQ] = React.useState(filters?.q ?? '');
+    const [status, setStatus] = React.useState<string>(filters?.status ?? '');
     const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 25));
 
     React.useEffect(() => {
         setQ(filters?.q ?? '');
+        setStatus(filters?.status ?? '');
         setPerPage(Number(filters?.per_page ?? 25));
-    }, [filters?.q, filters?.per_page]);
+    }, [filters?.q, filters?.status, filters?.per_page]);
 
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
         const merged = {
             q,
+            status,
             per_page: perPage,
             ...(next ?? {}),
         };
@@ -88,8 +109,9 @@ export default function AdminUsers() {
 
     function resetFilters() {
         setQ('');
+        setStatus('');
         setPerPage(25);
-        router.get('/users', { q: '', per_page: 25 } as any, {
+        router.get('/users', { q: '', status: '', per_page: 25 } as any, {
             preserveScroll: true,
             preserveState: true,
             replace: true,
@@ -151,6 +173,21 @@ export default function AdminUsers() {
                                 <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nama / email / no. hp / id')} />
                             </div>
 
+                            <div>
+                                <Label>{t('Status')}</Label>
+                                <Select value={status} onValueChange={(v) => setStatus(v)}>
+                                    <SelectTrigger className="mt-2 h-10">
+                                        <SelectValue placeholder={t('Semua')} />
+                                    </SelectTrigger>
+                                    <SelectContent align="end">
+                                        <SelectItem value="">{t('Semua')}</SelectItem>
+                                        <SelectItem value="active">{t('Aktif')}</SelectItem>
+                                        <SelectItem value="inactive">{t('Nonaktif')}</SelectItem>
+                                        <SelectItem value="banned">{t('Banned')}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
                             <div className="flex items-end gap-2">
                                 <Button onClick={() => applyFilters({ page: 1 })}>{t('Filter')}</Button>
                                 <Button variant="outline" onClick={resetFilters}>
@@ -176,13 +213,14 @@ export default function AdminUsers() {
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Total Deposit')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Total Spent')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Aktivitas Terakhir')}</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Status')}</th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('Aksi')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {rows.length === 0 ? (
                                         <tr>
-                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={10}>
+                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={11}>
                                                 {t('Tidak ada data.')}
                                             </td>
                                         </tr>
@@ -198,6 +236,16 @@ export default function AdminUsers() {
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(row.total_deposit ?? 0))}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">Rp {formatNumber(Number(row.total_spent ?? 0))}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.last_activity_at_wib ?? '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    {(() => {
+                                                        const meta = statusMeta(row.account_status, t);
+                                                        return (
+                                                            <Badge variant="outline" className={meta.className}>
+                                                                {meta.label}
+                                                            </Badge>
+                                                        );
+                                                    })()}
+                                                </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
                                                     <div className="flex gap-2">
                                                         <Button asChild variant="outline" size="sm">
