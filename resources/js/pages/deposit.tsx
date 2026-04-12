@@ -638,11 +638,59 @@ export default function DepositPage() {
                                         );
                                     })}
                                 </div>
-                                                <div className="text-sm font-semibold">{t('Isi Saldo')}</div>
-                                                <div className="text-xs text-muted-foreground">QRIS, VA Bank, GoPay, dan metode lainnya</div>
+
+                                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                                    <span className="inline-flex h-5 items-center rounded-md bg-muted px-1.5 text-[10px] text-foreground">
+                                        RP
+                                    </span>
+                                    <span>{t('ATAU MASUKKAN NOMINAL MANUAL')}</span>
                                 </div>
 
                                 <div>
                                     <Label htmlFor="amount">{t('Nominal')}</Label>
+                                    <Input
+                                        id="amount"
+                                        className="mt-1"
+                                        type="number"
+                                        inputMode="numeric"
+                                        min={1000}
+                                        max={200000}
+                                        value={String(amount)}
+                                        onChange={(e) => setAmount(Number(e.target.value))}
+                                        placeholder={t('0')}
+                                    />
+                                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                                        <span>{t('Minimal')}: Rp 1.000</span>
+                                        <span>{t('Maksimal')}: Rp 200.000</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                            ) : null}
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                            <Button asChild variant="outline">
+                                <Link href="/history/deposit" prefetch>
+                                    {t('Riwayat')}
+                                </Link>
+                            </Button>
+
+                            <Button type="button" onClick={createDeposit} disabled={isSubmitting || !!activePending}>
+                                <ArrowRight className="mr-2 h-4 w-4" />
+                                {isSubmitting ? t('Memproses...') : t('Lanjutkan')}
+                            </Button>
+                        </div>
+                    </CardHeader>
+                </Card>
+            </div>
+        </>
+    );
+}
+
+DepositPage.layout = {
+    breadcrumbs: [
+        {
+            title: 'Deposit Saldo',
+            href: '/deposit',
+        },
+    ],
+};
