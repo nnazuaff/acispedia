@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 
+import AdminDateRangePicker from '@/components/admin-date-range-picker';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -322,14 +323,18 @@ export default function AdminDeposits() {
                                 </Select>
                             </div>
 
-                            <div>
-                                <Label htmlFor="date_from">{t('Dari Tanggal')}</Label>
-                                <Input id="date_from" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-                            </div>
-
-                            <div>
-                                <Label htmlFor="date_to">{t('Sampai Tanggal')}</Label>
-                                <Input id="date_to" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+                            <div className="lg:col-span-2">
+                                <Label htmlFor="date_from">{t('Rentang Tanggal')}</Label>
+                                <AdminDateRangePicker
+                                    id="date_from"
+                                    valueFrom={dateFrom}
+                                    valueTo={dateTo}
+                                    onChange={({ from, to }) => {
+                                        setDateFrom(from);
+                                        setDateTo(to);
+                                    }}
+                                    placeholder={t('Pilih tanggal')}
+                                />
                             </div>
 
                             <div className="flex items-end gap-2">

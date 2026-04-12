@@ -1,18 +1,14 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
-import type { DateRange } from 'react-day-picker';
-import { CalendarIcon } from 'lucide-react';
 
+import AdminDateRangePicker from '@/components/admin-date-range-picker';
 import Heading from '@/components/heading';
 import { useConfirm } from '@/components/confirm-dialog-provider';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useI18n } from '@/i18n/i18n-provider';
-import { cn } from '@/lib/utils';
 
 type Filters = {
     date_from: string;
@@ -91,23 +87,6 @@ function parseMoneyLikeToInt(value: unknown): number {
     return Math.round(n);
 }
 
-function parseYmdToLocalDate(value: string): Date | undefined {
-    const raw = String(value ?? '').trim();
-    if (raw === '') return undefined;
-
-    const parts = raw.split('-');
-    if (parts.length !== 3) return undefined;
-
-    const year = Number(parts[0]);
-    const month = Number(parts[1]);
-    const day = Number(parts[2]);
-
-    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return undefined;
-    if (year < 1900 || month < 1 || month > 12 || day < 1 || day > 31) return undefined;
-
-    return new Date(year, month - 1, day);
-}
-
 function formatLocalDateToYmd(date: Date): string {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -133,9 +112,6 @@ export default function AdminFinancialReport() {
         today_sales: TodaySales;
     };
 
-    const [isDatePickerOpen, setIsDatePickerOpen] = React.useState(false);
-    const [isSelectingDateEnd, setIsSelectingDateEnd] = React.useState(false);
-
     const [dateFrom, setDateFrom] = React.useState(() => {
         const from = String(filters?.date_from ?? '').trim();
         return from !== '' ? from : formatLocalDateToYmd(getTodayLocalDate());
@@ -144,38 +120,14 @@ export default function AdminFinancialReport() {
         const to = String(filters?.date_to ?? '').trim();
         return to !== '' ? to : formatLocalDateToYmd(getTodayLocalDate());
     });
-    const [dateRange, setDateRange] = React.useState<DateRange | undefined>(() => {
-        const from = parseYmdToLocalDate(filters?.date_from ?? '');
-        const to = parseYmdToLocalDate(filters?.date_to ?? '');
-        if (!from && !to) {
-            const today = getTodayLocalDate();
-            return { from: today, to: today };
-        }
-        return { from: from ?? to, to: to ?? from };
-    });
 
     React.useEffect(() => {
         const fromRaw = String(filters?.date_from ?? '').trim();
         const toRaw = String(filters?.date_to ?? '').trim();
+        const todayYmd = formatLocalDateToYmd(getTodayLocalDate());
 
-        const from = parseYmdToLocalDate(fromRaw);
-        const to = parseYmdToLocalDate(toRaw);
-
-        if (!from && !to) {
-            const today = getTodayLocalDate();
-            const todayYmd = formatLocalDateToYmd(today);
-            setDateFrom(todayYmd);
-            setDateTo(todayYmd);
-            setDateRange({ from: today, to: today });
-            return;
-        }
-
-        const resolvedFrom = from ?? to;
-        const resolvedTo = to ?? from;
-
-        setDateFrom(resolvedFrom ? formatLocalDateToYmd(resolvedFrom) : '');
-        setDateTo(resolvedTo ? formatLocalDateToYmd(resolvedTo) : '');
-        setDateRange({ from: resolvedFrom, to: resolvedTo });
+        setDateFrom(fromRaw !== '' ? fromRaw : todayYmd);
+        setDateTo(toRaw !== '' ? toRaw : todayYmd);
     }, [filters?.date_from, filters?.date_to]);
 
     const isEditing = Boolean(editing?.id);
@@ -373,67 +325,16 @@ export default function AdminFinancialReport() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                             <div className="lg:col-span-4">
                                 <Label htmlFor="date_from">{t('Rentang Tanggal')}</Label>
-                                <Popover
-                                    open={isDatePickerOpen}
-                                    onOpenChange={(open) => {
-                                        setIsDatePickerOpen(open);
-                                        if (open) {
-                                            setIsSelectingDateEnd(false);
-                                        }
+                                <AdminDateRangePicker
+                                    id="date_from"
+                                    valueFrom={dateFrom}
+                                    valueTo={dateTo}
+                                    onChange={({ from, to }) => {
+                                        setDateFrom(from);
+                                        setDateTo(to);
                                     }}
-                                >
-                                    <PopoverTrigger asChild>
-                                        <button
-                                            type="button"
-                                            className={cn(
-                                                'border-input placeholder:text-muted-foreground flex h-9 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm',
-                                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                                !dateFrom && !dateTo ? 'text-muted-foreground' : ''
-                                            )}
-                                        >
-                                            <span className="truncate">
-                                                {dateFrom || dateTo ? (
-                                                    dateFrom && dateTo ? (
-                                                        `${dateFrom} ~ ${dateTo}`
-                                                    ) : (
-                                                        dateFrom || dateTo
-                                                    )
-                                                ) : (
-                                                    t('Pilih tanggal')
-                                                )}
-                                            </span>
-                                            <CalendarIcon className="ml-2 size-4 shrink-0 text-muted-foreground" />
-                                        </button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            mode="range"
-                                            numberOfMonths={2}
-                                            selected={dateRange}
-                                            onDayClick={(day) => {
-                                                const clicked = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-
-                                                if (!isSelectingDateEnd) {
-                                                    setDateRange({ from: clicked, to: undefined });
-                                                    setDateFrom(formatLocalDateToYmd(clicked));
-                                                    setDateTo('');
-                                                    setIsSelectingDateEnd(true);
-                                                    return;
-                                                }
-
-                                                const start = dateRange?.from ?? clicked;
-                                                const from = clicked < start ? clicked : start;
-                                                const to = clicked < start ? start : clicked;
-
-                                                setDateRange({ from, to });
-                                                setDateFrom(formatLocalDateToYmd(from));
-                                                setDateTo(formatLocalDateToYmd(to));
-                                                setIsSelectingDateEnd(false);
-                                                setIsDatePickerOpen(false);
-                                            }}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
+                                    placeholder={t('Pilih tanggal')}
+                                />
                             </div>
                             <div className="flex items-end lg:col-span-2">
                                 <Button onClick={applyDateFilter}>{t('Terapkan')}</Button>

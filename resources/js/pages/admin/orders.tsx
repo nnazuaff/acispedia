@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 
+import AdminDateRangePicker from '@/components/admin-date-range-picker';
 import Heading from '@/components/heading';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -288,23 +289,17 @@ export default function AdminOrders() {
                                 </Select>
                             </div>
 
-                            <div>
-                                <Label htmlFor="date_from">{t('Dari Tanggal')}</Label>
-                                <Input
+                            <div className="lg:col-span-2">
+                                <Label htmlFor="date_from">{t('Rentang Tanggal')}</Label>
+                                <AdminDateRangePicker
                                     id="date_from"
-                                    type="date"
-                                    value={dateFrom}
-                                    onChange={(e) => setDateFrom(e.target.value)}
-                                />
-                            </div>
-
-                            <div>
-                                <Label htmlFor="date_to">{t('Sampai Tanggal')}</Label>
-                                <Input
-                                    id="date_to"
-                                    type="date"
-                                    value={dateTo}
-                                    onChange={(e) => setDateTo(e.target.value)}
+                                    valueFrom={dateFrom}
+                                    valueTo={dateTo}
+                                    onChange={({ from, to }) => {
+                                        setDateFrom(from);
+                                        setDateTo(to);
+                                    }}
+                                    placeholder={t('Pilih tanggal')}
                                 />
                             </div>
 
