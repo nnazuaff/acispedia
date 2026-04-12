@@ -27,6 +27,13 @@ class DepositsController extends Controller
     public function index(Request $request): Response
     {
         $q = trim((string) $request->query('q', ''));
+        $id = trim((string) $request->query('id', ''));
+        $idInt = null;
+        if ($id !== '' && ctype_digit($id)) {
+            $idInt = (int) $id;
+        } else {
+            $id = '';
+        }
         $status = trim((string) $request->query('status', ''));
         $method = trim((string) $request->query('method', ''));
         $dateFrom = trim((string) $request->query('date_from', now()->toDateString()));
@@ -51,7 +58,11 @@ class DepositsController extends Controller
 
         $query = Deposit::query()->with(['user:id,name,email']);
 
-        $query->whereBetween('created_at', [$rangeStart, $rangeEnd]);
+        if ($idInt !== null) {
+            $query->where('id', $idInt);
+        } else {
+            $query->whereBetween('created_at', [$rangeStart, $rangeEnd]);
+        }
 
         if ($q !== '') {
             $qInt = null;
@@ -138,6 +149,7 @@ class DepositsController extends Controller
             'stats' => $stats,
             'filters' => [
                 'q' => $q,
+                'id' => $id,
                 'status' => $status,
                 'method' => $method,
                 'date_from' => $rangeStart->toDateString(),

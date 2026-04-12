@@ -30,6 +30,13 @@ class OrdersController extends Controller
     public function index(Request $request): Response
     {
         $q = trim((string) $request->query('q', ''));
+        $id = trim((string) $request->query('id', ''));
+        $idInt = null;
+        if ($id !== '' && ctype_digit($id)) {
+            $idInt = (int) $id;
+        } else {
+            $id = '';
+        }
         $status = trim((string) $request->query('status', ''));
         $target = trim((string) $request->query('target', ''));
         $dateFrom = trim((string) $request->query('date_from', now()->toDateString()));
@@ -45,7 +52,11 @@ class OrdersController extends Controller
 
         $query = Order::query()->with(['user:id,name,email']);
 
-        $query->whereBetween('created_at', [$rangeStart, $rangeEnd]);
+        if ($idInt !== null) {
+            $query->where('id', $idInt);
+        } else {
+            $query->whereBetween('created_at', [$rangeStart, $rangeEnd]);
+        }
 
         if ($q !== '') {
             $qLower = mb_strtolower($q);
@@ -119,6 +130,7 @@ class OrdersController extends Controller
             'stats' => $stats,
             'filters' => [
                 'q' => $q,
+                'id' => $id,
                 'status' => $status,
                 'target' => $target,
                 'date_from' => $rangeStart->toDateString(),

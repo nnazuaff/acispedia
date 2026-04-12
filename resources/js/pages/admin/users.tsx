@@ -44,6 +44,7 @@ type UsersPaginator = {
 
 type Filters = {
     q: string;
+    id: string;
     status: string;
     per_page: number;
 };
@@ -84,18 +85,21 @@ export default function AdminUsers() {
     const STATUS_ALL = 'all';
 
     const [q, setQ] = React.useState(filters?.q ?? '');
+    const [id, setId] = React.useState(filters?.id ?? '');
     const [status, setStatus] = React.useState<string>(filters?.status ? filters.status : STATUS_ALL);
     const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 25));
 
     React.useEffect(() => {
         setQ(filters?.q ?? '');
+        setId(filters?.id ?? '');
         setStatus(filters?.status ? filters.status : STATUS_ALL);
         setPerPage(Number(filters?.per_page ?? 25));
-    }, [filters?.q, filters?.status, filters?.per_page]);
+    }, [filters?.q, filters?.id, filters?.status, filters?.per_page]);
 
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
         const merged = {
             q,
+            id,
             status,
             per_page: perPage,
             ...(next ?? {}),
@@ -103,6 +107,7 @@ export default function AdminUsers() {
 
         const payload = {
             ...merged,
+            id: String(merged.id ?? '').trim(),
             status: merged.status === STATUS_ALL ? '' : merged.status,
         };
 
@@ -115,9 +120,10 @@ export default function AdminUsers() {
 
     function resetFilters() {
         setQ('');
+        setId('');
         setStatus(STATUS_ALL);
         setPerPage(25);
-        router.get('/users', { q: '', status: '', per_page: 25 } as any, {
+        router.get('/users', { q: '', id: '', status: '', per_page: 25 } as any, {
             preserveScroll: true,
             preserveState: true,
             replace: true,
@@ -173,7 +179,7 @@ export default function AdminUsers() {
 
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                             <div className="lg:col-span-2">
                                 <Label htmlFor="q">{t('Cari')}</Label>
                                 <Input
@@ -182,6 +188,19 @@ export default function AdminUsers() {
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
                                     placeholder={t('nama / email / no. hp / id')}
+                                />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="id">{t('ID')}</Label>
+                                <Input
+                                    id="id"
+                                    className="mt-2 h-10"
+                                    value={id}
+                                    onChange={(e) => setId(e.target.value.replace(/\D+/g, ''))}
+                                    placeholder="123"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                 />
                             </div>
 

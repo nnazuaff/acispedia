@@ -27,6 +27,13 @@ class UsersController extends Controller
     public function index(Request $request): Response
     {
         $q = trim((string) $request->query('q', ''));
+        $id = trim((string) $request->query('id', ''));
+        $idInt = null;
+        if ($id !== '' && ctype_digit($id)) {
+            $idInt = (int) $id;
+        } else {
+            $id = '';
+        }
         $status = strtolower(trim((string) $request->query('status', '')));
         if (! in_array($status, ['active', 'inactive', 'banned'], true)) {
             $status = '';
@@ -38,6 +45,10 @@ class UsersController extends Controller
         }
 
         $query = User::query()->with(['balanceRow:user_id,balance,total_spent,total_deposit']);
+
+        if ($idInt !== null) {
+            $query->where('id', $idInt);
+        }
 
         if ($q !== '') {
             $query->where(function (Builder $uq) use ($q) {
@@ -97,6 +108,7 @@ class UsersController extends Controller
             'stats' => $stats,
             'filters' => [
                 'q' => $q,
+                'id' => $id,
                 'status' => $status,
                 'per_page' => $perPage,
             ],

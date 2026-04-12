@@ -53,6 +53,7 @@ type Stats = {
 
 type Filters = {
     q: string;
+    id: string;
     status: string;
     target: string;
     date_from: string;
@@ -85,6 +86,7 @@ export default function AdminOrders() {
     };
 
     const [q, setQ] = React.useState(filters?.q ?? '');
+    const [id, setId] = React.useState(filters?.id ?? '');
     const [status, setStatus] = React.useState(filters?.status ?? '');
     const [target, setTarget] = React.useState(filters?.target ?? '');
     const [dateFrom, setDateFrom] = React.useState(filters?.date_from ?? '');
@@ -93,16 +95,18 @@ export default function AdminOrders() {
 
     React.useEffect(() => {
         setQ(filters?.q ?? '');
+        setId(filters?.id ?? '');
         setStatus(filters?.status ?? '');
         setTarget(filters?.target ?? '');
         setDateFrom(filters?.date_from ?? '');
         setDateTo(filters?.date_to ?? '');
         setPerPage(Number(filters?.per_page ?? 25));
-    }, [filters?.q, filters?.status, filters?.target, filters?.date_from, filters?.date_to, filters?.per_page]);
+    }, [filters?.q, filters?.id, filters?.status, filters?.target, filters?.date_from, filters?.date_to, filters?.per_page]);
 
     function applyFilters(next?: Partial<Filters> & { page?: number }) {
         const merged = {
             q,
+            id,
             status,
             target,
             date_from: dateFrom,
@@ -111,7 +115,7 @@ export default function AdminOrders() {
             ...(next ?? {}),
         };
 
-        router.get('/orders', merged as any, {
+        router.get('/orders', { ...merged, id: String(merged.id ?? '').trim() } as any, {
             preserveScroll: true,
             preserveState: true,
             replace: true,
@@ -120,6 +124,7 @@ export default function AdminOrders() {
 
     function resetFilters() {
         setQ('');
+        setId('');
         setStatus('');
         setTarget('');
         const today = new Date().toISOString().slice(0, 10);
@@ -131,6 +136,7 @@ export default function AdminOrders() {
             '/orders',
             {
                 q: '',
+                id: '',
                 status: '',
                 target: '',
                 date_from: today,
@@ -206,7 +212,7 @@ export default function AdminOrders() {
 
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                             <div className="lg:col-span-2">
                                 <Label htmlFor="q">{t('Cari')}</Label>
                                 <Input
@@ -214,6 +220,18 @@ export default function AdminOrders() {
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
                                     placeholder={t('nama pengguna / layanan')}
+                                />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="id">{t('ID')}</Label>
+                                <Input
+                                    id="id"
+                                    value={id}
+                                    onChange={(e) => setId(e.target.value.replace(/\D+/g, ''))}
+                                    placeholder="123"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                 />
                             </div>
 
