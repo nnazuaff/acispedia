@@ -346,24 +346,27 @@ export default function AdminFinancialReport() {
                                 <Label htmlFor="date_from">{t('Rentang Tanggal')}</Label>
                                 <Popover>
                                     <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
+                                        <button
+                                            type="button"
                                             className={cn(
-                                                'mt-2 w-full justify-start text-left font-normal',
+                                                'border-input placeholder:text-muted-foreground flex h-9 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm',
+                                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                                                 !dateFrom && !dateTo ? 'text-muted-foreground' : ''
                                             )}
                                         >
-                                            <CalendarIcon className="mr-2 size-4" />
-                                            {dateFrom || dateTo ? (
-                                                dateFrom && dateTo ? (
-                                                    `${dateFrom} s/d ${dateTo}`
+                                            <span className="truncate">
+                                                {dateFrom || dateTo ? (
+                                                    dateFrom && dateTo ? (
+                                                        `${dateFrom} ~ ${dateTo}`
+                                                    ) : (
+                                                        dateFrom || dateTo
+                                                    )
                                                 ) : (
-                                                    dateFrom || dateTo
-                                                )
-                                            ) : (
-                                                <span>{t('Pilih tanggal')}</span>
-                                            )}
-                                        </Button>
+                                                    t('Pilih tanggal')
+                                                )}
+                                            </span>
+                                            <CalendarIcon className="ml-2 size-4 shrink-0 text-muted-foreground" />
+                                        </button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
                                         <Calendar
