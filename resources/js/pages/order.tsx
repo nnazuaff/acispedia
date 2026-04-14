@@ -3,6 +3,7 @@ import * as React from 'react';
 import {
     AtSign,
     Check,
+    ChevronDown,
     ChevronsUpDown,
     Ellipsis,
     Facebook,
@@ -22,6 +23,7 @@ import { toast } from 'sonner';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -396,6 +398,55 @@ function formatRupiah(value: number): string {
     return `Rp ${Math.round(safe).toLocaleString('id-ID')}`;
 }
 
+type OrderInformationContentProps = {
+    balance: number;
+    t: (key: string) => string;
+};
+
+function OrderInformationContent({ balance, t }: OrderInformationContentProps) {
+    return (
+        <div className="space-y-4 text-sm">
+            <div className="rounded-lg border bg-muted/20 p-3">
+                <div className="text-xs font-semibold text-muted-foreground">{t('Saldo')}</div>
+                <div className="mt-1 font-semibold text-foreground">{formatRupiah(balance)}</div>
+            </div>
+
+            <div>
+                <div className="text-xs font-semibold text-muted-foreground">Instagram</div>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+                    <li>{t('Pastikan akun tidak private saat order diproses.')}</li>
+                    <li>{t('Jangan ubah username/tautan selama pesanan berjalan.')}</li>
+                    <li>{t('Jika order untuk postingan, pastikan post tidak dihapus.')}</li>
+                </ul>
+            </div>
+
+            <div>
+                <div className="text-xs font-semibold text-muted-foreground">{t('Langkah Order')}</div>
+                <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+                    <li>{t('Pilih kategori dan layanan.')}</li>
+                    <li>{t('Masukkan target (link/username).')}</li>
+                    <li>{t('Isi quantity sesuai batas min/maks.')}</li>
+                    <li>{t('Jika layanan butuh comments, isi 1 baris per quantity.')}</li>
+                    <li>{t('Klik “Buat Pesanan”. Status akan update otomatis.')}</li>
+                </ol>
+            </div>
+
+            <div>
+                <div className="text-xs font-semibold text-muted-foreground">{t('Aturan')}</div>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+                    <li>{t('Pastikan target benar, pesanan tidak bisa dibatalkan setelah diproses.')}</li>
+                    <li>{t('Jangan buat pesanan ganda untuk target yang sama secara bersamaan.')}</li>
+                    <li>{t('Jika ada kendala, cek status beberapa menit kemudian.')}</li>
+                </ul>
+            </div>
+
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
+                {t('Gunakan layanan dengan bijak. Kesalahan input target/quantity bisa menyebabkan hasil tidak sesuai.')}
+            </div>
+        </div>
+    );
+}
+
 export default function OrderPage() {
     const { t, locale } = useI18n();
     const page = usePage();
@@ -430,6 +481,7 @@ export default function OrderPage() {
     const [quantity, setQuantity] = React.useState('');
     const [comments, setComments] = React.useState('');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [isInfoOpen, setIsInfoOpen] = React.useState(false);
 
     const preselectMeta = React.useMemo(() => {
         let sid: string | null = null;
@@ -749,6 +801,31 @@ export default function OrderPage() {
                 )}
 
                 <div className="grid gap-4 lg:grid-cols-12">
+                    <Card className="lg:hidden">
+                        <Collapsible open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+                            <CollapsibleTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="flex w-full items-center justify-between gap-3 px-6 py-4 text-left"
+                                >
+                                    <span className="text-base font-semibold text-foreground">{t('Informasi')}</span>
+                                    <ChevronDown
+                                        className={cn(
+                                            'size-4 shrink-0 text-muted-foreground transition-transform',
+                                            isInfoOpen && 'rotate-180'
+                                        )}
+                                        aria-hidden="true"
+                                    />
+                                </button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <CardContent className="pt-0">
+                                    <OrderInformationContent balance={balance} t={t} />
+                                </CardContent>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </Card>
+
                     <Card className="lg:col-span-8">
                         <CardHeader>
                             <div className="flex items-center justify-between gap-3">
@@ -1086,48 +1163,12 @@ export default function OrderPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="lg:col-span-4 lg:sticky lg:top-20">
+                    <Card className="hidden lg:col-span-4 lg:sticky lg:top-20 lg:block">
                         <CardHeader>
                             <CardTitle>{t('Informasi')}</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4 text-sm">
-                            <div className="rounded-lg border bg-muted/20 p-3">
-                                <div className="text-xs font-semibold text-muted-foreground">{t('Saldo')}</div>
-                                <div className="mt-1 font-semibold text-foreground">{formatRupiah(balance)}</div>
-                            </div>
-
-                            <div>
-                                <div className="text-xs font-semibold text-muted-foreground">Instagram</div>
-                                <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-                                    <li>{t('Pastikan akun tidak private saat order diproses.')}</li>
-                                    <li>{t('Jangan ubah username/tautan selama pesanan berjalan.')}</li>
-                                    <li>{t('Jika order untuk postingan, pastikan post tidak dihapus.')}</li>
-                                </ul>
-                            </div>
-
-                            <div>
-                                <div className="text-xs font-semibold text-muted-foreground">{t('Langkah Order')}</div>
-                                <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
-                                    <li>{t('Pilih kategori dan layanan.')}</li>
-                                    <li>{t('Masukkan target (link/username).')}</li>
-                                    <li>{t('Isi quantity sesuai batas min/maks.')}</li>
-                                    <li>{t('Jika layanan butuh comments, isi 1 baris per quantity.')}</li>
-                                    <li>{t('Klik “Buat Pesanan”. Status akan update otomatis.')}</li>
-                                </ol>
-                            </div>
-
-                            <div>
-                                <div className="text-xs font-semibold text-muted-foreground">{t('Aturan')}</div>
-                                <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-                                    <li>{t('Pastikan target benar, pesanan tidak bisa dibatalkan setelah diproses.')}</li>
-                                    <li>{t('Jangan buat pesanan ganda untuk target yang sama secara bersamaan.')}</li>
-                                    <li>{t('Jika ada kendala, cek status beberapa menit kemudian.')}</li>
-                                </ul>
-                            </div>
-
-                            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
-                                {t('Gunakan layanan dengan bijak. Kesalahan input target/quantity bisa menyebabkan hasil tidak sesuai.')}
-                            </div>
+                        <CardContent>
+                            <OrderInformationContent balance={balance} t={t} />
                         </CardContent>
                     </Card>
                 </div>
