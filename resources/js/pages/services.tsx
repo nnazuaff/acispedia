@@ -516,7 +516,7 @@ export default function Services() {
                             </div>
                         </div>
 
-                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-6">
                             {topCategoryOptions.map((item) => {
                                 const Icon = item.icon;
                                 const isActive = activeTopCategory === item.value;
@@ -526,14 +526,14 @@ export default function Services() {
                                         key={item.value}
                                         type="button"
                                         className={cn(
-                                            'flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-colors',
+                                            'flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-colors sm:min-h-11 sm:px-4 sm:py-3 sm:text-sm',
                                             isActive
                                                 ? 'border-primary/40 bg-primary text-primary-foreground'
                                                 : 'bg-muted/40 text-foreground hover:bg-muted'
                                         )}
                                         onClick={() => handleSelectTopCategory(item.value)}
                                     >
-                                        <Icon className="size-4" />
+                                        <Icon className="size-4 sm:size-4" />
                                         <span>{item.label}</span>
                                     </button>
                                 );

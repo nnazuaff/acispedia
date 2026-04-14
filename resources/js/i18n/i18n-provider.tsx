@@ -529,7 +529,6 @@ const dictionaries: Record<Locale, Dict> = {
         'Pay code': 'Pay code',
         'Checkout': 'Checkout',
         'Buka': 'Open',
-        'Status pembayaran': 'Payment status',
 
         // Filters
         'Pencarian': 'Search',

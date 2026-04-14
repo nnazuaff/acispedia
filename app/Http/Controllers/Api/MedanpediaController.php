@@ -13,6 +13,27 @@ use Illuminate\Support\Facades\Cache;
 
 class MedanpediaController extends Controller
 {
+    private static function normalizeCategoryLabel(string $category): string
+    {
+        $trimmed = trim($category);
+        if ($trimmed === '') {
+            return $trimmed;
+        }
+
+        $lower = mb_strtolower($trimmed);
+
+        // Provider sometimes returns a combined marketplace label even though services belong to Shopee.
+        // Example: "Shopee/Tokopedia/Bukalapak/Lazada".
+        if (
+            str_contains($lower, 'shopee')
+            && (str_contains($lower, 'tokopedia') || str_contains($lower, 'bukalapak') || str_contains($lower, 'lazada'))
+        ) {
+            return 'Shopee';
+        }
+
+        return $trimmed;
+    }
+
     private static function maskThirdPartyName(string $message): string
     {
         $message = trim($message);
@@ -187,7 +208,7 @@ class MedanpediaController extends Controller
         $markup = AppSetting::getInt('smm_markup_amount', (int) config('medanpedia.markup_amount', 200));
 
         $category = isset($found['category']) && trim((string) $found['category']) !== ''
-            ? (string) $found['category']
+            ? self::normalizeCategoryLabel((string) $found['category'])
             : 'Other';
 
         $price = $found['price'] ?? ($found['rate'] ?? 0);
@@ -320,7 +341,7 @@ class MedanpediaController extends Controller
             }
 
             $category = isset($service['category']) && trim((string) $service['category']) !== ''
-                ? (string) $service['category']
+                ? self::normalizeCategoryLabel((string) $service['category'])
                 : 'Other';
 
             $desc = isset($service['description']) ? (string) $service['description'] : '';
