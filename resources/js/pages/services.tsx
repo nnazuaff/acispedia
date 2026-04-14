@@ -3,7 +3,6 @@ import * as React from 'react';
 import {
     AtSign,
     Check,
-    ChevronDown,
     ChevronsUpDown,
     Ellipsis,
     Facebook,
@@ -14,6 +13,7 @@ import {
     Music2,
     Search,
     Send,
+    Tag,
     Twitter,
     Youtube,
 } from 'lucide-react';
@@ -337,12 +337,12 @@ export default function Services() {
     const [serviceQuery, setServiceQuery] = React.useState('');
     const [debouncedServiceQuery, setDebouncedServiceQuery] = React.useState('');
     const [activeTopCategory, setActiveTopCategory] = React.useState<string>(ALL_TOP_CATEGORIES_VALUE);
+    const [isTopCategoryOpen, setIsTopCategoryOpen] = React.useState(false);
     const [category, setCategory] = React.useState<string>(ALL_CATEGORIES_VALUE);
     const [sort, setSort] = React.useState<SortValue>(DEFAULT_SORT_VALUE);
     const [perPage, setPerPage] = React.useState<PerPageValue>('25');
     const [page, setPage] = React.useState(1);
     const [categoryPickerQuery, setCategoryPickerQuery] = React.useState('');
-    const [isCategoryMenuOpen, setIsCategoryMenuOpen] = React.useState(false);
     const [isCategorySelectOpen, setIsCategorySelectOpen] = React.useState(false);
 
     const [categories, setCategories] = React.useState<string[]>([]);
@@ -457,8 +457,6 @@ export default function Services() {
         load({ q: debouncedServiceQuery, group: activeTopCategory, category, sort, perPage, page });
     }, [load, debouncedServiceQuery, activeTopCategory, category, sort, perPage, page]);
 
-    const selectedTopCategoryLabel = React.useMemo(() => getTopCategoryLabel(activeTopCategory), [activeTopCategory]);
-
     const selectedCategoryLabel = category === ALL_CATEGORIES_VALUE ? t('Pilih...') : category;
 
     const handleSelectExactCategory = React.useCallback(
@@ -470,7 +468,6 @@ export default function Services() {
             setCategory(value);
             setPage(1);
             setCategoryPickerQuery('');
-            setIsCategoryMenuOpen(false);
             setIsCategorySelectOpen(false);
         },
         []
@@ -488,72 +485,65 @@ export default function Services() {
             <Head title={t('Layanan')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="space-y-1">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                     <Heading
                         variant="small"
                         title={t('Layanan')}
                         description={t('Cari dan lihat daftar layanan.')}
                     />
+
+                    <Button
+                        type="button"
+                        variant="default"
+                        className="gap-2"
+                        onClick={() => setIsTopCategoryOpen((open) => !open)}
+                    >
+                        <Tag className="size-4" />
+                        {t('Kategori')}
+                    </Button>
                 </div>
 
-                <Card className="py-4">
-                    <CardContent className="space-y-4">
-                        <div className="space-y-4 rounded-2xl border border-sky-200/60 bg-linear-to-br from-sky-50 via-white to-indigo-50 p-4">
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                                <div className="space-y-1">
-                                    <div className="text-sm font-semibold text-foreground">{t('Kategori utama')}</div>
-                                    <div className="text-xs text-muted-foreground">
-                                        {locale === 'en'
-                                            ? 'Use the main category buttons or open the picker to choose a more specific category.'
-                                            : 'Gunakan tombol kategori utama di bawah atau buka picker untuk memilih kategori yang lebih spesifik.'}
-                                    </div>
-                                </div>
-
-                                <Popover open={isCategoryMenuOpen} onOpenChange={setIsCategoryMenuOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button type="button" variant="outline" className="gap-2">
-                                            {t('Kategori')}
-                                            <ChevronDown className="size-4" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent align="end" className="w-80 p-0">
-                                        <CategoryPickerContent
-                                            categories={categories}
-                                            categoryQuery={categoryPickerQuery}
-                                            onCategoryQueryChange={setCategoryPickerQuery}
-                                            selectedCategory={category}
-                                            onSelect={handleSelectExactCategory}
-                                            t={t}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
+                {isTopCategoryOpen && (
+                    <div className="space-y-3 rounded-xl border bg-card p-4">
+                        <div className="space-y-1">
+                            <div className="text-sm font-semibold text-foreground">
+                                {t('Kategori utama')}
                             </div>
-
-                            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                                {topCategoryOptions.map((item) => {
-                                    const Icon = item.icon;
-                                    const isActive = activeTopCategory === item.value;
-
-                                    return (
-                                        <button
-                                            key={item.value}
-                                            type="button"
-                                            className={cn(
-                                                'flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium text-white shadow-sm transition-all',
-                                                isActive
-                                                    ? 'border-blue-700 bg-linear-to-r from-blue-700 to-indigo-700 shadow-blue-200'
-                                                    : 'border-blue-300 bg-linear-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
-                                            )}
-                                            onClick={() => handleSelectTopCategory(item.value)}
-                                        >
-                                            <Icon className="size-4" />
-                                            <span>{item.label}</span>
-                                        </button>
-                                    );
-                                })}
+                            <div className="text-xs text-muted-foreground">
+                                {locale === 'en'
+                                    ? 'Pick a main category to filter services faster.'
+                                    : 'Pilih kategori utama untuk memfilter layanan lebih cepat.'}
                             </div>
                         </div>
 
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            {topCategoryOptions.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = activeTopCategory === item.value;
+
+                                return (
+                                    <button
+                                        key={item.value}
+                                        type="button"
+                                        className={cn(
+                                            'flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-colors',
+                                            isActive
+                                                ? 'border-primary/40 bg-primary text-primary-foreground'
+                                                : 'bg-muted/40 text-foreground hover:bg-muted'
+                                        )}
+                                        onClick={() => handleSelectTopCategory(item.value)}
+                                    >
+                                        <Icon className="size-4" />
+                                        <span>{item.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                <Card className="py-4">
+                    <CardContent className="space-y-4">
                         <div className="grid gap-3 md:grid-cols-12">
                             <div className="md:col-span-4">
                                 <Label htmlFor="service-q">{t('Cari layanan')}</Label>
@@ -564,28 +554,6 @@ export default function Services() {
                                     onChange={(e) => setServiceQuery(e.target.value)}
                                     placeholder={t('Cari nama layanan...')}
                                 />
-                            </div>
-
-                            <div className="md:col-span-4">
-                                <Label htmlFor="sort">{t('Urutkan')}</Label>
-                                <Select
-                                    value={sort}
-                                    onValueChange={(v) => {
-                                        setSort(v as SortValue);
-                                        setPage(1);
-                                    }}
-                                >
-                                    <SelectTrigger id="sort" className="mt-1 w-full">
-                                        <SelectValue placeholder={t('Default')} />
-                                    </SelectTrigger>
-                                    <SelectContent align="start">
-                                        {sortOptions.map((o) => (
-                                            <SelectItem key={o.value} value={o.value}>
-                                                {t(o.label)}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
                             </div>
 
                             <div className="md:col-span-4">
@@ -615,6 +583,28 @@ export default function Services() {
                                     </PopoverContent>
                                 </Popover>
                             </div>
+
+                            <div className="md:col-span-4">
+                                <Label htmlFor="sort">{t('Urutkan')}</Label>
+                                <Select
+                                    value={sort}
+                                    onValueChange={(v) => {
+                                        setSort(v as SortValue);
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger id="sort" className="mt-1 w-full">
+                                        <SelectValue placeholder={t('Default')} />
+                                    </SelectTrigger>
+                                    <SelectContent align="start">
+                                        {sortOptions.map((o) => (
+                                            <SelectItem key={o.value} value={o.value}>
+                                                {t(o.label)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm text-muted-foreground">
@@ -635,20 +625,6 @@ export default function Services() {
                                 )}
                             </div>
 
-                            {!isLoading && !error && (
-                                <div className="text-right">
-                                    <div>
-                                        {locale === 'en'
-                                            ? `Main category: ${selectedTopCategoryLabel}`
-                                            : `Kategori utama: ${selectedTopCategoryLabel}`}
-                                    </div>
-                                    <div>
-                                        {locale === 'en'
-                                            ? `Detail category: ${category === ALL_CATEGORIES_VALUE ? 'All categories' : category}`
-                                            : `Kategori detail: ${category === ALL_CATEGORIES_VALUE ? 'Semua kategori' : category}`}
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
                         <div className="overflow-hidden rounded-lg border">
@@ -682,7 +658,7 @@ export default function Services() {
                                     <tbody>
                                         {serviceGroups.map((group) => (
                                             <React.Fragment key={group.key}>
-                                                <tr className="border-t bg-sky-100/70 text-slate-900">
+                                                <tr className="border-t bg-muted/40 text-foreground">
                                                     <td colSpan={7} className="px-4 py-3 text-center font-semibold">
                                                         {group.label}
                                                     </td>
