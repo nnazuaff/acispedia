@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
-use App\Services\ServicePolicy;
 use App\Services\MedanpediaClient;
+use App\Services\ServicePolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -101,6 +101,39 @@ class MedanpediaController extends Controller
         }
 
         return $seconds;
+    }
+
+    private static function resolveCategoryGroup(string $category): string
+    {
+        $normalized = mb_strtolower(trim($category));
+
+        if ($normalized === '') {
+            return 'lainnya';
+        }
+
+        $checks = [
+            'instagram_followers' => ['instagram follower', 'instagram followers'],
+            'instagram' => ['instagram'],
+            'facebook' => ['facebook', 'fb '],
+            'youtube' => ['youtube', 'yt '],
+            'twitter' => ['twitter', 'x - twitter', 'x/twitter', 'x twitter'],
+            'spotify' => ['spotify'],
+            'tiktok' => ['tiktok', 'tik tok'],
+            'linkedin' => ['linkedin'],
+            'telegram' => ['telegram'],
+            'thread' => ['thread', 'threads'],
+            'web_traffic' => ['web traffic', 'traffic website', 'website traffic', 'web visitor'],
+        ];
+
+        foreach ($checks as $group => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (str_contains($normalized, $keyword)) {
+                    return $group;
+                }
+            }
+        }
+
+        return 'lainnya';
     }
 
     public function service(int $id, MedanpediaClient $client): JsonResponse
@@ -219,13 +252,14 @@ class MedanpediaController extends Controller
     public function services(Request $request, MedanpediaClient $client): JsonResponse
     {
         $q = trim((string) $request->query('q', ''));
+        $groupFilter = trim((string) $request->query('group', ''));
         $categoryFilter = trim((string) $request->query('category', ''));
         $sort = trim((string) $request->query('sort', ''));
         $refresh = $request->boolean('refresh');
         $obfuscate = $request->boolean('obf');
 
         $perPage = (int) $request->query('per_page', 25);
-        if (!in_array($perPage, [25, 50, 100, 200], true)) {
+        if (! in_array($perPage, [25, 50, 100, 200], true)) {
             $perPage = 25;
         }
 
@@ -321,6 +355,12 @@ class MedanpediaController extends Controller
                 $searchableText = mb_strtolower(trim($s['name'].' '.$s['description']));
 
                 return str_contains($searchableText, $qLower);
+            }));
+        }
+
+        if ($groupFilter !== '') {
+            $flat = array_values(array_filter($flat, function (array $s) use ($groupFilter) {
+                return self::resolveCategoryGroup((string) ($s['category'] ?? '')) === $groupFilter;
             }));
         }
 

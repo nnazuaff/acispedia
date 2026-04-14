@@ -1,10 +1,26 @@
 import { Head } from '@inertiajs/react';
 import * as React from 'react';
+import {
+    AtSign,
+    Check,
+    ChevronDown,
+    ChevronsUpDown,
+    Ellipsis,
+    Facebook,
+    Globe,
+    Instagram,
+    LayoutGrid,
+    Linkedin,
+    Music2,
+    Search,
+    Send,
+    Twitter,
+    Youtube,
+} from 'lucide-react';
 
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useI18n } from '@/i18n/i18n-provider';
 import {
     Dialog,
     DialogContent,
@@ -15,6 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
     Select,
     SelectContent,
@@ -23,6 +40,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/i18n/i18n-provider';
+import { cn } from '@/lib/utils';
 
 type Service = {
     id: number;
@@ -52,6 +71,12 @@ type ServiceGroup = {
     key: string;
     label: string;
     services: Service[];
+};
+
+type TopCategoryOption = {
+    value: string;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
 };
 
 function b64ToUtf8(b64: string): string {
@@ -155,7 +180,24 @@ function normalizeDescription(input: string): string {
 }
 
 const ALL_CATEGORIES_VALUE = '__all__';
+const ALL_TOP_CATEGORIES_VALUE = '__all_groups__';
 const DEFAULT_SORT_VALUE = '__default__';
+
+const topCategoryOptions: TopCategoryOption[] = [
+    { value: ALL_TOP_CATEGORIES_VALUE, label: 'Semua Kategori', icon: LayoutGrid },
+    { value: 'instagram', label: 'Instagram', icon: Instagram },
+    { value: 'facebook', label: 'Facebook', icon: Facebook },
+    { value: 'youtube', label: 'Youtube', icon: Youtube },
+    { value: 'twitter', label: 'X - Twitter', icon: Twitter },
+    { value: 'spotify', label: 'Spotify', icon: Music2 },
+    { value: 'tiktok', label: 'Tiktok', icon: Music2 },
+    { value: 'linkedin', label: 'Linkedin', icon: Linkedin },
+    { value: 'telegram', label: 'Telegram', icon: Send },
+    { value: 'thread', label: 'Thread', icon: AtSign },
+    { value: 'web_traffic', label: 'Web Traffic', icon: Globe },
+    { value: 'lainnya', label: 'Lainnya', icon: Ellipsis },
+    { value: 'instagram_followers', label: 'Instagram Followers', icon: Instagram },
+];
 
 const sortOptions = [
     { value: DEFAULT_SORT_VALUE, label: 'Default' },
@@ -171,6 +213,121 @@ type SortValue = (typeof sortOptions)[number]['value'];
 const perPageOptions = ['25', '50', '100', '200'] as const;
 type PerPageValue = (typeof perPageOptions)[number];
 
+function resolveTopCategoryGroup(category: string): string {
+    const normalized = category.trim().toLowerCase();
+
+    if (normalized === '') {
+        return 'lainnya';
+    }
+
+    const checks: Array<[string, string[]]> = [
+        ['instagram_followers', ['instagram follower', 'instagram followers']],
+        ['instagram', ['instagram']],
+        ['facebook', ['facebook', 'fb ']],
+        ['youtube', ['youtube', 'yt ']],
+        ['twitter', ['twitter', 'x - twitter', 'x/twitter', 'x twitter']],
+        ['spotify', ['spotify']],
+        ['tiktok', ['tiktok', 'tik tok']],
+        ['linkedin', ['linkedin']],
+        ['telegram', ['telegram']],
+        ['thread', ['thread', 'threads']],
+        ['web_traffic', ['web traffic', 'traffic website', 'website traffic', 'web visitor']],
+    ];
+
+    for (const [group, keywords] of checks) {
+        if (keywords.some((keyword) => normalized.includes(keyword))) {
+            return group;
+        }
+    }
+
+    return 'lainnya';
+}
+
+function getTopCategoryLabel(group: string): string {
+    return topCategoryOptions.find((item) => item.value === group)?.label ?? 'Lainnya';
+}
+
+type CategoryPickerContentProps = {
+    categories: string[];
+    categoryQuery: string;
+    onCategoryQueryChange: (value: string) => void;
+    selectedCategory: string;
+    onSelect: (value: string) => void;
+    t: (key: string) => string;
+};
+
+function CategoryPickerContent({
+    categories,
+    categoryQuery,
+    onCategoryQueryChange,
+    selectedCategory,
+    onSelect,
+    t,
+}: CategoryPickerContentProps) {
+    const filteredCategories = React.useMemo(() => {
+        const keyword = categoryQuery.trim().toLowerCase();
+
+        if (keyword === '') {
+            return categories;
+        }
+
+        return categories.filter((item) => item.toLowerCase().includes(keyword));
+    }, [categories, categoryQuery]);
+
+    return (
+        <div className="flex max-h-96 flex-col">
+            <div className="border-b p-3">
+                <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        value={categoryQuery}
+                        onChange={(event) => onCategoryQueryChange(event.target.value)}
+                        placeholder={t('Cari kategori...')}
+                        className="pl-9"
+                    />
+                </div>
+            </div>
+
+            <div className="max-h-72 overflow-y-auto p-2">
+                <button
+                    type="button"
+                    className={cn(
+                        'flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors',
+                        selectedCategory === ALL_CATEGORIES_VALUE
+                            ? 'bg-primary/10 text-primary'
+                            : 'hover:bg-muted'
+                    )}
+                    onClick={() => onSelect(ALL_CATEGORIES_VALUE)}
+                >
+                    <span>{t('Semua kategori')}</span>
+                    {selectedCategory === ALL_CATEGORIES_VALUE && <Check className="size-4" />}
+                </button>
+
+                {filteredCategories.map((item) => (
+                    <button
+                        key={item}
+                        type="button"
+                        className={cn(
+                            'flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors',
+                            selectedCategory === item ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+                        )}
+                        onClick={() => onSelect(item)}
+                    >
+                        <span>{item}</span>
+                        {selectedCategory === item && <Check className="size-4" />}
+                    </button>
+                ))}
+
+                {filteredCategories.length === 0 && (
+                    <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                        {t('Tidak ada kategori yang cocok dengan pencarian.')}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 export default function Services() {
     const { t, locale } = useI18n();
 
@@ -179,11 +336,14 @@ export default function Services() {
 
     const [serviceQuery, setServiceQuery] = React.useState('');
     const [debouncedServiceQuery, setDebouncedServiceQuery] = React.useState('');
-    const [categoryQuery, setCategoryQuery] = React.useState('');
+    const [activeTopCategory, setActiveTopCategory] = React.useState<string>(ALL_TOP_CATEGORIES_VALUE);
     const [category, setCategory] = React.useState<string>(ALL_CATEGORIES_VALUE);
     const [sort, setSort] = React.useState<SortValue>(DEFAULT_SORT_VALUE);
     const [perPage, setPerPage] = React.useState<PerPageValue>('25');
     const [page, setPage] = React.useState(1);
+    const [categoryPickerQuery, setCategoryPickerQuery] = React.useState('');
+    const [isCategoryMenuOpen, setIsCategoryMenuOpen] = React.useState(false);
+    const [isCategorySelectOpen, setIsCategorySelectOpen] = React.useState(false);
 
     const [categories, setCategories] = React.useState<string[]>([]);
     const [serviceGroups, setServiceGroups] = React.useState<ServiceGroup[]>([]);
@@ -197,7 +357,14 @@ export default function Services() {
     const [detail, setDetail] = React.useState<Service | null>(null);
 
     const load = React.useCallback(
-        async (opts: { q?: string; category?: string; sort?: string; perPage?: string; page?: number }) => {
+        async (opts: {
+            q?: string;
+            group?: string;
+            category?: string;
+            sort?: string;
+            perPage?: string;
+            page?: number;
+        }) => {
             setIsLoading(true);
             setError(null);
 
@@ -208,6 +375,10 @@ export default function Services() {
 
                 if (opts.q) {
                     url.searchParams.set('q', opts.q);
+                }
+
+                if (opts.group && opts.group !== ALL_TOP_CATEGORIES_VALUE) {
+                    url.searchParams.set('group', opts.group);
                 }
 
                 if (opts.category && opts.category !== ALL_CATEGORIES_VALUE) {
@@ -283,18 +454,34 @@ export default function Services() {
     }, [categories, category]);
 
     React.useEffect(() => {
-        load({ q: debouncedServiceQuery, category, sort, perPage, page });
-    }, [load, debouncedServiceQuery, category, sort, perPage, page]);
+        load({ q: debouncedServiceQuery, group: activeTopCategory, category, sort, perPage, page });
+    }, [load, debouncedServiceQuery, activeTopCategory, category, sort, perPage, page]);
 
-    const filteredCategories = React.useMemo(() => {
-        const keyword = categoryQuery.trim().toLowerCase();
+    const selectedTopCategoryLabel = React.useMemo(() => getTopCategoryLabel(activeTopCategory), [activeTopCategory]);
 
-        if (keyword === '') {
-            return categories;
-        }
+    const selectedCategoryLabel = category === ALL_CATEGORIES_VALUE ? t('Pilih...') : category;
 
-        return categories.filter((item) => item.toLowerCase().includes(keyword));
-    }, [categories, categoryQuery]);
+    const handleSelectExactCategory = React.useCallback(
+        (value: string) => {
+            if (value !== ALL_CATEGORIES_VALUE) {
+                setActiveTopCategory(resolveTopCategoryGroup(value));
+            }
+
+            setCategory(value);
+            setPage(1);
+            setCategoryPickerQuery('');
+            setIsCategoryMenuOpen(false);
+            setIsCategorySelectOpen(false);
+        },
+        []
+    );
+
+    const handleSelectTopCategory = React.useCallback((value: string) => {
+        setActiveTopCategory(value);
+        setCategory(ALL_CATEGORIES_VALUE);
+        setPage(1);
+        setCategoryPickerQuery('');
+    }, []);
 
     return (
         <>
@@ -311,6 +498,62 @@ export default function Services() {
 
                 <Card className="py-4">
                     <CardContent className="space-y-4">
+                        <div className="space-y-4 rounded-2xl border border-sky-200/60 bg-linear-to-br from-sky-50 via-white to-indigo-50 p-4">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="space-y-1">
+                                    <div className="text-sm font-semibold text-foreground">{t('Kategori utama')}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {locale === 'en'
+                                            ? 'Use the main category buttons or open the picker to choose a more specific category.'
+                                            : 'Gunakan tombol kategori utama di bawah atau buka picker untuk memilih kategori yang lebih spesifik.'}
+                                    </div>
+                                </div>
+
+                                <Popover open={isCategoryMenuOpen} onOpenChange={setIsCategoryMenuOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button type="button" variant="outline" className="gap-2">
+                                            {t('Kategori')}
+                                            <ChevronDown className="size-4" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent align="end" className="w-80 p-0">
+                                        <CategoryPickerContent
+                                            categories={categories}
+                                            categoryQuery={categoryPickerQuery}
+                                            onCategoryQueryChange={setCategoryPickerQuery}
+                                            selectedCategory={category}
+                                            onSelect={handleSelectExactCategory}
+                                            t={t}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                {topCategoryOptions.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = activeTopCategory === item.value;
+
+                                    return (
+                                        <button
+                                            key={item.value}
+                                            type="button"
+                                            className={cn(
+                                                'flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium text-white shadow-sm transition-all',
+                                                isActive
+                                                    ? 'border-blue-700 bg-linear-to-r from-blue-700 to-indigo-700 shadow-blue-200'
+                                                    : 'border-blue-300 bg-linear-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
+                                            )}
+                                            onClick={() => handleSelectTopCategory(item.value)}
+                                        >
+                                            <Icon className="size-4" />
+                                            <span>{item.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
                         <div className="grid gap-3 md:grid-cols-12">
                             <div className="md:col-span-4">
                                 <Label htmlFor="service-q">{t('Cari layanan')}</Label>
@@ -346,76 +589,32 @@ export default function Services() {
                             </div>
 
                             <div className="md:col-span-4">
-                                <Label htmlFor="category-q">{t('Cari kategori')}</Label>
-                                <Input
-                                    id="category-q"
-                                    className="mt-1"
-                                    value={categoryQuery}
-                                    onChange={(e) => setCategoryQuery(e.target.value)}
-                                    placeholder={t('Cari kategori...')}
-                                />
+                                <Label htmlFor="category-select">{t('Kategori')}</Label>
+                                <Popover open={isCategorySelectOpen} onOpenChange={setIsCategorySelectOpen}>
+                                    <PopoverTrigger asChild>
+                                        <button
+                                            id="category-select"
+                                            type="button"
+                                            className="mt-1 flex h-10 w-full items-center justify-between rounded-md border bg-background px-3 text-sm"
+                                        >
+                                            <span className={cn(category === ALL_CATEGORIES_VALUE && 'text-muted-foreground')}>
+                                                {selectedCategoryLabel}
+                                            </span>
+                                            <ChevronsUpDown className="size-4 text-muted-foreground" />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent align="start" className="w-(--radix-popover-trigger-width) p-0">
+                                        <CategoryPickerContent
+                                            categories={categories}
+                                            categoryQuery={categoryPickerQuery}
+                                            onCategoryQueryChange={setCategoryPickerQuery}
+                                            selectedCategory={category}
+                                            onSelect={handleSelectExactCategory}
+                                            t={t}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
-                        </div>
-
-                        <div className="space-y-3 rounded-lg border border-dashed p-4">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                <div>
-                                    <div className="text-sm font-semibold text-foreground">{t('Kategori')}</div>
-                                    <div className="text-xs text-muted-foreground">
-                                        {locale === 'en'
-                                            ? 'Click a category to limit the visible services.'
-                                            : 'Klik kategori untuk menampilkan layanan pada kategori itu saja.'}
-                                    </div>
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                    {locale === 'en'
-                                        ? `${filteredCategories.length} categories`
-                                        : `${filteredCategories.length} kategori`}
-                                </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2">
-                                <button
-                                    type="button"
-                                    className={[
-                                        'rounded-full border px-3 py-1.5 text-sm transition-colors',
-                                        category === ALL_CATEGORIES_VALUE
-                                            ? 'border-primary bg-primary text-primary-foreground'
-                                            : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
-                                    ].join(' ')}
-                                    onClick={() => {
-                                        setCategory(ALL_CATEGORIES_VALUE);
-                                        setPage(1);
-                                    }}
-                                >
-                                    {t('Semua kategori')}
-                                </button>
-
-                                {filteredCategories.map((item) => (
-                                    <button
-                                        key={item}
-                                        type="button"
-                                        className={[
-                                            'rounded-full border px-3 py-1.5 text-sm transition-colors',
-                                            category === item
-                                                ? 'border-primary bg-primary text-primary-foreground'
-                                                : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
-                                        ].join(' ')}
-                                        onClick={() => {
-                                            setCategory(item);
-                                            setPage(1);
-                                        }}
-                                    >
-                                        {item}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {!isLoading && filteredCategories.length === 0 && (
-                                <div className="text-sm text-muted-foreground">
-                                    {t('Tidak ada kategori yang cocok dengan pencarian.')}
-                                </div>
-                            )}
                         </div>
 
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm text-muted-foreground">
@@ -437,10 +636,17 @@ export default function Services() {
                             </div>
 
                             {!isLoading && !error && (
-                                <div>
-                                    {locale === 'en'
-                                        ? `Active category: ${category === ALL_CATEGORIES_VALUE ? 'All categories' : category}`
-                                        : `Kategori aktif: ${category === ALL_CATEGORIES_VALUE ? 'Semua kategori' : category}`}
+                                <div className="text-right">
+                                    <div>
+                                        {locale === 'en'
+                                            ? `Main category: ${selectedTopCategoryLabel}`
+                                            : `Kategori utama: ${selectedTopCategoryLabel}`}
+                                    </div>
+                                    <div>
+                                        {locale === 'en'
+                                            ? `Detail category: ${category === ALL_CATEGORIES_VALUE ? 'All categories' : category}`
+                                            : `Kategori detail: ${category === ALL_CATEGORIES_VALUE ? 'Semua kategori' : category}`}
+                                    </div>
                                 </div>
                             )}
                         </div>
