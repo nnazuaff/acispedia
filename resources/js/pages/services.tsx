@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import * as React from 'react';
+import { toast } from 'sonner';
 import {
     AtSign,
     Check,
@@ -365,6 +366,7 @@ export default function Services() {
             perPage?: string;
             page?: number;
         }) => {
+            const startedAt = Date.now();
             setIsLoading(true);
             setError(null);
 
@@ -425,6 +427,11 @@ export default function Services() {
                 const msg = e instanceof Error ? e.message : t('Kesalahan tidak diketahui.');
                 setError(msg);
             } finally {
+                const elapsed = Date.now() - startedAt;
+                const minMs = 250;
+                if (elapsed < minMs) {
+                    await new Promise((resolve) => window.setTimeout(resolve, minMs - elapsed));
+                }
                 setIsLoading(false);
             }
         },
@@ -469,16 +476,26 @@ export default function Services() {
             setPage(1);
             setCategoryPickerQuery('');
             setIsCategorySelectOpen(false);
+
+            toast.success(t('Kategori berhasil dipilih.'), {
+                description: value === ALL_CATEGORIES_VALUE ? t('Semua kategori') : value,
+            });
         },
-        []
+        [t]
     );
 
-    const handleSelectTopCategory = React.useCallback((value: string) => {
-        setActiveTopCategory(value);
-        setCategory(ALL_CATEGORIES_VALUE);
-        setPage(1);
-        setCategoryPickerQuery('');
-    }, []);
+    const handleSelectTopCategory = React.useCallback(
+        (value: string) => {
+            setActiveTopCategory(value);
+            setCategory(ALL_CATEGORIES_VALUE);
+            setPage(1);
+            setCategoryPickerQuery('');
+
+            const label = getTopCategoryLabel(value);
+            toast.success(locale === 'en' ? `${label} selected.` : `${label} berhasil dipilih.`);
+        },
+        [locale]
+    );
 
     return (
         <>
@@ -571,7 +588,13 @@ export default function Services() {
                                             <ChevronsUpDown className="size-4 text-muted-foreground" />
                                         </button>
                                     </PopoverTrigger>
-                                    <PopoverContent align="start" className="w-(--radix-popover-trigger-width) p-0">
+                                    <PopoverContent
+                                        side="bottom"
+                                        align="start"
+                                        sideOffset={8}
+                                        avoidCollisions={false}
+                                        className="w-(--radix-popover-trigger-width) p-0"
+                                    >
                                         <CategoryPickerContent
                                             categories={categories}
                                             categoryQuery={categoryPickerQuery}
@@ -658,7 +681,7 @@ export default function Services() {
                                     <tbody>
                                         {serviceGroups.map((group) => (
                                             <React.Fragment key={group.key}>
-                                                <tr className="border-t bg-muted/40 text-foreground">
+                                                <tr className="border-t border-primary/20 bg-primary/10 text-primary">
                                                     <td colSpan={7} className="px-4 py-3 text-center font-semibold">
                                                         {group.label}
                                                     </td>

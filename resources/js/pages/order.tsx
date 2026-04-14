@@ -495,6 +495,7 @@ export default function OrderPage() {
     }, [t, user?.id]);
 
     const loadCategories = React.useCallback(async (opts?: { group?: string }) => {
+        const startedAt = Date.now();
         setError(null);
         setIsBootLoading(true);
 
@@ -526,12 +527,18 @@ export default function OrderPage() {
         } catch (e) {
             setError(e instanceof Error ? e.message : t('Kesalahan tidak diketahui.'));
         } finally {
+            const elapsed = Date.now() - startedAt;
+            const minMs = 250;
+            if (elapsed < minMs) {
+                await new Promise((resolve) => window.setTimeout(resolve, minMs - elapsed));
+            }
             setIsBootLoading(false);
         }
     }, [t]);
 
     const loadServices = React.useCallback(
         async (opts: { group: string; category: string; q: string; preselectId?: string | null }) => {
+            const startedAt = Date.now();
             setError(null);
             setIsServiceLoading(true);
 
@@ -597,6 +604,11 @@ export default function OrderPage() {
             } catch (e) {
                 setError(e instanceof Error ? e.message : t('Kesalahan tidak diketahui.'));
             } finally {
+                const elapsed = Date.now() - startedAt;
+                const minMs = 250;
+                if (elapsed < minMs) {
+                    await new Promise((resolve) => window.setTimeout(resolve, minMs - elapsed));
+                }
                 setIsServiceLoading(false);
             }
         },
@@ -684,22 +696,12 @@ export default function OrderPage() {
             <Head title={t('Order')} />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-hidden rounded-xl p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="space-y-1">
                     <Heading
                         variant="small"
                         title={t('Buat Pesanan')}
                         description={t('Pilih layanan, masukkan target, lalu buat pesanan.')}
                     />
-
-                    <Button
-                        type="button"
-                        variant="default"
-                        className="gap-2"
-                        onClick={() => setIsTopCategoryOpen((open) => !open)}
-                    >
-                        <Tag className="size-4" />
-                        {t('Kategori')}
-                    </Button>
                 </div>
 
                 {isTopCategoryOpen && (
@@ -729,6 +731,12 @@ export default function OrderPage() {
                                             setServicePickerQuery('');
                                             setDebouncedServicePickerQuery('');
                                             setCategoryPickerQuery('');
+
+                                            toast.success(
+                                                locale === 'en'
+                                                    ? `${item.label} selected.`
+                                                    : `${item.label} berhasil dipilih.`
+                                            );
                                         }}
                                     >
                                         <Icon className="size-4" />
@@ -743,7 +751,18 @@ export default function OrderPage() {
                 <div className="grid gap-4 lg:grid-cols-12">
                     <Card className="lg:col-span-8">
                         <CardHeader>
-                            <CardTitle>{t('Form Order')}</CardTitle>
+                            <div className="flex items-center justify-between gap-3">
+                                <CardTitle>{t('Buat Pesanan')}</CardTitle>
+                                <Button
+                                    type="button"
+                                    variant="default"
+                                    className="gap-2"
+                                    onClick={() => setIsTopCategoryOpen((open) => !open)}
+                                >
+                                    <Tag className="size-4" />
+                                    {t('Kategori')}
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {error && (
@@ -773,7 +792,13 @@ export default function OrderPage() {
                                                 <ChevronsUpDown className="size-4 text-muted-foreground" />
                                             </button>
                                         </PopoverTrigger>
-                                        <PopoverContent align="start" className="w-(--radix-popover-trigger-width) p-0">
+                                        <PopoverContent
+                                            side="bottom"
+                                            align="start"
+                                            sideOffset={8}
+                                            avoidCollisions={false}
+                                            className="w-(--radix-popover-trigger-width) p-0"
+                                        >
                                             <CategoryPickerContent
                                                 categories={categories}
                                                 categoryQuery={categoryPickerQuery}
@@ -791,6 +816,13 @@ export default function OrderPage() {
                                                     setServicePickerQuery('');
                                                     setDebouncedServicePickerQuery('');
                                                     setIsCategorySelectOpen(false);
+
+                                                    toast.success(t('Kategori berhasil dipilih.'), {
+                                                        description:
+                                                            value === ALL_CATEGORIES_VALUE
+                                                                ? t('Semua kategori')
+                                                                : value,
+                                                    });
                                                 }}
                                                 t={t}
                                             />
@@ -822,7 +854,13 @@ export default function OrderPage() {
                                             <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
                                         </button>
                                     </PopoverTrigger>
-                                    <PopoverContent align="start" className="w-(--radix-popover-trigger-width) p-0">
+                                    <PopoverContent
+                                        side="bottom"
+                                        align="start"
+                                        sideOffset={8}
+                                        avoidCollisions={false}
+                                        className="w-(--radix-popover-trigger-width) p-0"
+                                    >
                                         <ServicePickerContent
                                             services={services}
                                             query={servicePickerQuery}
