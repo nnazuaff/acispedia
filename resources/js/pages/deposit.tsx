@@ -259,12 +259,31 @@ export default function DepositPage() {
             clientKey: midtransClientKey,
             snapToken,
         })) {
+            const loadingId = toast.loading(
+                locale === 'en' ? 'Opening payment popup…' : 'Membuka popup pembayaran…'
+            );
+
+            let dismissed = false;
+            const timer = window.setTimeout(() => {
+                if (dismissed) return;
+                dismissed = true;
+                toast.dismiss(loadingId);
+            }, 12000);
+
+            const dismissLoading = () => {
+                if (dismissed) return;
+                dismissed = true;
+                window.clearTimeout(timer);
+                toast.dismiss(loadingId);
+            };
+
             try {
                 await openMidtransSnapPopup({
                     snapJsUrl: midtransSnapJsUrl,
                     clientKey: midtransClientKey,
                     snapToken,
                     onSuccess: () => {
+                        dismissLoading();
                         toast.success(t('Pembayaran sukses'));
                         if (options.redirectAfterClose) {
                             redirectToMidtransFinish();
@@ -273,6 +292,7 @@ export default function DepositPage() {
                         }
                     },
                     onPending: () => {
+                        dismissLoading();
                         toast.warning(t('Menunggu pembayaran'));
                         if (options.redirectAfterClose) {
                             redirectToMidtransFinish();
@@ -281,12 +301,16 @@ export default function DepositPage() {
                         }
                     },
                     onError: () => {
+                        dismissLoading();
                         toast.error(t('Pembayaran gagal'));
                     },
-                    onClose: () => {},
+                    onClose: () => {
+                        dismissLoading();
+                    },
                 });
                 return true;
             } catch (error) {
+                dismissLoading();
                 if (paymentUrl === '') {
                     toast.error(error instanceof Error ? error.message : t('Gagal membuka popup pembayaran.'));
                 } else {

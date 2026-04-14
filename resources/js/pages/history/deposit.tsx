@@ -288,24 +288,48 @@ export default function HistoryDepositPage() {
         const isMidtrans = String(row.payment_method ?? '').toLowerCase() === 'midtrans';
 
         if (isMidtrans && canUseMidtransSnap({ snapJsUrl: midtransSnapJsUrl, clientKey: midtransClientKey, snapToken })) {
+            const loadingId = toast.loading(
+                locale === 'en' ? 'Opening payment popup…' : 'Membuka popup pembayaran…'
+            );
+
+            let dismissed = false;
+            const timer = window.setTimeout(() => {
+                if (dismissed) return;
+                dismissed = true;
+                toast.dismiss(loadingId);
+            }, 12000);
+
+            const dismissLoading = () => {
+                if (dismissed) return;
+                dismissed = true;
+                window.clearTimeout(timer);
+                toast.dismiss(loadingId);
+            };
+
             try {
                 await openMidtransSnapPopup({
                     snapJsUrl: midtransSnapJsUrl,
                     clientKey: midtransClientKey,
                     snapToken,
                     onSuccess: () => {
+                        dismissLoading();
                         redirectToMidtransFinish();
                     },
                     onPending: () => {
+                        dismissLoading();
                         router.reload({ preserveScroll: true } as any);
                     },
                     onError: () => {
+                        dismissLoading();
                         toast.error('Terjadi masalah saat memproses pembayaran.');
                     },
-                    onClose: () => {},
+                    onClose: () => {
+                        dismissLoading();
+                    },
                 });
                 return;
             } catch (error) {
+                dismissLoading();
                 if (paymentUrl === '') {
                     toast.error(error instanceof Error ? error.message : 'Gagal membuka halaman pembayaran.');
                 }

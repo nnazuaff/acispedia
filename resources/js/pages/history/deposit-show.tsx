@@ -150,26 +150,48 @@ export default function DepositShowPage() {
         const isMidtrans = String(deposit.payment_method ?? '').toLowerCase() === 'midtrans';
 
         if (isMidtrans && canUseMidtransSnap({ snapJsUrl: midtransSnapJsUrl, clientKey: midtransClientKey, snapToken })) {
+            const loadingId = toast.loading('Membuka popup pembayaran…');
+
+            let dismissed = false;
+            const timer = window.setTimeout(() => {
+                if (dismissed) return;
+                dismissed = true;
+                toast.dismiss(loadingId);
+            }, 12000);
+
+            const dismissLoading = () => {
+                if (dismissed) return;
+                dismissed = true;
+                window.clearTimeout(timer);
+                toast.dismiss(loadingId);
+            };
+
             try {
                 await openMidtransSnapPopup({
                     snapJsUrl: midtransSnapJsUrl,
                     clientKey: midtransClientKey,
                     snapToken,
                     onSuccess: () => {
+                        dismissLoading();
                         toast.success('Pembayaran sukses. Status deposit akan diperbarui otomatis.');
                         redirectToMidtransFinish();
                     },
                     onPending: () => {
+                        dismissLoading();
                         toast.warning('Pembayaran masih menunggu penyelesaian.');
                         router.reload();
                     },
                     onError: () => {
+                        dismissLoading();
                         toast.error('Terjadi masalah saat memproses pembayaran.');
                     },
-                    onClose: () => {},
+                    onClose: () => {
+                        dismissLoading();
+                    },
                 });
                 return;
             } catch (error) {
+                dismissLoading();
                 if (paymentUrl === '') {
                     toast.error(error instanceof Error ? error.message : 'Gagal membuka halaman pembayaran.');
                 }
