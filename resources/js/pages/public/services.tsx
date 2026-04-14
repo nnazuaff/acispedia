@@ -48,6 +48,12 @@ type ServicesPayload = {
     total_pages?: number;
 };
 
+type ServiceGroup = {
+    key: string;
+    label: string;
+    services: Service[];
+};
+
 function b64ToUtf8(b64: string): string {
     const bin = atob(b64);
 
@@ -92,23 +98,32 @@ function unpackApiPayload(obj: unknown): ServicesPayload {
     }
 }
 
-function flattenServices(services: ServicesPayload['services']): Service[] {
+function normalizeServiceGroups(services: ServicesPayload['services']): ServiceGroup[] {
     if (!services) {
         return [];
     }
 
     if (Array.isArray(services)) {
-        return services;
+        if (services.length === 0) {
+            return [];
+        }
+
+        return [
+            {
+                key: 'results',
+                label: services[0]?.category ?? 'Layanan',
+                services,
+            },
+        ];
     }
 
-    const flattened: Service[] = [];
-    Object.values(services).forEach((list) => {
-        if (Array.isArray(list)) {
-            list.forEach((s) => flattened.push(s));
-        }
-    });
-
-    return flattened;
+    return Object.entries(services)
+        .map(([key, list]) => ({
+            key,
+            label: Array.isArray(list) && list[0]?.category ? list[0].category : key,
+            services: Array.isArray(list) ? list : [],
+        }))
+        .filter((group) => group.services.length > 0);
 }
 
 function normalizeCategories(categories: ServicesPayload['categories']): string[] {
@@ -144,6 +159,7 @@ const DEFAULT_SORT_VALUE = '__default__';
 
 const sortOptions = [
     { value: DEFAULT_SORT_VALUE, label: 'Default' },
+    { value: 'time_asc', label: 'Waktu: Tercepat' },
     { value: 'price_asc', label: 'Harga: Termurah' },
     { value: 'price_desc', label: 'Harga: Termahal' },
     { value: 'name_asc', label: 'Nama: A-Z' },
@@ -160,15 +176,16 @@ export default function PublicServices() {
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
 
-    const [q, setQ] = React.useState('');
-    const [debouncedQ, setDebouncedQ] = React.useState('');
+    const [serviceQuery, setServiceQuery] = React.useState('');
+    const [debouncedServiceQuery, setDebouncedServiceQuery] = React.useState('');
+    const [categoryQuery, setCategoryQuery] = React.useState('');
     const [category, setCategory] = React.useState<string>(ALL_CATEGORIES_VALUE);
     const [sort, setSort] = React.useState<SortValue>(DEFAULT_SORT_VALUE);
     const [perPage, setPerPage] = React.useState<PerPageValue>('25');
     const [page, setPage] = React.useState(1);
 
     const [categories, setCategories] = React.useState<string[]>([]);
-    const [services, setServices] = React.useState<Service[]>([]);
+    const [serviceGroups, setServiceGroups] = React.useState<ServiceGroup[]>([]);
 
     const [meta, setMeta] = React.useState({
         valid: 0,
@@ -215,22 +232,22 @@ export default function PublicServices() {
 
                 if (!json.success) {
                     setError(t(json.message ?? 'Gagal memuat layanan.'));
-                    setServices([]);
+                    setServiceGroups([]);
                     setCategories([]);
                     setMeta({ valid: 0, shown: 0, totalPages: 0 });
 
                     return;
                 }
 
-                const nextServices = flattenServices(json.services);
+                const nextServiceGroups = normalizeServiceGroups(json.services);
                 const nextCategories = normalizeCategories(json.categories);
 
-                setServices(nextServices);
+                setServiceGroups(nextServiceGroups);
                 setCategories(nextCategories);
 
                 setMeta({
-                    valid: json.valid_services ?? nextServices.length,
-                    shown: json.shown_services ?? nextServices.length,
+                    valid: json.valid_services ?? nextServiceGroups.reduce((sum, group) => sum + group.services.length, 0),
+                    shown: json.shown_services ?? nextServiceGroups.reduce((sum, group) => sum + group.services.length, 0),
                     totalPages: json.total_pages ?? 0,
                 });
             } catch (e) {
@@ -245,16 +262,39 @@ export default function PublicServices() {
 
     React.useEffect(() => {
         const id = window.setTimeout(() => {
-            setDebouncedQ(q);
+            setDebouncedServiceQuery(serviceQuery);
             setPage(1);
         }, 350);
 
         return () => window.clearTimeout(id);
-    }, [q]);
+    }, [serviceQuery]);
 
     React.useEffect(() => {
-        load({ q: debouncedQ, category, sort, perPage, page });
-    }, [load, debouncedQ, category, sort, perPage, page]);
+        if (category === ALL_CATEGORIES_VALUE) {
+            return;
+        }
+
+        if (categories.includes(category)) {
+            return;
+        }
+
+        setCategory(ALL_CATEGORIES_VALUE);
+        setPage(1);
+    }, [categories, category]);
+
+    React.useEffect(() => {
+        load({ q: debouncedServiceQuery, category, sort, perPage, page });
+    }, [load, debouncedServiceQuery, category, sort, perPage, page]);
+
+    const filteredCategories = React.useMemo(() => {
+        const keyword = categoryQuery.trim().toLowerCase();
+
+        if (keyword === '') {
+            return categories;
+        }
+
+        return categories.filter((item) => item.toLowerCase().includes(keyword));
+    }, [categories, categoryQuery]);
 
     return (
         <>
@@ -273,26 +313,14 @@ export default function PublicServices() {
                     <CardContent className="space-y-4">
                         <div className="grid gap-3 md:grid-cols-12">
                             <div className="md:col-span-4">
-                                <Label htmlFor="category">{t('Kategori')}</Label>
-                                <Select
-                                    value={category}
-                                    onValueChange={(v) => {
-                                        setCategory(v);
-                                        setPage(1);
-                                    }}
-                                >
-                                    <SelectTrigger id="category" className="mt-1 w-full">
-                                        <SelectValue placeholder={t('Semua kategori')} />
-                                    </SelectTrigger>
-                                    <SelectContent align="start">
-                                        <SelectItem value={ALL_CATEGORIES_VALUE}>{t('Semua kategori')}</SelectItem>
-                                        {categories.map((c) => (
-                                            <SelectItem key={c} value={c}>
-                                                {c}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Label htmlFor="service-q">{t('Cari layanan')}</Label>
+                                <Input
+                                    id="service-q"
+                                    className="mt-1"
+                                    value={serviceQuery}
+                                    onChange={(e) => setServiceQuery(e.target.value)}
+                                    placeholder={t('Cari nama layanan...')}
+                                />
                             </div>
 
                             <div className="md:col-span-4">
@@ -318,15 +346,76 @@ export default function PublicServices() {
                             </div>
 
                             <div className="md:col-span-4">
-                                <Label htmlFor="q">{t('Pencarian')}</Label>
+                                <Label htmlFor="category-q">{t('Cari kategori')}</Label>
                                 <Input
-                                    id="q"
+                                    id="category-q"
                                     className="mt-1"
-                                    value={q}
-                                    onChange={(e) => setQ(e.target.value)}
-                                    placeholder={t('Cari layanan atau kategori...')}
+                                    value={categoryQuery}
+                                    onChange={(e) => setCategoryQuery(e.target.value)}
+                                    placeholder={t('Cari kategori...')}
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-3 rounded-lg border border-dashed p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <div className="text-sm font-semibold text-foreground">{t('Kategori')}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        {locale === 'en'
+                                            ? 'Click a category to limit the visible services.'
+                                            : 'Klik kategori untuk menampilkan layanan pada kategori itu saja.'}
+                                    </div>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                    {locale === 'en'
+                                        ? `${filteredCategories.length} categories`
+                                        : `${filteredCategories.length} kategori`}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    className={[
+                                        'rounded-full border px-3 py-1.5 text-sm transition-colors',
+                                        category === ALL_CATEGORIES_VALUE
+                                            ? 'border-primary bg-primary text-primary-foreground'
+                                            : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
+                                    ].join(' ')}
+                                    onClick={() => {
+                                        setCategory(ALL_CATEGORIES_VALUE);
+                                        setPage(1);
+                                    }}
+                                >
+                                    {t('Semua kategori')}
+                                </button>
+
+                                {filteredCategories.map((item) => (
+                                    <button
+                                        key={item}
+                                        type="button"
+                                        className={[
+                                            'rounded-full border px-3 py-1.5 text-sm transition-colors',
+                                            category === item
+                                                ? 'border-primary bg-primary text-primary-foreground'
+                                                : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
+                                        ].join(' ')}
+                                        onClick={() => {
+                                            setCategory(item);
+                                            setPage(1);
+                                        }}
+                                    >
+                                        {item}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {!isLoading && filteredCategories.length === 0 && (
+                                <div className="text-sm text-muted-foreground">
+                                    {t('Tidak ada kategori yang cocok dengan pencarian.')}
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm text-muted-foreground">
@@ -346,6 +435,14 @@ export default function PublicServices() {
                                     </span>
                                 )}
                             </div>
+
+                            {!isLoading && !error && (
+                                <div>
+                                    {locale === 'en'
+                                        ? `Active category: ${category === ALL_CATEGORIES_VALUE ? 'All categories' : category}`
+                                        : `Kategori aktif: ${category === ALL_CATEGORIES_VALUE ? 'Semua kategori' : category}`}
+                                </div>
+                            )}
                         </div>
 
                         <div className="overflow-hidden rounded-lg border">
@@ -377,38 +474,48 @@ export default function PublicServices() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {services.map((s) => (
-                                            <tr
-                                                key={s.id}
-                                                className="border-t transition-colors hover:bg-muted/20"
-                                            >
-                                                <td className="px-4 py-3 align-top font-medium">
-                                                    {s.id}
-                                                </td>
-                                                <td className="px-4 py-3 align-top">
-                                                    <div className="font-semibold text-foreground">
-                                                        {s.name}
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3 align-top font-semibold text-emerald-600 dark:text-emerald-500">
-                                                    {s.price_formatted ?? '—'}
-                                                </td>
-                                                <td className="px-4 py-3 align-top">{s.min}</td>
-                                                <td className="px-4 py-3 align-top">{s.max}</td>
-                                                <td className="px-4 py-3 align-top">
-                                                    {s.average_time ?? ''}
-                                                </td>
-                                                <td className="px-4 py-3 align-top">
-                                                    <div className="flex flex-wrap justify-center gap-2">
-                                                        <Button type="button" onClick={() => setDetail(s)}>
-                                                            {t('Detail')}
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                        {serviceGroups.map((group) => (
+                                            <React.Fragment key={group.key}>
+                                                <tr className="border-t bg-sky-100/70 text-slate-900">
+                                                    <td colSpan={7} className="px-4 py-3 text-center font-semibold">
+                                                        {group.label}
+                                                    </td>
+                                                </tr>
+
+                                                {group.services.map((s) => (
+                                                    <tr
+                                                        key={s.id}
+                                                        className="border-t transition-colors hover:bg-muted/20"
+                                                    >
+                                                        <td className="px-4 py-3 align-top font-medium">
+                                                            {s.id}
+                                                        </td>
+                                                        <td className="px-4 py-3 align-top">
+                                                            <div className="font-semibold text-foreground">
+                                                                {s.name}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3 align-top font-semibold text-emerald-600 dark:text-emerald-500">
+                                                            {s.price_formatted ?? '—'}
+                                                        </td>
+                                                        <td className="px-4 py-3 align-top">{s.min}</td>
+                                                        <td className="px-4 py-3 align-top">{s.max}</td>
+                                                        <td className="px-4 py-3 align-top">
+                                                            {s.average_time ?? ''}
+                                                        </td>
+                                                        <td className="px-4 py-3 align-top">
+                                                            <div className="flex flex-wrap justify-center gap-2">
+                                                                <Button type="button" onClick={() => setDetail(s)}>
+                                                                    {t('Detail')}
+                                                                </Button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </React.Fragment>
                                         ))}
 
-                                        {!isLoading && services.length === 0 && (
+                                        {!isLoading && serviceGroups.length === 0 && (
                                             <tr>
                                                 <td
                                                     colSpan={7}

@@ -27,6 +27,82 @@ class MedanpediaController extends Controller
         return $message;
     }
 
+    private static function parseAverageTimeToSeconds(?string $averageTime): ?int
+    {
+        if ($averageTime === null) {
+            return null;
+        }
+
+        $normalized = preg_replace('/\s+/u', ' ', mb_strtolower(trim($averageTime)));
+        if (! is_string($normalized) || $normalized === '') {
+            return null;
+        }
+
+        foreach ([
+            '/waktu\s+proses\s+rata-?rata\s*:?\s*(.+)$/u',
+            '/average\s+processing\s+time\s*:?\s*(.+)$/u',
+            '/average\s+time\s*:?\s*(.+)$/u',
+        ] as $pattern) {
+            if (preg_match($pattern, $normalized, $matches) === 1) {
+                $normalized = trim((string) ($matches[1] ?? ''));
+                break;
+            }
+        }
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        preg_match_all(
+            '/(\d+)\s*(hari|jam|menit|detik|day|days|hour|hours|hr|hrs|minute|minutes|min|mins|second|seconds|sec|secs)\b/u',
+            $normalized,
+            $matches,
+            PREG_SET_ORDER,
+        );
+
+        if ($matches === []) {
+            return null;
+        }
+
+        $seconds = 0;
+
+        foreach ($matches as $match) {
+            $value = (int) ($match[1] ?? 0);
+            $unit = (string) ($match[2] ?? '');
+
+            switch ($unit) {
+                case 'hari':
+                case 'day':
+                case 'days':
+                    $seconds += $value * 86400;
+                    break;
+                case 'jam':
+                case 'hour':
+                case 'hours':
+                case 'hr':
+                case 'hrs':
+                    $seconds += $value * 3600;
+                    break;
+                case 'menit':
+                case 'minute':
+                case 'minutes':
+                case 'min':
+                case 'mins':
+                    $seconds += $value * 60;
+                    break;
+                case 'detik':
+                case 'second':
+                case 'seconds':
+                case 'sec':
+                case 'secs':
+                    $seconds += $value;
+                    break;
+            }
+        }
+
+        return $seconds;
+    }
+
     public function service(int $id, MedanpediaClient $client): JsonResponse
     {
         $cacheKey = 'medanpedia.services_raw';
@@ -242,12 +318,19 @@ class MedanpediaController extends Controller
 
         if ($qLower !== '') {
             $flat = array_values(array_filter($flat, function (array $s) use ($qLower) {
-                $nameMatch = str_contains(mb_strtolower($s['name']), $qLower);
-                $catMatch = str_contains(mb_strtolower($s['category']), $qLower);
+                $searchableText = mb_strtolower(trim($s['name'].' '.$s['description']));
 
-                return $nameMatch || $catMatch;
+                return str_contains($searchableText, $qLower);
             }));
         }
+
+        $categories = [];
+        foreach ($flat as $s) {
+            $key = strtolower(str_replace([' ', '-', '_'], '', (string) $s['category']));
+            $categories[$key] = (string) $s['category'];
+        }
+
+        natcasesort($categories);
 
         if ($categoryFilter !== '') {
             $flat = array_values(array_filter($flat, fn (array $s) => $s['category'] === $categoryFilter));
@@ -266,6 +349,30 @@ class MedanpediaController extends Controller
             case 'name_desc':
                 usort($flat, fn ($a, $b) => strcasecmp($b['name'], $a['name']));
                 break;
+            case 'time_asc':
+                usort($flat, function (array $a, array $b): int {
+                    $aSeconds = self::parseAverageTimeToSeconds($a['average_time'] ?? null);
+                    $bSeconds = self::parseAverageTimeToSeconds($b['average_time'] ?? null);
+
+                    if ($aSeconds === null && $bSeconds === null) {
+                        return strcasecmp($a['name'], $b['name']);
+                    }
+
+                    if ($aSeconds === null) {
+                        return 1;
+                    }
+
+                    if ($bSeconds === null) {
+                        return -1;
+                    }
+
+                    if ($aSeconds === $bSeconds) {
+                        return strcasecmp($a['name'], $b['name']);
+                    }
+
+                    return $aSeconds <=> $bSeconds;
+                });
+                break;
         }
 
         $totalAfterFilter = count($flat);
@@ -276,12 +383,6 @@ class MedanpediaController extends Controller
 
         $offset = ($page - 1) * $perPage;
         $paged = $totalAfterFilter ? array_slice($flat, $offset, $perPage) : [];
-
-        $categories = [];
-        foreach ($flat as $s) {
-            $key = strtolower(str_replace([' ', '-', '_'], '', (string) $s['category']));
-            $categories[$key] = (string) $s['category'];
-        }
 
         $markup = AppSetting::getInt('smm_markup_amount', (int) config('medanpedia.markup_amount', 200));
 
