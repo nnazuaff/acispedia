@@ -11,6 +11,7 @@ use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Services\MedanpediaClient;
 use App\Services\ServicePolicy;
+use App\Support\TargetNormalizer;
 use App\Support\UserActivity;
 use App\Support\WalletLedgerWriter;
 use Illuminate\Http\JsonResponse;
@@ -78,6 +79,22 @@ class OrdersController extends Controller
         $min = (int) ($service['min'] ?? 1);
         $max = (int) ($service['max'] ?? 1000000);
         $serviceName = (string) ($service['name'] ?? '');
+
+        $normalizedTarget = TargetNormalizer::normalizeForService($service, $target);
+        if ($normalizedTarget['error'] !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => (string) $normalizedTarget['error'],
+            ], 422);
+        }
+
+        $target = trim((string) $normalizedTarget['target']);
+        if ($target === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Target tidak valid.',
+            ], 422);
+        }
 
         if ($quantity < $min) {
             return response()->json([
