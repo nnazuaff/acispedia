@@ -3,16 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Deposit;
 use App\Models\FinancialReport;
-use App\Models\Order;
 use App\Models\UserBalance;
+use App\Services\FinancialReportMetrics;
 use App\Services\MedanpediaClient;
+use App\Support\WibDateRange;
 use App\Support\AdminActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -80,25 +79,16 @@ class FinancialReportController extends Controller
 
     public function index(Request $request, MedanpediaClient $medanpedia): Response
     {
-        $today = now()->toDateString();
+        $today = WibDateRange::todayDateString();
         $dateFrom = trim((string) $request->query('date_from', $today));
         $dateTo = trim((string) $request->query('date_to', $today));
         $editId = (int) $request->query('id', 0);
 
-        try {
-            $rangeStartWib = Carbon::parse($dateFrom, 'Asia/Jakarta')->startOfDay();
-        } catch (Throwable) {
-            $rangeStartWib = now('Asia/Jakarta')->startOfDay();
-        }
-
-        try {
-            $rangeEndWib = Carbon::parse($dateTo, 'Asia/Jakarta')->endOfDay();
-        } catch (Throwable) {
-            $rangeEndWib = now('Asia/Jakarta')->endOfDay();
-        }
-
-        $rangeStartUtc = $rangeStartWib->copy()->setTimezone('UTC');
-        $rangeEndUtc = $rangeEndWib->copy()->setTimezone('UTC');
+        $range = WibDateRange::resolve($dateFrom, $dateTo);
+        $rangeStartWib = $range['start_wib'];
+        $rangeEndWib = $range['end_wib'];
+        $rangeStartUtc = $range['start_utc'];
+        $rangeEndUtc = $range['end_utc'];
 
         $salesDateLabelWib = $rangeStartWib->toDateString();
         if ($rangeStartWib->toDateString() !== $rangeEndWib->toDateString()) {
@@ -131,26 +121,7 @@ class FinancialReportController extends Controller
             }
         }
 
-        $todayDeposit = (int) Deposit::query()
-            ->where('status', 'success')
-            ->whereBetween('processed_at', [$rangeStartUtc, $rangeEndUtc])
-            ->sum('amount');
-
-        $todaySales = (int) Order::query()
-            ->where('status', 'Success')
-            ->whereBetween('created_at', [$rangeStartUtc, $rangeEndUtc])
-            ->sum('total_price');
-
-        $todayRevenueCost = Order::query()
-            ->where('status', 'Success')
-            ->whereBetween('created_at', [$rangeStartUtc, $rangeEndUtc])
-            ->select([
-                DB::raw('COALESCE(SUM(total_price), 0) as revenue'),
-                DB::raw('COALESCE(SUM(ROUND((base_price * quantity) / 1000)), 0) as cost'),
-            ])
-            ->first();
-
-        $todayNetProfit = (int) (data_get($todayRevenueCost, 'revenue', 0) - data_get($todayRevenueCost, 'cost', 0));
+        $metrics = FinancialReportMetrics::summarize($rangeStartUtc, $rangeEndUtc);
 
         return Inertia::render('admin/financial-report', [
             'filters' => [
@@ -167,9 +138,9 @@ class FinancialReportController extends Controller
             ],
             'today_sales' => [
                 'date_wib' => $salesDateLabelWib,
-                'total_deposit' => $todayDeposit,
-                'total_sales' => $todaySales,
-                'net_profit' => $todayNetProfit,
+                'total_deposit' => $metrics['total_deposit'],
+                'total_sales' => $metrics['total_sales'],
+                'net_profit' => $metrics['net_profit'],
             ],
             'records' => $records->map(fn (FinancialReport $r) => [
                 'id' => (int) $r->id,

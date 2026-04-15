@@ -6,13 +6,13 @@ use App\Events\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Support\AdminActivity;
+use App\Support\WibDateRange;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use Throwable;
 use Inertia\Inertia;
 use Inertia\Response;
-use Throwable;
 
 class OrdersController extends Controller
 {
@@ -47,16 +47,18 @@ class OrdersController extends Controller
         }
         $status = trim((string) $request->query('status', ''));
         $target = trim((string) $request->query('target', ''));
-        $dateFrom = trim((string) $request->query('date_from', now()->toDateString()));
-        $dateTo = trim((string) $request->query('date_to', now()->toDateString()));
+        $today = WibDateRange::todayDateString();
+        $dateFrom = trim((string) $request->query('date_from', $today));
+        $dateTo = trim((string) $request->query('date_to', $today));
 
         $perPage = (int) $request->query('per_page', 25);
         if (!in_array($perPage, [25, 50, 100, 200], true)) {
             $perPage = 25;
         }
 
-        $rangeStart = Carbon::parse($dateFrom)->startOfDay();
-        $rangeEnd = Carbon::parse($dateTo)->endOfDay();
+        $range = WibDateRange::resolve($dateFrom, $dateTo);
+        $rangeStart = $range['start_utc'];
+        $rangeEnd = $range['end_utc'];
 
         $query = Order::query()->with(['user:id,name,email']);
 
@@ -148,8 +150,8 @@ class OrdersController extends Controller
                 'user_id' => $userId,
                 'status' => $status,
                 'target' => $target,
-                'date_from' => $rangeStart->toDateString(),
-                'date_to' => $rangeEnd->toDateString(),
+                'date_from' => $range['date_from'],
+                'date_to' => $range['date_to'],
                 'per_page' => $perPage,
             ],
             'known_statuses' => array_keys(self::CANONICAL_STATUSES),

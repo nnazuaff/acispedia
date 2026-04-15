@@ -21,6 +21,7 @@ use App\Models\Deposit;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\DashboardStats;
+use App\Support\WibDateRange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
@@ -76,8 +77,9 @@ if ($adminDomain !== '') {
             Route::redirect('/', 'dashboard');
 
             Route::get('dashboard', function () {
-                $start = now()->startOfDay();
-                $end = now()->endOfDay();
+                $range = WibDateRange::resolve();
+                $start = $range['start_utc'];
+                $end = $range['end_utc'];
 
                 $stats = [
                     'users_today' => User::query()->whereBetween('created_at', [$start, $end])->count(),

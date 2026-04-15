@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\UserBalance;
+use App\Support\WibDateRange;
 
 final class DashboardStats
 {
@@ -37,7 +38,7 @@ final class DashboardStats
         $balance = (int) ($balanceRow?->balance ?? 0);
         $totalSpent = (int) ($balanceRow?->total_spent ?? 0);
 
-        $startOfMonth = now()->startOfMonth();
+        $startOfMonth = WibDateRange::currentMonthStartUtc();
 
         $totalMonth = (int) Order::query()
             ->where('user_id', $userId)

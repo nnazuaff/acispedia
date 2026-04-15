@@ -10,11 +10,11 @@ use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Services\TelegramNotifier;
 use App\Support\AdminActivity;
+use App\Support\WibDateRange;
 use App\Support\WalletLedgerWriter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -49,25 +49,18 @@ class DepositsController extends Controller
         } elseif ($method === 'tripay') {
             $method = 'qris';
         }
-        $dateFrom = trim((string) $request->query('date_from', now()->toDateString()));
-        $dateTo = trim((string) $request->query('date_to', now()->toDateString()));
+        $today = WibDateRange::todayDateString();
+        $dateFrom = trim((string) $request->query('date_from', $today));
+        $dateTo = trim((string) $request->query('date_to', $today));
 
         $perPage = (int) $request->query('per_page', 25);
         if (!in_array($perPage, [25, 50, 100, 200], true)) {
             $perPage = 25;
         }
 
-        try {
-            $rangeStart = Carbon::parse($dateFrom)->startOfDay();
-        } catch (Throwable) {
-            $rangeStart = now()->startOfDay();
-        }
-
-        try {
-            $rangeEnd = Carbon::parse($dateTo)->endOfDay();
-        } catch (Throwable) {
-            $rangeEnd = now()->endOfDay();
-        }
+        $range = WibDateRange::resolve($dateFrom, $dateTo);
+        $rangeStart = $range['start_utc'];
+        $rangeEnd = $range['end_utc'];
 
         $query = Deposit::query()->with(['user:id,name,email']);
 
@@ -203,8 +196,8 @@ class DepositsController extends Controller
                 'user_id' => $userId,
                 'status' => $status,
                 'method' => $method,
-                'date_from' => $rangeStart->toDateString(),
-                'date_to' => $rangeEnd->toDateString(),
+                'date_from' => $range['date_from'],
+                'date_to' => $range['date_to'],
                 'per_page' => $perPage,
             ],
             'known_statuses' => self::KNOWN_STATUSES,
