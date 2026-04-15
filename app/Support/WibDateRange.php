@@ -2,12 +2,24 @@
 
 namespace App\Support;
 
+use DateTimeZone;
 use Illuminate\Support\Carbon;
 use Throwable;
 
 final class WibDateRange
 {
     public const TIMEZONE = 'Asia/Jakarta';
+
+    private static function safeTimezone(): string
+    {
+        try {
+            new DateTimeZone(self::TIMEZONE);
+
+            return self::TIMEZONE;
+        } catch (Throwable) {
+            return 'UTC';
+        }
+    }
 
     /**
      * @return array{
@@ -21,16 +33,17 @@ final class WibDateRange
      */
     public static function resolve(?string $dateFrom = null, ?string $dateTo = null): array
     {
-        $todayWib = now(self::TIMEZONE);
+        $tz = self::safeTimezone();
+        $todayWib = Carbon::now($tz);
 
         try {
-            $startWib = Carbon::parse((string) $dateFrom, self::TIMEZONE)->startOfDay();
+            $startWib = Carbon::parse((string) $dateFrom, $tz)->startOfDay();
         } catch (Throwable) {
             $startWib = $todayWib->copy()->startOfDay();
         }
 
         try {
-            $endWib = Carbon::parse((string) $dateTo, self::TIMEZONE)->endOfDay();
+            $endWib = Carbon::parse((string) $dateTo, $tz)->endOfDay();
         } catch (Throwable) {
             $endWib = $todayWib->copy()->endOfDay();
         }
@@ -51,11 +64,11 @@ final class WibDateRange
 
     public static function todayDateString(): string
     {
-        return now(self::TIMEZONE)->toDateString();
+        return Carbon::now(self::safeTimezone())->toDateString();
     }
 
     public static function currentMonthStartUtc(): Carbon
     {
-        return now(self::TIMEZONE)->startOfMonth()->setTimezone('UTC');
+        return Carbon::now(self::safeTimezone())->startOfMonth()->setTimezone('UTC');
     }
 }

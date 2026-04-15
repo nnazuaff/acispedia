@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Support\WibDateRange;
 use App\Models\Order;
 use App\Models\UserBalance;
-use App\Support\WibDateRange;
+use Illuminate\Support\Carbon;
+use Throwable;
 
 final class DashboardStats
 {
@@ -38,7 +40,7 @@ final class DashboardStats
         $balance = (int) ($balanceRow?->balance ?? 0);
         $totalSpent = (int) ($balanceRow?->total_spent ?? 0);
 
-        $startOfMonth = WibDateRange::currentMonthStartUtc();
+        $startOfMonth = self::currentMonthStartUtc();
 
         $totalMonth = (int) Order::query()
             ->where('user_id', $userId)
@@ -64,5 +66,25 @@ final class DashboardStats
             'completed' => $completed,
             'totalSpent' => $totalSpent,
         ];
+    }
+
+    private static function currentMonthStartUtc(): Carbon
+    {
+        $wibRangeClass = WibDateRange::class;
+
+        if (class_exists($wibRangeClass) && method_exists($wibRangeClass, 'currentMonthStartUtc')) {
+            try {
+                /** @var Carbon */
+                return $wibRangeClass::currentMonthStartUtc();
+            } catch (Throwable) {
+                // fall through to safe fallback
+            }
+        }
+
+        try {
+            return now('Asia/Jakarta')->startOfMonth()->setTimezone('UTC');
+        } catch (Throwable) {
+            return now()->startOfMonth();
+        }
     }
 }
