@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $start_count
  * @property int|null $remains
  * @property int|null $charge
+ * @property \Illuminate\Support\Carbon|null $refunded_at
  * @property \Illuminate\Support\Carbon|null $last_status_check
  * @property int|null $status_check_attempts
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -47,6 +48,7 @@ class Order extends Model
         'start_count',
         'remains',
         'charge',
+        'refunded_at',
         'last_status_check',
         'status_check_attempts',
     ];
@@ -74,6 +76,7 @@ class Order extends Model
             'start_count' => 'integer',
             'remains' => 'integer',
             'charge' => 'integer',
+            'refunded_at' => 'datetime',
             'last_status_check' => 'datetime',
             'status_check_attempts' => 'integer',
         ];

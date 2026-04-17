@@ -189,12 +189,12 @@ class MedanpediaClient
                 $body = (string) $response->body();
 
                 $errorMsg = match ($response->status()) {
-                    400 => 'HTTP Error: 400 - Bad Request. Format permintaan tidak valid.',
-                    402 => 'HTTP Error: 402 - Payment Required. Kemungkinan saldo akun API tidak cukup atau parameter order ditolak.',
-                    403 => 'HTTP Error: 403 - Forbidden. Kemungkinan IP tidak ter-whitelist atau kredensial salah.',
-                    404 => 'HTTP Error: 404 - Not Found. URL endpoint tidak ditemukan.',
-                    500 => 'HTTP Error: 500 - Internal Server Error. Ada masalah di server penyedia layanan.',
-                    default => 'HTTP Error: '.$response->status(),
+                    400 => 'Permintaan ke provider ditolak (HTTP 400). Parameter/format order tidak valid.',
+                    402 => 'Order ditolak provider (HTTP 402). Biasanya karena saldo API tidak cukup atau parameter order tidak valid.',
+                    403 => 'Akses ke provider ditolak (HTTP 403). Cek whitelist IP dan kredensial API.',
+                    404 => 'Endpoint provider tidak ditemukan (HTTP 404). Cek base URL/endpoint.',
+                    500 => 'Provider sedang bermasalah (HTTP 500). Coba lagi beberapa saat.',
+                    default => 'Terjadi error dari provider (HTTP '.$response->status().').',
                 };
 
                 $ipBlockedDetected = $response->status() === 403

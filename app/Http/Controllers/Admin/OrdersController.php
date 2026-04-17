@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Events\OrderStatusUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\DashboardStats;
+use App\Services\OrderRefundService;
+use App\Events\DashboardStatsUpdated;
 use App\Support\AdminActivity;
 use App\Support\WibDateRange;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -206,12 +210,43 @@ class OrdersController extends Controller
             return back()->with('error', 'Status tidak valid.');
         }
 
+        $currentKey = strtolower(trim((string) ($order->status ?? '')));
+        $nextStatus = self::CANONICAL_STATUSES[$statusKey];
+        $nextKey = strtolower($nextStatus);
+
+        $lockedStatuses = ['failed', 'error'];
+        if (in_array($currentKey, $lockedStatuses, true) && $nextKey !== $currentKey) {
+            return back()->with('error', 'Status gagal tidak bisa diubah lagi.');
+        }
+
         $before = (string) ($order->status ?? '');
-        $order->status = self::CANONICAL_STATUSES[$statusKey];
-        $order->save();
+
+        DB::transaction(function () use ($order, $nextStatus) {
+            $fresh = Order::query()->lockForUpdate()->find($order->id);
+            if (! $fresh) {
+                return;
+            }
+
+            $fresh->status = $nextStatus;
+            $fresh->save();
+
+            $freshKey = strtolower(trim((string) ($fresh->status ?? '')));
+            if (in_array($freshKey, ['failed', 'error'], true)) {
+                OrderRefundService::refundLockedOrder($fresh, 'Refund order (status gagal - admin)');
+            }
+        });
+
+        $order->refresh();
 
         try {
             broadcast(new OrderStatusUpdated($order));
+        } catch (Throwable) {
+            // best-effort
+        }
+
+        try {
+            $stats = DashboardStats::forUser((int) $order->user_id);
+            broadcast(new DashboardStatsUpdated((int) $order->user_id, $stats));
         } catch (Throwable) {
             // best-effort
         }

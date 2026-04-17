@@ -31,6 +31,19 @@ final class TargetNormalizer
             return ['target' => $username, 'error' => null];
         }
 
+        if (self::isTikTokFollowersService($service)) {
+            $username = self::extractTikTokUsername($target);
+
+            if ($username === null) {
+                return [
+                    'target' => $target,
+                    'error' => 'Target TikTok tidak valid. Isi username (contoh: moyzstore) atau link profil (contoh: https://tiktok.com/@moyzstore).',
+                ];
+            }
+
+            return ['target' => $username, 'error' => null];
+        }
+
         // Known URLs that frequently fail due to extra trailing slash.
         $target = self::normalizeUrlTrailingSlash($target, [
             'vt.tiktok.com',
@@ -59,6 +72,91 @@ final class TargetNormalizer
         // Match common naming variations.
         return str_contains($text, 'instagram')
             && (str_contains($text, 'follower') || str_contains($text, 'followers'));
+    }
+
+    /**
+     * @param  array<string, mixed>  $service
+     */
+    private static function isTikTokFollowersService(array $service): bool
+    {
+        $name = is_scalar($service['name'] ?? null) ? (string) $service['name'] : '';
+        $category = is_scalar($service['category'] ?? null) ? (string) $service['category'] : '';
+        $description = is_scalar($service['description'] ?? null) ? (string) $service['description'] : '';
+
+        $text = mb_strtolower(trim($name.' '.$category.' '.$description));
+        if ($text === '') {
+            return false;
+        }
+
+        return str_contains($text, 'tiktok')
+            && (str_contains($text, 'follower') || str_contains($text, 'followers'));
+    }
+
+    private static function extractTikTokUsername(string $input): ?string
+    {
+        $t = trim($input);
+        $t = trim($t, " \t\n\r\0\x0B\"'");
+
+        if ($t === '') {
+            return null;
+        }
+
+        if (str_starts_with($t, '@')) {
+            $t = ltrim($t, '@');
+        }
+
+        // If it's already a plain username.
+        if (! Str::contains($t, ['://', '/', '?', '#'])) {
+            return self::isValidTikTokUsername($t) ? $t : null;
+        }
+
+        $url = $t;
+        if (! preg_match('~^https?://~i', $url)) {
+            $url = 'https://'.$url;
+        }
+
+        $parts = @parse_url($url);
+        if (! is_array($parts)) {
+            return null;
+        }
+
+        $host = isset($parts['host']) ? mb_strtolower((string) $parts['host']) : '';
+        $host = preg_replace('/^www\./i', '', $host) ?? $host;
+
+        if ($host === '' || ! str_ends_with($host, 'tiktok.com')) {
+            return null;
+        }
+
+        $path = isset($parts['path']) ? (string) $parts['path'] : '';
+        $path = trim($path);
+        $path = trim($path, '/');
+
+        if ($path === '') {
+            return null;
+        }
+
+        $segments = array_values(array_filter(explode('/', $path), static fn ($s) => $s !== ''));
+        $first = $segments[0] ?? '';
+        if ($first === '') {
+            return null;
+        }
+
+        if (str_starts_with($first, '@')) {
+            $first = ltrim($first, '@');
+        }
+
+        return self::isValidTikTokUsername($first) ? $first : null;
+    }
+
+    private static function isValidTikTokUsername(string $username): bool
+    {
+        $u = trim($username);
+        if ($u === '') {
+            return false;
+        }
+
+        // TikTok username rules (practical): letters, numbers, underscore, dot. Max 24.
+        return preg_match('/^[A-Za-z0-9._]{2,24}$/', $u) === 1;
     }
 
     private static function extractInstagramUsername(string $input): ?string

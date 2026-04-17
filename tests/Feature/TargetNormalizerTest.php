@@ -41,3 +41,16 @@ it('normalizes tiktok short link by removing trailing slash', function () {
     expect($out1['target'])->toBe('https://vt.tiktok.com/ZSHpHjKmk');
     expect($out2['target'])->toBe('https://vt.tiktok.com/ZSHpHjKmk');
 });
+
+it('normalizes tiktok followers target from url with tracking query to username', function () {
+    $service = [
+        'name' => 'TikTok Followers',
+        'category' => 'TikTok Followers',
+    ];
+
+    $input = 'https://tiktok.com/@moyzstore?_r=1&_t=ZS-95aV4EVz9H6';
+    $out = TargetNormalizer::normalizeForService($service, $input);
+
+    expect($out['error'])->toBeNull();
+    expect($out['target'])->toBe('moyzstore');
+});

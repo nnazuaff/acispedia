@@ -32,5 +32,8 @@ return [
         // Negative reactions (scope to "reaction(s)" to avoid over-blocking)
         '/\b(reaction|reactions)\b[^\n]{0,40}\bnegative\b/i',
         '/\bnegative\b[^\n]{0,40}\b(reaction|reactions)\b/i',
+
+        // Hide internal/maintenance packages (do not show & do not allow buying)
+        '/\bPAKET\s+Instagram\s+(500|1000|5000|10\.?000|10000|20\.?000|20000)\s+Followers\s+Indonesia\s+Real\b/iu',
     ],
 ];

@@ -83,6 +83,11 @@ export default function AdminOrderDetail() {
 
     const [statusKey, setStatusKey] = React.useState<string>(currentKey);
 
+    const isLocked = React.useMemo(() => {
+        const key = String(order?.status ?? '').toLowerCase();
+        return key === 'failed' || key === 'error';
+    }, [order?.status]);
+
     React.useEffect(() => {
         setStatusKey(currentKey);
     }, [currentKey]);
@@ -109,8 +114,8 @@ export default function AdminOrderDetail() {
                                 <>
                                     <div className="w-full sm:max-w-xs">
                                         <Label>{t('Status')}</Label>
-                                        <Select value={statusKey} onValueChange={setStatusKey}>
-                                            <SelectTrigger>
+                                        <Select value={statusKey} onValueChange={isLocked ? undefined : setStatusKey}>
+                                            <SelectTrigger disabled={isLocked}>
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -124,7 +129,7 @@ export default function AdminOrderDetail() {
                                         <input type="hidden" name="status" value={statusKey} />
                                     </div>
 
-                                    <Button type="submit">{t('Perbarui Status')}</Button>
+                                    <Button type="submit" disabled={isLocked}>{t('Perbarui Status')}</Button>
 
                                     <Button asChild variant="outline">
                                         <Link href="/orders" prefetch>

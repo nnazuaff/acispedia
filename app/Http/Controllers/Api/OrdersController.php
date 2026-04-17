@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Services\MedanpediaClient;
+use App\Services\OrderRefundService;
 use App\Services\ServicePolicy;
 use App\Support\TargetNormalizer;
 use App\Support\UserActivity;
@@ -288,40 +289,19 @@ class OrdersController extends Controller
 
         if (! $providerOk && $providerOrderId === null) {
             // Refund if provider submission failed.
-            DB::transaction(function () use ($user, $createdOrder, $totalPrice) {
-                $balanceRow = UserBalance::query()
-                    ->where('user_id', $user->id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($balanceRow) {
-                    $balanceBefore = (int) $balanceRow->balance;
-                    $balanceAfter = $balanceBefore + $totalPrice;
-
-                    $balanceRow->balance = $balanceAfter;
-                    $spent = (int) $balanceRow->total_spent;
-                    $balanceRow->total_spent = $spent >= $totalPrice ? $spent - $totalPrice : 0;
-                    $balanceRow->save();
-
-                    WalletLedgerWriter::record(
-                        (int) $user->id,
-                        'credit',
-                        (int) $totalPrice,
-                        (int) $balanceBefore,
-                        (int) $balanceAfter,
-                        'order',
-                        (string) $createdOrder->id,
-                        'Refund order (gagal submit)',
-                        [
-                            'order_id' => (int) $createdOrder->id,
-                        ],
-                        now(),
-                    );
+            DB::transaction(function () use ($createdOrder) {
+                $fresh = Order::query()->lockForUpdate()->find($createdOrder->id);
+                if (! $fresh) {
+                    return;
                 }
 
-                $createdOrder->status = 'Error';
-                $createdOrder->save();
+                $fresh->status = 'Error';
+                $fresh->save();
+
+                OrderRefundService::refundLockedOrder($fresh, 'Refund order (gagal submit)');
             });
+
+            $createdOrder->refresh();
 
             try {
                 broadcast(new OrderStatusUpdated($createdOrder));
@@ -354,6 +334,20 @@ class OrdersController extends Controller
         $createdOrder->provider_order_id = $providerOrderId !== null ? (string) $providerOrderId : null;
         $createdOrder->status = $providerStatus;
         $createdOrder->save();
+
+        $statusKey = mb_strtolower((string) $createdOrder->status);
+        if (in_array($statusKey, ['failed', 'error'], true)) {
+            DB::transaction(function () use ($createdOrder) {
+                $fresh = Order::query()->lockForUpdate()->find($createdOrder->id);
+                if (! $fresh) {
+                    return;
+                }
+
+                OrderRefundService::refundLockedOrder($fresh, 'Refund order (status gagal)');
+            });
+
+            $createdOrder->refresh();
+        }
 
         try {
             broadcast(new OrderStatusUpdated($createdOrder));

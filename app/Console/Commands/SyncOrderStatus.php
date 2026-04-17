@@ -7,6 +7,7 @@ use App\Events\OrderStatusUpdated;
 use App\Models\Order;
 use App\Services\DashboardStats;
 use App\Services\MedanpediaClient;
+use App\Services\OrderRefundService;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -90,6 +91,11 @@ class SyncOrderStatus extends Command
                     $fresh->status = $nextStatus;
                     $statusChanged = true;
                     $updated++;
+                }
+
+                $statusKey = mb_strtolower((string) ($fresh->status ?? ''));
+                if ($statusChanged && in_array($statusKey, ['failed', 'error'], true)) {
+                    OrderRefundService::refundLockedOrder($fresh, 'Refund order (status gagal)');
                 }
 
                 if (is_array($info)) {
