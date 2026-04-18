@@ -15,14 +15,22 @@ final class FinancialReportMetrics
     public static function summarize(Carbon $rangeStartUtc, Carbon $rangeEndUtc): array
     {
         $totalDeposit = (int) Deposit::query()
-            ->whereBetween('created_at', [$rangeStartUtc, $rangeEndUtc])
+            ->where('status', 'success')
+            ->where(function ($q) use ($rangeStartUtc, $rangeEndUtc) {
+                $q->whereBetween('processed_at', [$rangeStartUtc, $rangeEndUtc])
+                    ->orWhere(function ($qq) use ($rangeStartUtc, $rangeEndUtc) {
+                        $qq->whereNull('processed_at')
+                            ->whereBetween('created_at', [$rangeStartUtc, $rangeEndUtc]);
+                    });
+            })
             ->sum('amount');
 
         $revenueCost = Order::query()
             ->whereBetween('created_at', [$rangeStartUtc, $rangeEndUtc])
+            ->whereNull('refunded_at')
             ->select([
                 DB::raw('COALESCE(SUM(total_price), 0) as revenue'),
-                DB::raw('COALESCE(SUM(ROUND((COALESCE(base_price, 0) * COALESCE(quantity, 0)) / 1000)), 0) as cost'),
+                DB::raw('COALESCE(SUM(CASE WHEN charge IS NOT NULL THEN charge ELSE ROUND((COALESCE(base_price, 0) * COALESCE(quantity, 0)) / 1000) END), 0) as cost'),
             ])
             ->first();
 

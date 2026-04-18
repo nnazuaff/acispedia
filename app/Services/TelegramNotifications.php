@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Deposit;
 use App\Models\Order;
+use App\Models\Suggestion;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Throwable;
@@ -111,6 +112,32 @@ final class TelegramNotifications
                 'Referensi: '.$reference."\n".
                 'Nominal: '.(int) ($deposit->amount ?? 0)."\n".
                 'Final: '.(int) ($deposit->final_amount ?? 0)
+            );
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    public static function suggestionSubmitted(Suggestion $suggestion, ?User $user = null): bool
+    {
+        try {
+            $user = $user ?? $suggestion->user;
+
+            $message = trim((string) ($suggestion->message ?? ''));
+            if (mb_strlen($message) > 800) {
+                $message = mb_substr($message, 0, 800).'…';
+            }
+
+            return TelegramNotifier::sendMessage(
+                "[Kotak Saran] Pesan masuk\n".
+                'Tanggal: '.self::wib($suggestion->created_at)."\n".
+                'ID: #'.(int) $suggestion->id."\n".
+                'User ID: #'.(int) ($suggestion->user_id ?? 0)."\n".
+                'Nama: '.(string) ($suggestion->name ?? '-')."\n".
+                'Email: '.(string) ($user?->email ?? '-')."\n".
+                'HP: '.(string) ($suggestion->phone ?? '-')."\n".
+                'Kategori: '.(string) ($suggestion->category ?? '-')."\n".
+                'Pesan: '.$message
             );
         } catch (Throwable) {
             return false;

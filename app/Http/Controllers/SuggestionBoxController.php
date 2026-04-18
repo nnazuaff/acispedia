@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Suggestion;
+use App\Services\TelegramNotifications;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class SuggestionBoxController extends Controller
 {
@@ -38,13 +40,19 @@ class SuggestionBoxController extends Controller
             'message' => ['required', 'string', 'min:5', 'max:10000'],
         ]);
 
-        Suggestion::query()->create([
+        $suggestion = Suggestion::query()->create([
             'user_id' => (int) $user->id,
             'name' => trim((string) $validated['name']),
             'phone' => trim((string) $validated['phone']),
             'category' => trim((string) $validated['category']),
             'message' => trim((string) $validated['message']),
         ]);
+
+        try {
+            TelegramNotifications::suggestionSubmitted($suggestion, $user);
+        } catch (Throwable) {
+            // best-effort
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Terima kasih! Saran Anda berhasil dikirim.']);
 

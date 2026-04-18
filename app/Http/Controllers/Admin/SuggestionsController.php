@@ -7,6 +7,7 @@ use App\Models\Suggestion;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Support\WibDateRange;
 
 class SuggestionsController extends Controller
 {
@@ -17,7 +18,36 @@ class SuggestionsController extends Controller
             $perPage = 25;
         }
 
+        $today = WibDateRange::todayDateString();
+        $date = trim((string) $request->query('date', $today));
+        $id = (int) $request->query('id', 0);
+        $user = trim((string) $request->query('user', ''));
+        $category = trim((string) $request->query('category', ''));
+
+        if (! in_array($category, ['', 'saran', 'keluhan', 'lainnya'], true)) {
+            $category = '';
+        }
+
+        $range = WibDateRange::resolve($date, $date);
+        $startUtc = $range['start_utc'];
+        $endUtc = $range['end_utc'];
+
         $paginator = Suggestion::query()
+            ->with(['user:id,name,email'])
+            ->whereBetween('created_at', [$startUtc, $endUtc])
+            ->when($id > 0, fn ($q) => $q->where('id', $id))
+            ->when($category !== '', fn ($q) => $q->where('category', $category))
+            ->when($user !== '', function ($q) use ($user) {
+                $needle = '%'.$user.'%';
+
+                $q->where(function ($qq) use ($needle) {
+                    $qq->where('name', 'like', $needle)
+                        ->orWhereHas('user', function ($u) use ($needle) {
+                            $u->where('name', 'like', $needle)
+                                ->orWhere('email', 'like', $needle);
+                        });
+                });
+            })
             ->orderByDesc('id')
             ->paginate($perPage)
             ->withQueryString();
@@ -26,6 +56,8 @@ class SuggestionsController extends Controller
             return [
                 'id' => (int) $row->id,
                 'user_id' => (int) $row->user_id,
+                'user_name' => (string) ($row->user?->name ?? ''),
+                'user_email' => (string) ($row->user?->email ?? ''),
                 'name' => (string) ($row->name ?? ''),
                 'phone' => (string) ($row->phone ?? ''),
                 'category' => (string) ($row->category ?? ''),
@@ -40,6 +72,10 @@ class SuggestionsController extends Controller
             'suggestions' => $paginator,
             'filters' => [
                 'per_page' => $perPage,
+                'date' => $range['date_from'],
+                'id' => $id > 0 ? $id : null,
+                'user' => $user !== '' ? $user : null,
+                'category' => $category !== '' ? $category : null,
             ],
         ]);
     }

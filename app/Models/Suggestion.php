@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
@@ -18,4 +19,11 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['user_id', 'name', 'phone', 'category', 'message'])]
 class Suggestion extends Model
 {
+	/**
+	 * @return BelongsTo<User, Suggestion>
+	 */
+	public function user(): BelongsTo
+	{
+		return $this->belongsTo(User::class);
+	}
 }

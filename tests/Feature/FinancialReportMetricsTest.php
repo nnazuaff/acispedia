@@ -44,8 +44,21 @@ test('financial report metrics use created date regardless of transaction status
             'final_amount' => 50000,
             'payment_method' => 'midtrans',
             'status' => 'success',
-            'created_at' => '2026-04-15 18:00:00',
-            'updated_at' => '2026-04-15 18:00:00',
+            'created_at' => '2026-04-15 03:00:00',
+            'updated_at' => '2026-04-15 03:00:00',
+            'processed_at' => '2026-04-15 03:00:00',
+        ]);
+
+        // Created yesterday but succeeded today -> should count for today's deposit.
+        Deposit::query()->create([
+            'user_id' => $user->id,
+            'amount' => 70000,
+            'final_amount' => 70000,
+            'payment_method' => 'tripay',
+            'status' => 'success',
+            'created_at' => '2026-04-14 20:00:00',
+            'updated_at' => '2026-04-15 02:00:00',
+            'processed_at' => '2026-04-15 02:00:00',
         ]);
     });
 
@@ -64,6 +77,22 @@ test('financial report metrics use created date regardless of transaction status
             'updated_at' => '2026-04-15 02:00:00',
         ]);
 
+        // Refunded order created today should not affect today's sales/profit.
+        Order::query()->create([
+            'user_id' => $user->id,
+            'service_id' => 3,
+            'service_name' => 'Instagram Likes (Refunded)',
+            'base_price' => 4000,
+            'price_per_1000' => 5000,
+            'total_price' => 5000,
+            'target' => 'https://example.com/post/refunded',
+            'quantity' => 1000,
+            'status' => 'Error',
+            'refunded_at' => '2026-04-15 12:00:00',
+            'created_at' => '2026-04-15 08:00:00',
+            'updated_at' => '2026-04-15 12:00:00',
+        ]);
+
         Order::query()->create([
             'user_id' => $user->id,
             'service_id' => 2,
@@ -74,15 +103,15 @@ test('financial report metrics use created date regardless of transaction status
             'target' => 'https://example.com/post/2',
             'quantity' => 2000,
             'status' => 'Success',
-            'created_at' => '2026-04-15 20:00:00',
-            'updated_at' => '2026-04-15 20:10:00',
+            'created_at' => '2026-04-15 10:00:00',
+            'updated_at' => '2026-04-15 10:10:00',
         ]);
     });
 
     $range = WibDateRange::resolve('2026-04-15', '2026-04-15');
     $summary = FinancialReportMetrics::summarize($range['start_utc'], $range['end_utc']);
 
-    expect($summary['total_deposit'])->toBe(100000)
-        ->and($summary['total_sales'])->toBe(5000)
-        ->and($summary['net_profit'])->toBe(1000);
+    expect($summary['total_deposit'])->toBe(120000)
+        ->and($summary['total_sales'])->toBe(14000)
+        ->and($summary['net_profit'])->toBe(4000);
 });

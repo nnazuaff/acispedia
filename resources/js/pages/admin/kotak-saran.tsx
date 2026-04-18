@@ -4,11 +4,22 @@ import * as React from 'react';
 import Heading from '@/components/heading';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useI18n } from '@/i18n/i18n-provider';
 
 type SuggestionRow = {
     id: number;
     user_id: number;
+    user_name?: string;
+    user_email?: string;
     name: string;
     phone: string;
     category: string;
@@ -30,6 +41,10 @@ type SuggestionsPaginator = {
 
 type Filters = {
     per_page: number;
+    date?: string | null;
+    id?: number | null;
+    user?: string | null;
+    category?: string | null;
 };
 
 type PageProps = {
@@ -41,8 +56,35 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
     const { t } = useI18n();
     const rows = suggestions?.data ?? [];
 
+    const [expandedId, setExpandedId] = React.useState<number | null>(null);
+
+    const [draft, setDraft] = React.useState(() => ({
+        date: filters?.date ?? '',
+        id: filters?.id ? String(filters.id) : '',
+        user: filters?.user ?? '',
+        category: filters?.category ?? '',
+    }));
+
     const go = (params: Record<string, any>) => {
         router.get('/kotak-saran', { ...filters, ...params }, { preserveState: true, replace: true });
+    };
+
+    const truncate = (text: string, max = 120) => {
+        const clean = text ?? '';
+        if (clean.length <= max) return clean;
+        return clean.slice(0, max) + '…';
+    };
+
+    const applyFilters = () => {
+        const idNum = Number.parseInt(draft.id || '0', 10);
+
+        go({
+            page: 1,
+            date: draft.date || undefined,
+            id: Number.isFinite(idNum) && idNum > 0 ? idNum : undefined,
+            user: draft.user.trim() || undefined,
+            category: draft.category || undefined,
+        });
     };
 
     return (
@@ -53,6 +95,63 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
 
                 <Card>
                     <CardContent className="pt-6">
+                        <div className="grid gap-3 pb-4 md:grid-cols-5">
+                            <div className="space-y-1">
+                                <Label htmlFor="date">{t('Tanggal')}</Label>
+                                <Input
+                                    id="date"
+                                    type="date"
+                                    value={draft.date}
+                                    onChange={(e) => setDraft((s) => ({ ...s, date: e.target.value }))}
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label htmlFor="id">{t('ID')}</Label>
+                                <Input
+                                    id="id"
+                                    inputMode="numeric"
+                                    placeholder="123"
+                                    value={draft.id}
+                                    onChange={(e) => setDraft((s) => ({ ...s, id: e.target.value }))}
+                                />
+                            </div>
+
+                            <div className="space-y-1 md:col-span-2">
+                                <Label htmlFor="user">{t('Nama User')}</Label>
+                                <Input
+                                    id="user"
+                                    placeholder={t('Cari nama / email...')}
+                                    value={draft.user}
+                                    onChange={(e) => setDraft((s) => ({ ...s, user: e.target.value }))}
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>{t('Kategori')}</Label>
+                                <Select
+                                    value={draft.category || undefined}
+                                    onValueChange={(v) => setDraft((s) => ({ ...s, category: v }))}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('Semua')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">{t('Semua')}</SelectItem>
+                                        <SelectItem value="saran">{t('Saran')}</SelectItem>
+                                        <SelectItem value="keluhan">{t('Keluhan')}</SelectItem>
+                                        <SelectItem value="lainnya">{t('Lainnya')}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pb-4">
+                            <Button variant="outline" onClick={applyFilters}>
+                                {t('Filter')}
+                            </Button>
+                        </div>
+
                         <div className="flex items-center justify-end gap-2 pb-4">
                             <Button
                                 variant="outline"
@@ -95,26 +194,59 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                             {t('Saran')}
                                         </th>
+                                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Aksi')}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {rows.length === 0 ? (
                                         <tr>
-                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={7}>
+                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={8}>
                                                 {t('Tidak ada data.')}
                                             </td>
                                         </tr>
                                     ) : (
                                         rows.map((row) => (
-                                            <tr key={row.id} className="border-t align-top">
-                                                <td className="px-4 py-3 whitespace-nowrap">#{row.id}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.created_at_wib ?? '-'}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">#{row.user_id}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.name}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.phone}</td>
-                                                <td className="px-4 py-3 whitespace-nowrap">{row.category}</td>
-                                                <td className="px-4 py-3 whitespace-pre-wrap wrap-break-word">{row.message}</td>
-                                            </tr>
+                                            <React.Fragment key={row.id}>
+                                                <tr className="border-t align-top">
+                                                    <td className="px-4 py-3 whitespace-nowrap">#{row.id}</td>
+                                                    <td className="px-4 py-3 whitespace-nowrap">{row.created_at_wib ?? '-'}</td>
+                                                    <td className="px-4 py-3 whitespace-nowrap">#{row.user_id}</td>
+                                                    <td className="px-4 py-3 whitespace-nowrap">{row.name}</td>
+                                                    <td className="px-4 py-3 whitespace-nowrap">{row.phone}</td>
+                                                    <td className="px-4 py-3 whitespace-nowrap">{row.category}</td>
+                                                    <td className="px-4 py-3 whitespace-pre-wrap wrap-break-word">
+                                                        {expandedId === row.id ? row.message : truncate(row.message)}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                setExpandedId((cur) => (cur === row.id ? null : row.id))
+                                                            }
+                                                        >
+                                                            {expandedId === row.id ? t('Tutup') : t('Detail')}
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+
+                                                {expandedId === row.id && (
+                                                    <tr className="border-t bg-muted/10">
+                                                        <td className="px-4 py-3 text-xs text-muted-foreground" colSpan={8}>
+                                                            <div className="grid gap-1 md:grid-cols-2">
+                                                                <div>
+                                                                    {t('User')}: {row.user_name || '-'}
+                                                                </div>
+                                                                <div>
+                                                                    {t('Email')}: {row.user_email || '-'}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
                                         ))
                                     )}
                                 </tbody>
