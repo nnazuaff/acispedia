@@ -234,7 +234,7 @@ export default function AdminOrders() {
                                     id="q"
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
-                                    placeholder={t('nama pengguna / layanan')}
+                                    placeholder={t('')}
                                 />
                             </div>
 
@@ -244,7 +244,7 @@ export default function AdminOrders() {
                                     id="id"
                                     value={id}
                                     onChange={(e) => setId(e.target.value.replace(/\D+/g, ''))}
-                                    placeholder="123"
+                                    placeholder=""
                                     inputMode="numeric"
                                     pattern="[0-9]*"
                                 />
@@ -256,7 +256,7 @@ export default function AdminOrders() {
                                     id="user_id"
                                     value={userId}
                                     onChange={(e) => setUserId(e.target.value.replace(/\D+/g, ''))}
-                                    placeholder="123"
+                                    placeholder=""
                                     inputMode="numeric"
                                     pattern="[0-9]*"
                                 />
@@ -268,7 +268,7 @@ export default function AdminOrders() {
                                     id="target"
                                     value={target}
                                     onChange={(e) => setTarget(e.target.value)}
-                                    placeholder="https://..."
+                                    placeholder=""
                                 />
                             </div>
 
@@ -276,7 +276,7 @@ export default function AdminOrders() {
                                 <Label>{t('Status')}</Label>
                                 <Select value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder={t('Semua')} />
+                                        <SelectValue placeholder={t('-- Semua --')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">{t('Semua')}</SelectItem>

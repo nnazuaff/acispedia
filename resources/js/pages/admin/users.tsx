@@ -187,7 +187,7 @@ export default function AdminUsers() {
                                     className="mt-2 h-10"
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
-                                    placeholder={t('nama / email / no. hp / id')}
+                                    placeholder={t('')}
                                 />
                             </div>
 
@@ -198,7 +198,7 @@ export default function AdminUsers() {
                                     className="mt-2 h-10"
                                     value={id}
                                     onChange={(e) => setId(e.target.value.replace(/\D+/g, ''))}
-                                    placeholder="123"
+                                    placeholder=""
                                     inputMode="numeric"
                                     pattern="[0-9]*"
                                 />
@@ -208,7 +208,7 @@ export default function AdminUsers() {
                                 <Label>{t('Status')}</Label>
                                 <Select value={status} onValueChange={(v) => setStatus(v)}>
                                     <SelectTrigger className="mt-2 h-10">
-                                        <SelectValue placeholder={t('Semua')} />
+                                        <SelectValue placeholder={t('-- Semua --')} />
                                     </SelectTrigger>
                                     <SelectContent align="end">
                                         <SelectItem value={STATUS_ALL}>{t('Semua')}</SelectItem>

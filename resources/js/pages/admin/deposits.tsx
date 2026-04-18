@@ -250,7 +250,7 @@ export default function AdminDeposits() {
                                     id="id"
                                     value={id}
                                     onChange={(e) => setId(e.target.value.replace(/\D+/g, ''))}
-                                    placeholder="123"
+                                    placeholder=""
                                     inputMode="numeric"
                                     pattern="[0-9]*"
                                 />
@@ -262,7 +262,7 @@ export default function AdminDeposits() {
                                     id="user_id"
                                     value={userId}
                                     onChange={(e) => setUserId(e.target.value.replace(/\D+/g, ''))}
-                                    placeholder="123"
+                                    placeholder=""
                                     inputMode="numeric"
                                     pattern="[0-9]*"
                                 />
@@ -272,7 +272,7 @@ export default function AdminDeposits() {
                                 <Label>{t('Status')}</Label>
                                 <Select value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder={t('Semua')} />
+                                        <SelectValue placeholder={t('-- Semua --')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">{t('Semua')}</SelectItem>
@@ -289,7 +289,7 @@ export default function AdminDeposits() {
                                 <Label>{t('Metode')}</Label>
                                 <Select value={method || 'all'} onValueChange={(v) => setMethod(v === 'all' ? '' : v)}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder={t('Semua')} />
+                                        <SelectValue placeholder={t('-- Semua --')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">{t('Semua')}</SelectItem>

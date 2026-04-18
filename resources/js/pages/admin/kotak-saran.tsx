@@ -1,11 +1,20 @@
 import { Head, router } from '@inertiajs/react';
 import * as React from 'react';
+import { CalendarIcon } from 'lucide-react';
 
 import Heading from '@/components/heading';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
     Select,
     SelectContent,
@@ -14,6 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useI18n } from '@/i18n/i18n-provider';
+import { cn } from '@/lib/utils';
 
 type SuggestionRow = {
     id: number;
@@ -54,11 +64,35 @@ type PageProps = {
 
 const CATEGORY_ALL = '__all__';
 
+function parseYmdToLocalDate(value: string): Date | undefined {
+    const raw = String(value ?? '').trim();
+    if (raw === '') return undefined;
+
+    const parts = raw.split('-');
+    if (parts.length !== 3) return undefined;
+
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    const day = Number(parts[2]);
+
+    if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return undefined;
+    if (year < 1900 || month < 1 || month > 12 || day < 1 || day > 31) return undefined;
+
+    return new Date(year, month - 1, day);
+}
+
+function formatLocalDateToYmd(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
 export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
     const { t } = useI18n();
     const rows = suggestions?.data ?? [];
 
-    const [expandedId, setExpandedId] = React.useState<number | null>(null);
+    const [detail, setDetail] = React.useState<SuggestionRow | null>(null);
 
     const [draft, setDraft] = React.useState(() => ({
         date: filters?.date ?? '',
@@ -71,7 +105,7 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
         router.get('/kotak-saran', { ...filters, ...params }, { preserveState: true, replace: true });
     };
 
-    const truncate = (text: string, max = 120) => {
+    const truncate = (text: string, max = 15) => {
         const clean = text ?? '';
         if (clean.length <= max) return clean;
         return clean.slice(0, max) + '…';
@@ -100,12 +134,34 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                         <div className="grid gap-3 pb-4 md:grid-cols-5">
                             <div className="space-y-1">
                                 <Label htmlFor="date">{t('Tanggal')}</Label>
-                                <Input
-                                    id="date"
-                                    type="date"
-                                    value={draft.date}
-                                    onChange={(e) => setDraft((s) => ({ ...s, date: e.target.value }))}
-                                />
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <button
+                                            id="date"
+                                            type="button"
+                                            className={cn(
+                                                'border-input placeholder:text-muted-foreground flex h-9 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm',
+                                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                                                !draft.date ? 'text-muted-foreground' : ''
+                                            )}
+                                        >
+                                            <span className="truncate">{draft.date || t('Pilih tanggal')}</span>
+                                            <CalendarIcon className="ml-2 size-4 shrink-0 text-muted-foreground" />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={parseYmdToLocalDate(draft.date)}
+                                            onSelect={(day) => {
+                                                if (!day) return;
+                                                const clicked = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+                                                setDraft((s) => ({ ...s, date: formatLocalDateToYmd(clicked) }));
+                                            }}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
                             </div>
 
                             <div className="space-y-1">
@@ -210,45 +266,20 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                                         </tr>
                                     ) : (
                                         rows.map((row) => (
-                                            <React.Fragment key={row.id}>
-                                                <tr className="border-t align-top">
-                                                    <td className="px-4 py-3 whitespace-nowrap">#{row.id}</td>
-                                                    <td className="px-4 py-3 whitespace-nowrap">{row.created_at_wib ?? '-'}</td>
-                                                    <td className="px-4 py-3 whitespace-nowrap">#{row.user_id}</td>
-                                                    <td className="px-4 py-3 whitespace-nowrap">{row.name}</td>
-                                                    <td className="px-4 py-3 whitespace-nowrap">{row.phone}</td>
-                                                    <td className="px-4 py-3 whitespace-nowrap">{row.category}</td>
-                                                    <td className="px-4 py-3 whitespace-pre-wrap wrap-break-word">
-                                                        {expandedId === row.id ? row.message : truncate(row.message)}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                setExpandedId((cur) => (cur === row.id ? null : row.id))
-                                                            }
-                                                        >
-                                                            {expandedId === row.id ? t('Tutup') : t('Detail')}
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-
-                                                {expandedId === row.id && (
-                                                    <tr className="border-t bg-muted/10">
-                                                        <td className="px-4 py-3 text-xs text-muted-foreground" colSpan={8}>
-                                                            <div className="grid gap-1 md:grid-cols-2">
-                                                                <div>
-                                                                    {t('User')}: {row.user_name || '-'}
-                                                                </div>
-                                                                <div>
-                                                                    {t('Email')}: {row.user_email || '-'}
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </React.Fragment>
+                                            <tr key={row.id} className="border-t align-top">
+                                                <td className="px-4 py-3 whitespace-nowrap">#{row.id}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.created_at_wib ?? '-'}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">#{row.user_id}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.name}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.phone}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{row.category}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">{truncate(row.message)}</td>
+                                                <td className="px-4 py-3 text-right whitespace-nowrap">
+                                                    <Button variant="outline" size="sm" onClick={() => setDetail(row)}>
+                                                        {t('Detail')}
+                                                    </Button>
+                                                </td>
+                                            </tr>
                                         ))
                                     )}
                                 </tbody>
@@ -256,6 +287,85 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                         </div>
                     </CardContent>
                 </Card>
+
+                <Dialog open={detail !== null} onOpenChange={(open) => !open && setDetail(null)}>
+                    <DialogContent className="max-h-[calc(100vh-2rem)] overflow-auto sm:max-w-lg">
+                        <DialogHeader>
+                            <DialogTitle>{t('Detail Saran')}</DialogTitle>
+                        </DialogHeader>
+
+                        {detail ? (
+                            <div className="grid gap-4">
+                                <div className="grid gap-3">
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('ID')}
+                                        </div>
+                                        <div className="text-sm font-semibold">#{detail.id}</div>
+                                    </div>
+
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Dibuat')}
+                                        </div>
+                                        <div className="text-sm font-medium">{detail.created_at_wib ?? '-'}</div>
+                                    </div>
+
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('User ID')}
+                                        </div>
+                                        <div className="text-sm font-medium">#{detail.user_id}</div>
+                                    </div>
+
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Nama User')}
+                                        </div>
+                                        <div className="text-sm font-medium">{detail.user_name || '-'}</div>
+                                    </div>
+
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Email')}
+                                        </div>
+                                        <div className="text-sm font-medium">{detail.user_email || '-'}</div>
+                                    </div>
+
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Nama')}
+                                        </div>
+                                        <div className="text-sm font-medium">{detail.name || '-'}</div>
+                                    </div>
+
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('HP')}
+                                        </div>
+                                        <div className="text-sm font-medium">{detail.phone || '-'}</div>
+                                    </div>
+
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Kategori')}
+                                        </div>
+                                        <div className="text-sm font-medium">{detail.category || '-'}</div>
+                                    </div>
+
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Saran')}
+                                        </div>
+                                        <div className="text-sm font-medium whitespace-pre-wrap break-words">{detail.message}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-sm text-muted-foreground">{t('Data tidak ditemukan.')}</div>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </div>
         </>
     );
