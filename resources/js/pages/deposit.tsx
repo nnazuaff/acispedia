@@ -260,7 +260,7 @@ export default function DepositPage() {
             snapToken,
         })) {
             const loadingId = toast.loading(
-                locale === 'en' ? 'Opening payment popup…' : 'Membuka popup pembayaran…'
+                t('Membuka popup pembayaran…')
             );
 
             let dismissed = false;
@@ -484,9 +484,8 @@ export default function DepositPage() {
                             <div className="mt-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm">
                                 <div className="font-semibold">{t('Ada deposit pending')}</div>
                                 <div className="mt-1 text-muted-foreground">
-                                    {locale === 'en'
-                                        ? `Deposit #${activePending.id}${activePending.expired_at ? ` • Expires: ${fmtWib(activePending.expired_at)}` : ''}`
-                                        : `Deposit #${activePending.id}${activePending.expired_at ? ` • Kadaluarsa: ${fmtWib(activePending.expired_at)}` : ''}`}
+                                    {t('Deposit')} #{activePending.id}
+                                    {activePending.expired_at ? ` • ${t('Expired')}: ${fmtWib(activePending.expired_at)}` : ''}
                                 </div>
 
                                 <div className="mt-3 flex flex-wrap gap-2">
@@ -627,7 +626,7 @@ export default function DepositPage() {
                                                             const next = normalizeIdPhoneToLocalZero(e.target.value);
                                                             setAcispayPhone(next);
                                                         }}
-                                                        placeholder="08xxxxxxxxxx"
+                                                        placeholder={t('Contoh: 08xxxxxxxxxx')}
                                                     />
                                                 </div>
                                                 <div>
@@ -637,7 +636,7 @@ export default function DepositPage() {
                                                         className="mt-1"
                                                         value={acispayUsername}
                                                         onChange={(e) => setAcispayUsername(e.target.value)}
-                                                        placeholder="username"
+                                                        placeholder={t('Contoh: username')}
                                                     />
                                                 </div>
                                             </div>
@@ -676,7 +675,7 @@ export default function DepositPage() {
 
                                 <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
                                     <span className="inline-flex h-5 items-center rounded-md bg-muted px-1.5 text-[10px] text-foreground">
-                                        RP
+                                        {t('RP')}
                                     </span>
                                     <span>{t('ATAU MASUKKAN NOMINAL MANUAL')}</span>
                                 </div>
@@ -692,7 +691,7 @@ export default function DepositPage() {
                                         max={200000}
                                         value={String(amount)}
                                         onChange={(e) => setAmount(Number(e.target.value))}
-                                        placeholder={t('0')}
+                                        placeholder="0"
                                     />
                                     <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                                         <span>{t('Minimal')}: Rp 1.000</span>

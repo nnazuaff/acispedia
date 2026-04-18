@@ -58,24 +58,24 @@ const ALL_TOP_CATEGORIES_VALUE = '__all_groups__';
 
 type TopCategoryOption = {
     value: string;
-    label: string;
+    labelKey: string;
     icon: React.ComponentType<{ className?: string }>;
 };
 
 const topCategoryOptions: TopCategoryOption[] = [
-    { value: ALL_TOP_CATEGORIES_VALUE, label: 'Semua Kategori', icon: LayoutGrid },
-    { value: 'instagram', label: 'Instagram', icon: Instagram },
-    { value: 'facebook', label: 'Facebook', icon: Facebook },
-    { value: 'youtube', label: 'Youtube', icon: Youtube },
-    { value: 'twitter', label: 'X - Twitter', icon: Twitter },
-    { value: 'spotify', label: 'Spotify', icon: Music2 },
-    { value: 'tiktok', label: 'Tiktok', icon: Music2 },
-    { value: 'linkedin', label: 'Linkedin', icon: Linkedin },
-    { value: 'telegram', label: 'Telegram', icon: Send },
-    { value: 'thread', label: 'Thread', icon: AtSign },
-    { value: 'web_traffic', label: 'Web Traffic', icon: Globe },
-    { value: 'lainnya', label: 'Lainnya', icon: Ellipsis },
-    { value: 'instagram_followers', label: 'Instagram Followers', icon: Instagram },
+    { value: ALL_TOP_CATEGORIES_VALUE, labelKey: 'Semua kategori', icon: LayoutGrid },
+    { value: 'instagram', labelKey: 'Instagram', icon: Instagram },
+    { value: 'facebook', labelKey: 'Facebook', icon: Facebook },
+    { value: 'youtube', labelKey: 'Youtube', icon: Youtube },
+    { value: 'twitter', labelKey: 'X - Twitter', icon: Twitter },
+    { value: 'spotify', labelKey: 'Spotify', icon: Music2 },
+    { value: 'tiktok', labelKey: 'Tiktok', icon: Music2 },
+    { value: 'linkedin', labelKey: 'Linkedin', icon: Linkedin },
+    { value: 'telegram', labelKey: 'Telegram', icon: Send },
+    { value: 'thread', labelKey: 'Thread', icon: AtSign },
+    { value: 'web_traffic', labelKey: 'Web Traffic', icon: Globe },
+    { value: 'lainnya', labelKey: 'Lainnya', icon: Ellipsis },
+    { value: 'instagram_followers', labelKey: 'Instagram Followers', icon: Instagram },
 ];
 
 function resolveTopCategoryGroup(category: string): string {
@@ -412,7 +412,7 @@ function OrderInformationContent({ balance, t }: OrderInformationContentProps) {
             </div>
 
             <div>
-                <div className="text-xs font-semibold text-muted-foreground">Instagram</div>
+                <div className="text-xs font-semibold text-muted-foreground">{t('Instagram')}</div>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
                     <li>{t('Pastikan akun tidak private saat order diproses.')}</li>
                     <li>{t('Jangan ubah username/tautan selama pesanan berjalan.')}</li>
@@ -784,15 +784,11 @@ export default function OrderPage() {
                                             setDebouncedServicePickerQuery('');
                                             setCategoryPickerQuery('');
 
-                                            toast.success(
-                                                locale === 'en'
-                                                    ? `${item.label} selected.`
-                                                    : `${item.label} berhasil dipilih.`
-                                            );
+                                            toast.success(t('Kategori berhasil dipilih.'));
                                         }}
                                     >
                                         <Icon className="size-4" />
-                                        <span>{item.label}</span>
+                                        <span>{t(item.labelKey)}</span>
                                     </button>
                                 );
                             })}
@@ -1115,11 +1111,7 @@ export default function OrderPage() {
                                                 const msg = t(rawMsg);
 
                                                 if (json?.code === 'INSUFFICIENT_BALANCE' && json?.formatted) {
-                                                    toast.error(
-                                                        locale === 'en'
-                                                            ? `${msg} Short by ${json.formatted.shortfall}.`
-                                                            : `${msg} Kurang ${json.formatted.shortfall}.`
-                                                    );
+                                                    toast.error(`${msg} ${t('Kurang')} ${json.formatted.shortfall}.`);
                                                 } else {
                                                     toast.error(msg);
                                                 }

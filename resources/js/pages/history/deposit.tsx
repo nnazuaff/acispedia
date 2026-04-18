@@ -289,7 +289,7 @@ export default function HistoryDepositPage() {
 
         if (isMidtrans && canUseMidtransSnap({ snapJsUrl: midtransSnapJsUrl, clientKey: midtransClientKey, snapToken })) {
             const loadingId = toast.loading(
-                locale === 'en' ? 'Opening payment popup…' : 'Membuka popup pembayaran…'
+                t('Membuka popup pembayaran…')
             );
 
             let dismissed = false;
@@ -321,7 +321,7 @@ export default function HistoryDepositPage() {
                     },
                     onError: () => {
                         dismissLoading();
-                        toast.error('Terjadi masalah saat memproses pembayaran.');
+                        toast.error(t('Terjadi masalah saat memproses pembayaran.'));
                     },
                     onClose: () => {
                         dismissLoading();
@@ -568,9 +568,10 @@ export default function HistoryDepositPage() {
 
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm text-muted-foreground">
                             <div>
-                                {locale === 'en'
-                                    ? `Showing ${from}-${to} of ${total}${depositsProp?.last_page ? ` (Page ${depositsProp.current_page} / ${depositsProp.last_page})` : ''}`
-                                    : `Menampilkan ${from}-${to} dari ${total}${depositsProp?.last_page ? ` (Halaman ${depositsProp.current_page} / ${depositsProp.last_page})` : ''}`}
+                                {t('Menampilkan')} {from}-{to} {t('dari')} {total}
+                                {depositsProp?.last_page
+                                    ? ` (${t('Halaman')} ${depositsProp.current_page} / ${depositsProp.last_page})`
+                                    : ''}
                             </div>
                         </div>
                     </CardHeader>

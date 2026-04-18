@@ -99,7 +99,7 @@ export default function Profile({
                                     name="phone"
                                     required
                                     autoComplete="tel"
-                                    placeholder={t('08xxxxxxxxxx')}
+                                    placeholder={t('Contoh: 08xxxxxxxxxx')}
                                 />
 
                                 <InputError

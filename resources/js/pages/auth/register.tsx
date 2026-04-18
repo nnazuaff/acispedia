@@ -119,7 +119,7 @@ export default function Register() {
                                         tabIndex={2}
                                         autoComplete="email"
                                         name="email"
-                                        placeholder="email@example.com"
+                                        placeholder={t('Contoh: email@example.com')}
                                         className="pl-10"
                                     />
                                 </div>
@@ -142,7 +142,7 @@ export default function Register() {
                                         autoComplete="tel"
                                         name="phone"
                                         inputMode="tel"
-                                        placeholder="08xxxxxxxxxx"
+                                        placeholder={t('Contoh: 08xxxxxxxxxx')}
                                         className="pl-10"
                                     />
                                 </div>

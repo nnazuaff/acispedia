@@ -362,15 +362,16 @@ export default function PublicServices() {
                                 <div>
                                     <div className="text-sm font-semibold text-foreground">{t('Kategori')}</div>
                                     <div className="text-xs text-muted-foreground">
-                                        {locale === 'en'
-                                            ? 'Click a category to limit the visible services.'
-                                            : 'Klik kategori untuk menampilkan layanan pada kategori itu saja.'}
+                                        {t('Klik kategori untuk menampilkan layanan pada kategori itu saja.')}
                                     </div>
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                    {locale === 'en'
-                                        ? `${filteredCategories.length} categories`
-                                        : `${filteredCategories.length} kategori`}
+                                    {filteredCategories.length}{' '}
+                                    {t(
+                                        filteredCategories.length === 1
+                                            ? 'kategori'
+                                            : 'kategori_plural'
+                                    )}
                                 </div>
                             </div>
 
@@ -429,18 +430,18 @@ export default function PublicServices() {
                                     <span className="text-destructive">{error}</span>
                                 ) : (
                                     <span>
-                                        {locale === 'en'
-                                            ? `Showing ${meta.shown} of ${meta.valid} services${meta.totalPages > 0 ? ` (Page ${page} / ${meta.totalPages})` : ''}`
-                                            : `Menampilkan ${meta.shown} dari ${meta.valid} layanan${meta.totalPages > 0 ? ` (Halaman ${page} / ${meta.totalPages})` : ''}`}
+                                        {t('Menampilkan')} {meta.shown} {t('dari')} {meta.valid}{' '}
+                                        {t(meta.valid === 1 ? 'layanan' : 'layanan_plural')}
+                                        {meta.totalPages > 0
+                                            ? ` (${t('Halaman')} ${page} / ${meta.totalPages})`
+                                            : ''}
                                     </span>
                                 )}
                             </div>
 
                             {!isLoading && !error && (
                                 <div>
-                                    {locale === 'en'
-                                        ? `Active category: ${category === ALL_CATEGORIES_VALUE ? 'All categories' : category}`
-                                        : `Kategori aktif: ${category === ALL_CATEGORIES_VALUE ? 'Semua kategori' : category}`}
+                                    {t('Kategori aktif')}: {category === ALL_CATEGORIES_VALUE ? t('Semua kategori') : category}
                                 </div>
                             )}
                         </div>
@@ -451,7 +452,7 @@ export default function PublicServices() {
                                     <thead className="bg-muted/30">
                                         <tr className="text-left">
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                ID
+                                                {t('ID')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                                 {t('Layanan')}
@@ -533,9 +534,7 @@ export default function PublicServices() {
                         <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                             <div className="text-xs text-muted-foreground">
                                 {meta.totalPages > 1
-                                    ? locale === 'en'
-                                        ? `Page ${page} / ${meta.totalPages}`
-                                        : `Halaman ${page} / ${meta.totalPages}`
+                                    ? `${t('Halaman')} ${page} / ${meta.totalPages}`
                                     : ' '}
                             </div>
 

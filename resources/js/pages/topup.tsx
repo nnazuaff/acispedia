@@ -142,7 +142,7 @@ export default function Topup() {
 
                         <div className="mt-4 grid gap-3 sm:grid-cols-2">
                             <div>
-                                <Label htmlFor="amount">Nominal</Label>
+                                <Label htmlFor="amount">{t('Nominal')}</Label>
                                 <Input
                                     id="amount"
                                     className="mt-1"

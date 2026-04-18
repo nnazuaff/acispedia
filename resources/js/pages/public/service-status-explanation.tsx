@@ -24,19 +24,19 @@ export function ServiceStatusExplanationContent(
                 <CardContent className="space-y-4 pt-4 text-sm">
                     <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
                         <li>
-                            <span className="font-medium text-foreground">Pending</span>: {t('Pesanan/deposit sedang dalam antrian di server.')}
+                            <span className="font-medium text-foreground">{t('Pending')}</span>: {t('Pesanan/deposit sedang dalam antrian di server.')}
                         </li>
                         <li>
-                            <span className="font-medium text-foreground">Processing</span>: {t('Pesanan sedang dalam proses.')}
+                            <span className="font-medium text-foreground">{t('Processing')}</span>: {t('Pesanan sedang dalam proses.')}
                         </li>
                         <li>
-                            <span className="font-medium text-foreground">Success</span>: {t('Pesanan telah berhasil.')}
+                            <span className="font-medium text-foreground">{t('Success')}</span>: {t('Pesanan telah berhasil.')}
                         </li>
                         <li>
-                            <span className="font-medium text-foreground">Partial</span>: {t('Pesanan sudah terproses tapi tercancel. Anda hanya akan membayar layanan yang masuk saja.')}
+                            <span className="font-medium text-foreground">{t('Partial')}</span>: {t('Pesanan sudah terproses tapi tercancel. Anda hanya akan membayar layanan yang masuk saja.')}
                         </li>
                         <li>
-                            <span className="font-medium text-foreground">Error</span>: {t('Pesanan dibatalkan, dan saldo akan otomatis kembali ke akun.')}
+                            <span className="font-medium text-foreground">{t('Error')}</span>: {t('Pesanan dibatalkan, dan saldo akan otomatis kembali ke akun.')}
                         </li>
                     </ul>
 

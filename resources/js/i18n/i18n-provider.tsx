@@ -28,6 +28,23 @@ const dictionaries: Record<Locale, Dict> = {
         'lang.indonesian': 'Indonesia',
         'lang.english': 'Inggris',
 
+        // Common (used for mixed/static UI strings)
+        'Halaman': 'Halaman',
+        'Kategori aktif': 'Kategori aktif',
+        'Terakhir dicek': 'Terakhir dicek',
+        'Percobaan': 'Percobaan',
+        'Kurang': 'Kurang',
+        'Membuka popup pembayaran…': 'Membuka popup pembayaran…',
+        'Terjadi masalah saat memproses pembayaran.': 'Terjadi masalah saat memproses pembayaran.',
+        'Klik kategori untuk menampilkan layanan pada kategori itu saja.':
+            'Klik kategori untuk menampilkan layanan pada kategori itu saja.',
+        'Pilih kategori utama untuk memfilter layanan lebih cepat.':
+            'Pilih kategori utama untuk memfilter layanan lebih cepat.',
+        'kategori': 'kategori',
+        'kategori_plural': 'kategori',
+        'layanan': 'layanan',
+        'layanan_plural': 'layanan',
+
         // Admin (normalize a few English-only labels)
         'Action': 'Aksi',
         'Comments': 'Komentar',
@@ -78,11 +95,37 @@ const dictionaries: Record<Locale, Dict> = {
         'Detail': 'Details',
         'Riwayat': 'History',
         'Data': 'Rows',
+        'ID': 'ID',
         'Sebelumnya': 'Previous',
         'Berikutnya': 'Next',
+        'Halaman': 'Page',
         'Minimal': 'Minimum',
         'Maksimal': 'Maximum',
         'Memproses...': 'Processing...',
+        'Kategori aktif': 'Active category',
+        'Terakhir dicek': 'Last checked',
+        'Percobaan': 'Attempts',
+        'Kurang': 'Short by',
+        'Membuka popup pembayaran…': 'Opening payment popup…',
+        'Terjadi masalah saat memproses pembayaran.':
+            'There was a problem processing the payment.',
+        'Klik kategori untuk menampilkan layanan pada kategori itu saja.':
+            'Click a category to limit the visible services.',
+        'Pilih kategori utama untuk memfilter layanan lebih cepat.':
+            'Pick a main category to filter services faster.',
+        'kategori': 'category',
+        'kategori_plural': 'categories',
+        'layanan': 'service',
+        'layanan_plural': 'services',
+        'Facebook': 'Facebook',
+        'Youtube': 'YouTube',
+        'X - Twitter': 'X - Twitter',
+        'Spotify': 'Spotify',
+        'Tiktok': 'TikTok',
+        'Linkedin': 'LinkedIn',
+        'Thread': 'Thread',
+        'Web Traffic': 'Web traffic',
+        'Instagram Followers': 'Instagram followers',
         'Lanjutkan': 'Continue',
         'Konversi Saldo': 'Balance conversion',
         'QRIS': 'QRIS',
@@ -124,7 +167,6 @@ const dictionaries: Record<Locale, Dict> = {
         'Pengguna Baru Hari Ini': 'New users today',
         'Pesanan Hari Ini': "Today's orders",
         'Deposit Berhasil Hari Ini': 'Successful deposits today',
-        'ID': 'ID',
         'Belum ada data.': 'No data yet.',
         'Laporan Keuangan': 'Financial report',
         'Koneksi': 'Connections',
@@ -262,6 +304,73 @@ const dictionaries: Record<Locale, Dict> = {
         'Tambah User': 'Add user',
         'Target / Tautan': 'Target / Link',
         'Telepon': 'Phone',
+
+        // User (UI)
+        'Cari kategori': 'Search categories',
+        'Cari kategori...': 'Search categories...',
+        'Cari layanan...': 'Search services...',
+        'Cari nama layanan...': 'Search service name...',
+        'Tidak ada kategori yang cocok dengan pencarian.': 'No categories match your search.',
+        'Tidak ada layanan yang cocok dengan pencarian.': 'No services match your search.',
+        'Kategori berhasil dipilih.': 'Category selected successfully.',
+        'Kategori utama': 'Main category',
+        'Instagram': 'Instagram',
+        'Nominal': 'Amount',
+        'Pilih...': 'Select...',
+        'Tahun': 'Year',
+        'Ubah password': 'Change password',
+        'Hapus akun': 'Delete account',
+        'Peringatan': 'Warning',
+        'Yakin ingin menghapus akun Anda?': 'Are you sure you want to delete your account?',
+        'Hapus akun Anda beserta seluruh data yang terkait': 'Delete your account and all related data',
+        'Harap berhati-hati, tindakan ini tidak dapat dibatalkan.': 'Please be careful, this action cannot be undone.',
+
+        // User (Auth)
+        'Masuk Admin': 'Admin login',
+        'Masuk untuk melanjutkan ke dashboard admin.': 'Log in to continue to the admin dashboard.',
+        'Masuk untuk melanjutkan ke dashboard dan transaksi Anda.': 'Log in to continue to your dashboard and transactions.',
+
+        // User (2FA)
+        'Autentikasi dua faktor aktif': 'Two-factor authentication enabled',
+        'Autentikasi dua faktor sudah aktif. Scan QR code atau masukkan setup key di aplikasi authenticator Anda.':
+            'Two-factor authentication is now enabled. Scan the QR code or enter the setup key in your authenticator app.',
+        'Verifikasi kode autentikasi': 'Verify authentication code',
+        'Masukkan kode 6 digit dari aplikasi authenticator Anda':
+            'Enter the 6-digit code from your authenticator app',
+        'Aktifkan autentikasi dua faktor': 'Enable two-factor authentication',
+        'Untuk menyelesaikan aktivasi autentikasi dua faktor, scan QR code atau masukkan setup key di aplikasi authenticator Anda':
+            'To finish enabling two-factor authentication, scan the QR code or enter the setup key in your authenticator app.',
+        'Atau, masukkan kode secara manual': 'Or, enter the code manually',
+
+        // User (Payments)
+        'Informasi Pembayaran': 'Payment information',
+        'Metode pembayaran': 'Payment method',
+        'Menunggu pembayaran': 'Awaiting payment',
+        'Lanjutkan pembayaran': 'Continue payment',
+        'Metode pembayaran sedang tidak tersedia.': 'Payment methods are currently unavailable.',
+        'Pembayaran sukses': 'Payment successful',
+        'Pembayaran gagal': 'Payment failed',
+        'Gagal membuka popup pembayaran.': 'Failed to open the payment popup.',
+        'Popup pembayaran tidak bisa dimuat. Dialihkan ke halaman pembayaran.':
+            'The payment popup could not be loaded. Redirecting to the payment page.',
+        'ID transaksi': 'Transaction ID',
+        'Processing': 'Processing',
+        'Success': 'Success',
+        'Error': 'Error',
+        'RP': 'RP',
+
+        // User (Placeholders)
+        'Contoh: email@example.com': 'Example: email@example.com',
+        'Contoh: username': 'Example: username',
+
+        // Public (Pages)
+        'Telegram': 'Telegram',
+        '@acispediasupport': '@acispediasupport',
+        '@acispediasmm': '@acispediasmm',
+        '09:00 - 20:00 WIB': '09:00 - 20:00 WIB',
+
+        // Public (Policies)
+        '6. Keamanan': '6. Security',
         'Terakhir Login': 'Last login',
         'Terdaftar': 'Registered',
         'Terkonfigurasi': 'Configured',
@@ -534,7 +643,6 @@ const dictionaries: Record<Locale, Dict> = {
         'Bayar': 'Pay',
         'Status': 'Status',
         'Tanggal': 'Date',
-        'Nominal': 'Amount',
         'Metode': 'Method',
         'Biaya admin': 'Admin fee',
         'Total bayar': 'Total payable',

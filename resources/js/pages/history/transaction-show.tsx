@@ -165,9 +165,7 @@ export default function TransactionShowPage() {
                                 </div>
 
                                 <div className="mt-4 text-xs text-muted-foreground">
-                                    {locale === 'en'
-                                        ? `Last checked: ${fmtDate(order.last_status_check)} • Attempts: ${order.status_check_attempts}`
-                                        : `Terakhir dicek: ${fmtDate(order.last_status_check)} • Percobaan: ${order.status_check_attempts}`}
+                                    {t('Terakhir dicek')}: {fmtDate(order.last_status_check)} • {t('Percobaan')}: {order.status_check_attempts}
                                 </div>
                             </div>
                         </div>

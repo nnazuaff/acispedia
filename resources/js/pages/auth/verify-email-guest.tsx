@@ -60,7 +60,7 @@ export default function VerifyEmailGuest({ status, hasEmail = false }: Props) {
                                     required
                                     value={value}
                                     onChange={(e) => setValue(e.target.value)}
-                                    placeholder="email@example.com"
+                                    placeholder={t('Contoh: email@example.com')}
                                     autoComplete="email"
                                 />
                                 <InputError message={(errors as any).email} />

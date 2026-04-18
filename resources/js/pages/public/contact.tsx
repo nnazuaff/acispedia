@@ -79,8 +79,8 @@ export function ContactContent(
                                 <div className="flex items-center gap-3">
                                     <Send className="size-4 text-primary" />
                                     <div className="leading-tight">
-                                        <div className="font-medium text-foreground">Telegram</div>
-                                        <div className="text-muted-foreground">@acispediasupport</div>
+                                        <div className="font-medium text-foreground">{t('Telegram')}</div>
+                                        <div className="text-muted-foreground">{t('@acispediasupport')}</div>
                                     </div>
                                 </div>
                                 <span className="text-muted-foreground">
@@ -100,7 +100,7 @@ export function ContactContent(
                                         <div className="font-medium text-foreground">
                                             {t('Channel Telegram')}
                                         </div>
-                                        <div className="text-muted-foreground">@acispediasmm</div>
+                                        <div className="text-muted-foreground">{t('@acispediasmm')}</div>
                                     </div>
                                 </div>
                                 <span className="text-muted-foreground">
@@ -123,7 +123,7 @@ export function ContactContent(
                                 <span className="text-muted-foreground">
                                     {t('Senin - Jumat')}
                                 </span>
-                                <span className="font-medium">09:00 - 20:00 WIB</span>
+                                <span className="font-medium">{t('09:00 - 20:00 WIB')}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">

@@ -76,7 +76,7 @@ type ServiceGroup = {
 
 type TopCategoryOption = {
     value: string;
-    label: string;
+    labelKey: string;
     icon: React.ComponentType<{ className?: string }>;
 };
 
@@ -185,19 +185,19 @@ const ALL_TOP_CATEGORIES_VALUE = '__all_groups__';
 const DEFAULT_SORT_VALUE = '__default__';
 
 const topCategoryOptions: TopCategoryOption[] = [
-    { value: ALL_TOP_CATEGORIES_VALUE, label: 'Semua Kategori', icon: LayoutGrid },
-    { value: 'instagram', label: 'Instagram', icon: Instagram },
-    { value: 'facebook', label: 'Facebook', icon: Facebook },
-    { value: 'youtube', label: 'Youtube', icon: Youtube },
-    { value: 'twitter', label: 'X - Twitter', icon: Twitter },
-    { value: 'spotify', label: 'Spotify', icon: Music2 },
-    { value: 'tiktok', label: 'Tiktok', icon: Music2 },
-    { value: 'linkedin', label: 'Linkedin', icon: Linkedin },
-    { value: 'telegram', label: 'Telegram', icon: Send },
-    { value: 'thread', label: 'Thread', icon: AtSign },
-    { value: 'web_traffic', label: 'Web Traffic', icon: Globe },
-    { value: 'lainnya', label: 'Lainnya', icon: Ellipsis },
-    { value: 'instagram_followers', label: 'Instagram Followers', icon: Instagram },
+    { value: ALL_TOP_CATEGORIES_VALUE, labelKey: 'Semua kategori', icon: LayoutGrid },
+    { value: 'instagram', labelKey: 'Instagram', icon: Instagram },
+    { value: 'facebook', labelKey: 'Facebook', icon: Facebook },
+    { value: 'youtube', labelKey: 'Youtube', icon: Youtube },
+    { value: 'twitter', labelKey: 'X - Twitter', icon: Twitter },
+    { value: 'spotify', labelKey: 'Spotify', icon: Music2 },
+    { value: 'tiktok', labelKey: 'Tiktok', icon: Music2 },
+    { value: 'linkedin', labelKey: 'Linkedin', icon: Linkedin },
+    { value: 'telegram', labelKey: 'Telegram', icon: Send },
+    { value: 'thread', labelKey: 'Thread', icon: AtSign },
+    { value: 'web_traffic', labelKey: 'Web Traffic', icon: Globe },
+    { value: 'lainnya', labelKey: 'Lainnya', icon: Ellipsis },
+    { value: 'instagram_followers', labelKey: 'Instagram Followers', icon: Instagram },
 ];
 
 const sortOptions = [
@@ -244,8 +244,8 @@ function resolveTopCategoryGroup(category: string): string {
     return 'lainnya';
 }
 
-function getTopCategoryLabel(group: string): string {
-    return topCategoryOptions.find((item) => item.value === group)?.label ?? 'Lainnya';
+function getTopCategoryLabelKey(group: string): string {
+    return topCategoryOptions.find((item) => item.value === group)?.labelKey ?? 'Lainnya';
 }
 
 type CategoryPickerContentProps = {
@@ -491,10 +491,12 @@ export default function Services() {
             setPage(1);
             setCategoryPickerQuery('');
 
-            const label = getTopCategoryLabel(value);
-            toast.success(locale === 'en' ? `${label} selected.` : `${label} berhasil dipilih.`);
+            const labelKey = getTopCategoryLabelKey(value);
+            toast.success(t('Kategori berhasil dipilih.'), {
+                description: t(labelKey),
+            });
         },
-        [locale]
+        [t]
     );
 
     return (
@@ -527,9 +529,7 @@ export default function Services() {
                                 {t('Kategori utama')}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                                {locale === 'en'
-                                    ? 'Pick a main category to filter services faster.'
-                                    : 'Pilih kategori utama untuk memfilter layanan lebih cepat.'}
+                                {t('Pilih kategori utama untuk memfilter layanan lebih cepat.')}
                             </div>
                         </div>
 
@@ -551,7 +551,7 @@ export default function Services() {
                                         onClick={() => handleSelectTopCategory(item.value)}
                                     >
                                         <Icon className="size-4 sm:size-4" />
-                                        <span>{item.label}</span>
+                                        <span>{t(item.labelKey)}</span>
                                     </button>
                                 );
                             })}
@@ -641,9 +641,11 @@ export default function Services() {
                                     <span className="text-destructive">{error}</span>
                                 ) : (
                                     <span>
-                                        {locale === 'en'
-                                            ? `Showing ${meta.shown} of ${meta.valid} services${meta.totalPages > 0 ? ` (Page ${page} / ${meta.totalPages})` : ''}`
-                                            : `Menampilkan ${meta.shown} dari ${meta.valid} layanan${meta.totalPages > 0 ? ` (Halaman ${page} / ${meta.totalPages})` : ''}`}
+                                        {t('Menampilkan')} {meta.shown} {t('dari')} {meta.valid}{' '}
+                                        {t(meta.valid === 1 ? 'layanan' : 'layanan_plural')}
+                                        {meta.totalPages > 0
+                                            ? ` (${t('Halaman')} ${page} / ${meta.totalPages})`
+                                            : ''}
                                     </span>
                                 )}
                             </div>
@@ -656,7 +658,7 @@ export default function Services() {
                                     <thead className="bg-muted/30">
                                         <tr className="text-left">
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                ID
+                                                {t('ID')}
                                             </th>
                                             <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                                 {t('Layanan')}
@@ -753,9 +755,7 @@ export default function Services() {
                         <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                             <div className="text-xs text-muted-foreground">
                                 {meta.totalPages > 1
-                                    ? locale === 'en'
-                                        ? `Page ${page} / ${meta.totalPages}`
-                                        : `Halaman ${page} / ${meta.totalPages}`
+                                    ? `${t('Halaman')} ${page} / ${meta.totalPages}`
                                     : ' '}
                             </div>
 

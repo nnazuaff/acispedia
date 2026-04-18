@@ -303,11 +303,11 @@ export default function DepositShowPage() {
 
                                 <div className="mt-4 grid gap-2 text-sm">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Expired</span>
+                                        <span className="text-muted-foreground">{t('Expired')}</span>
                                         <span className="font-medium">{fmtDate(deposit.expired_at)}</span>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-muted-foreground">Diproses</span>
+                                        <span className="text-muted-foreground">{t('Diproses')}</span>
                                         <span className="font-medium">{fmtDate(deposit.processed_at)}</span>
                                     </div>
                                 </div>

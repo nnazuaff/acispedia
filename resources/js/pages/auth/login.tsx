@@ -65,7 +65,7 @@ export default function Login({
                                         autoFocus
                                         tabIndex={1}
                                         autoComplete="email"
-                                        placeholder="email@example.com"
+                                        placeholder={t('Contoh: email@example.com')}
                                         className="pl-10"
                                     />
                                 </div>

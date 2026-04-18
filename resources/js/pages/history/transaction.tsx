@@ -377,9 +377,10 @@ export default function HistoryTransactionPage() {
 
                         <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 text-sm text-muted-foreground">
                             <div>
-                                {locale === 'en'
-                                    ? `Showing ${from}-${to} of ${total}${ordersProp?.last_page ? ` (Page ${ordersProp.current_page} / ${ordersProp.last_page})` : ''}`
-                                    : `Menampilkan ${from}-${to} dari ${total}${ordersProp?.last_page ? ` (Halaman ${ordersProp.current_page} / ${ordersProp.last_page})` : ''}`}
+                                {t('Menampilkan')} {from}-{to} {t('dari')} {total}
+                                {ordersProp?.last_page
+                                    ? ` (${t('Halaman')} ${ordersProp.current_page} / ${ordersProp.last_page})`
+                                    : ''}
                             </div>
                         </div>
                     </CardHeader>
