@@ -12,6 +12,7 @@ use App\Services\DashboardStats;
 use App\Services\MedanpediaClient;
 use App\Services\OrderRefundService;
 use App\Services\ServicePolicy;
+use App\Services\TelegramNotifications;
 use App\Support\TargetNormalizer;
 use App\Support\UserActivity;
 use App\Support\WalletLedgerWriter;
@@ -362,6 +363,15 @@ class OrdersController extends Controller
             broadcast(new DashboardStatsUpdated((int) $user->id, $stats));
         } catch (Throwable) {
             // Best-effort only.
+        }
+
+        try {
+            $statusKey = mb_strtolower((string) $createdOrder->status);
+            if (! in_array($statusKey, ['failed', 'error'], true)) {
+                TelegramNotifications::orderCreated($createdOrder, $user);
+            }
+        } catch (Throwable) {
+            // best-effort
         }
 
         return response()->json([

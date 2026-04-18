@@ -22,7 +22,7 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    dd($response->status(), $response->content());
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {

@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\UserBalance;
 use App\Services\DashboardStats;
-use App\Services\TelegramNotifier;
+use App\Services\TelegramNotifications;
 use App\Support\AdminActivity;
 use App\Support\WibDateRange;
 use App\Support\WalletLedgerWriter;
@@ -366,26 +366,10 @@ class DepositsController extends Controller
 
         if ($before === 'pending' && $after === 'success') {
             try {
-                $method = (string) ($fresh?->payment_method ?? $deposit->payment_method ?? '');
-                if ($method === 'konversi_saldo') {
-                    $userLabel = trim((string) ($fresh?->user?->name ?? ''));
-                    if ($userLabel === '') {
-                        $userLabel = trim((string) ($fresh?->user?->email ?? ''));
+                    $row = $fresh ?? Deposit::query()->with(['user:id,name,email,phone'])->find((int) $deposit->id);
+                    if ($row) {
+                        TelegramNotifications::depositSuccess($row, $row->user);
                     }
-                    if ($userLabel === '') {
-                        $userLabel = 'User #'.(string) ($fresh?->user_id ?? $deposit->user_id);
-                    }
-
-                    $depositId = (int) ($fresh?->id ?? $deposit->id);
-                    $amount = (int) ($fresh?->amount ?? $deposit->amount);
-
-                    TelegramNotifier::sendMessage(
-                        "[Konversi Saldo] Deposit CONFIRMED (SUCCESS)\n".
-                        "ID: #{$depositId}\n".
-                        "User: {$userLabel}\n".
-                        "Nominal: {$amount}"
-                    );
-                }
             } catch (Throwable) {
                 // best-effort
             }

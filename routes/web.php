@@ -13,10 +13,12 @@ use App\Http\Controllers\Admin\OrdersController as AdminOrdersController;
 use App\Http\Controllers\Admin\ServicesController as AdminServicesController;
 use App\Http\Controllers\Admin\UserActivityLogsController as AdminUserActivityLogsController;
 use App\Http\Controllers\Admin\UsersController as AdminUsersController;
+use App\Http\Controllers\Admin\SuggestionsController as AdminSuggestionsController;
 use App\Http\Controllers\Auth\CleanPasswordResetController;
 use App\Http\Controllers\Auth\GuestEmailVerificationController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\HistoryController;
+use App\Http\Controllers\SuggestionBoxController;
 use App\Models\Deposit;
 use App\Models\Order;
 use App\Models\User;
@@ -162,6 +164,8 @@ if ($adminDomain !== '') {
             Route::get('activity-logs', [AdminActivityLogsController::class, 'index'])->name('admin.activity-logs');
                Route::get('user-activity-logs', [AdminUserActivityLogsController::class, 'index'])->name('admin.user-activity-logs');
             Route::get('admin-users', [AdminAdminUsersController::class, 'index'])->name('admin.admin-users');
+
+                Route::get('kotak-saran', [AdminSuggestionsController::class, 'index'])->name('admin.kotak-saran');
         });
 }
 
@@ -324,6 +328,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('topup');
 
     Route::post('api/topup', [BalanceController::class, 'topup'])->name('api.balance.topup');
+
+    Route::get('kotak-saran', [SuggestionBoxController::class, 'index'])->name('kotak-saran');
+    Route::post('kotak-saran', [SuggestionBoxController::class, 'store'])->name('kotak-saran.store');
 });
 
 require __DIR__.'/settings.php';

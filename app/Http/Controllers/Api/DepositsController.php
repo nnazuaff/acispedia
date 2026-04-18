@@ -10,6 +10,7 @@ use App\Models\UserBalance;
 use App\Services\DashboardStats;
 use App\Services\MidtransClient;
 use App\Services\TelegramNotifier;
+use App\Services\TelegramNotifications;
 use App\Services\TripayClient;
 use App\Support\PhoneNormalizer;
 use App\Support\UserActivity;
@@ -894,6 +895,17 @@ class DepositsController extends Controller
             $this->broadcastUserStats((int) $deposit->user_id);
         }
 
+        if ($newStatus === 'success') {
+            try {
+                $fresh = Deposit::query()->with(['user:id,name,email,phone'])->find((int) $deposit->id);
+                if ($fresh) {
+                    TelegramNotifications::depositSuccess($fresh, $fresh->user);
+                }
+            } catch (Throwable) {
+                // best-effort
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'OK',
@@ -1036,6 +1048,17 @@ class DepositsController extends Controller
 
         if ($shouldBroadcastStats) {
             $this->broadcastUserStats((int) $deposit->user_id);
+        }
+
+        if ($newStatus === 'success') {
+            try {
+                $fresh = Deposit::query()->with(['user:id,name,email,phone'])->find((int) $deposit->id);
+                if ($fresh) {
+                    TelegramNotifications::depositSuccess($fresh, $fresh->user);
+                }
+            } catch (Throwable) {
+                // best-effort
+            }
         }
 
         return response()->json([

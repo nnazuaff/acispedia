@@ -66,6 +66,11 @@ const adminMainNavItems: NavItem[] = [
         href: '/users',
         icon: Users,
     },
+    {
+        title: 'Kotak Saran',
+        href: '/kotak-saran',
+        icon: FileText,
+    },
 ];
 
 export function AppSidebar() {
@@ -206,6 +211,18 @@ export function AppSidebar() {
                 <SidebarGroup className="px-2 py-0">
                     <SidebarGroupLabel>{t('Lainnya')}</SidebarGroupLabel>
                     <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                asChild
+                                tooltip={{ children: t('Kotak Saran') }}
+                            >
+                                <Link href="/kotak-saran" prefetch>
+                                    <FileText />
+                                    <span>{t('Kotak Saran')}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+
                         <SidebarMenuItem>
                             <SidebarMenuButton asChild tooltip={{ children: t('Bantuan') }}>
                                 <Link href="/contact" prefetch>

@@ -5,10 +5,12 @@ namespace App\Actions\Fortify;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
+use App\Services\TelegramNotifications;
 use App\Support\PhoneNormalizer;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Throwable;
 
 class CreateNewUser implements CreatesNewUsers
 {
@@ -43,11 +45,19 @@ class CreateNewUser implements CreatesNewUsers
 
         session()->forget('security_check_code');
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'phone' => $input['phone'],
             'password' => $input['password'],
         ]);
+
+        try {
+            TelegramNotifications::registration($user);
+        } catch (Throwable) {
+            // best-effort
+        }
+
+        return $user;
     }
 }
