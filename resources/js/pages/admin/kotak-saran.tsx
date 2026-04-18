@@ -150,7 +150,7 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
 
     return (
         <>
-            <Head title="Kotak Saran" />
+            <Head title={t('Kotak Saran')} />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <Heading title={t('Kotak Saran')} description={t('Daftar saran dari pengguna.')} />
 
@@ -194,17 +194,17 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                                 <Input
                                     id="id"
                                     inputMode="numeric"
-                                    placeholder="123"
+                                    placeholder=""
                                     value={draft.id}
                                     onChange={(e) => setDraft((s) => ({ ...s, id: e.target.value }))}
                                 />
                             </div>
 
                             <div className="space-y-1 md:col-span-2">
-                                <Label htmlFor="user">{t('Nama User')}</Label>
+                                <Label htmlFor="user">{t('Nama / Email Pengguna')}</Label>
                                 <Input
                                     id="user"
-                                    placeholder={t('Cari nama / email...')}
+                                    placeholder=""
                                     value={draft.user}
                                     onChange={(e) => setDraft((s) => ({ ...s, user: e.target.value }))}
                                 />

@@ -28,6 +28,7 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
+import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useI18n } from '@/i18n/i18n-provider';
 import { dashboard, home } from '@/routes';
 import type { NavItem } from '@/types';
@@ -79,6 +80,7 @@ export function AppSidebar() {
     const isHistoryActive = (url ?? '').startsWith('/history');
     const isAdminArea = Boolean((page.props as any)?.isAdminArea);
     const { t } = useI18n();
+    const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -104,6 +106,7 @@ export function AppSidebar() {
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
+                                    isActive={isCurrentOrParentUrl('/financial-report')}
                                     tooltip={{ children: t('Laporan Keuangan') }}
                                 >
                                     <Link href="/financial-report" prefetch>
@@ -114,7 +117,11 @@ export function AppSidebar() {
                             </SidebarMenuItem>
 
                             <SidebarMenuItem>
-                                <SidebarMenuButton asChild tooltip={{ children: t('Koneksi') }}>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isCurrentOrParentUrl('/connections')}
+                                    tooltip={{ children: t('Koneksi') }}
+                                >
                                     <Link href="/connections" prefetch>
                                         <Layers />
                                         <span>{t('Koneksi')}</span>
@@ -125,6 +132,7 @@ export function AppSidebar() {
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
+                                    isActive={isCurrentOrParentUrl('/activity-logs')}
                                     tooltip={{ children: t('Log Aktivitas') }}
                                 >
                                     <Link href="/activity-logs" prefetch>
@@ -137,6 +145,7 @@ export function AppSidebar() {
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
+                                    isActive={isCurrentOrParentUrl('/user-activity-logs')}
                                     tooltip={{ children: t('Log Aktivitas User') }}
                                 >
                                     <Link href="/user-activity-logs" prefetch>
@@ -156,6 +165,7 @@ export function AppSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
+                                isActive={isCurrentOrParentUrl('/deposit')}
                                 tooltip={{ children: t('Isi Saldo') }}
                             >
                                 <Link href="/deposit" prefetch>
@@ -166,7 +176,11 @@ export function AppSidebar() {
                         </SidebarMenuItem>
 
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip={{ children: t('Order') }}>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isCurrentOrParentUrl('/order')}
+                                tooltip={{ children: t('Order') }}
+                            >
                                 <Link href="/order" prefetch>
                                     <ShoppingCart />
                                     <span>{t('Order')}</span>
@@ -177,7 +191,10 @@ export function AppSidebar() {
                         <Collapsible defaultOpen={isHistoryActive} className="group/collapsible">
                             <SidebarMenuItem>
                                 <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton tooltip={{ children: t('Riwayat') }}>
+                                    <SidebarMenuButton
+                                        isActive={isHistoryActive}
+                                        tooltip={{ children: t('Riwayat') }}
+                                    >
                                         <History />
                                         <span>{t('Riwayat')}</span>
                                         <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
@@ -187,7 +204,10 @@ export function AppSidebar() {
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton asChild>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentOrParentUrl('/history/deposit')}
+                                            >
                                                 <Link href="/history/deposit" prefetch>
                                                     <span>{t('Riwayat Deposit')}</span>
                                                 </Link>
@@ -195,7 +215,10 @@ export function AppSidebar() {
                                         </SidebarMenuSubItem>
 
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton asChild>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentOrParentUrl('/history/transaction')}
+                                            >
                                                 <Link href="/history/transaction" prefetch>
                                                     <span>{t('Riwayat Transaksi')}</span>
                                                 </Link>
@@ -214,6 +237,7 @@ export function AppSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
+                                isActive={isCurrentOrParentUrl('/kotak-saran')}
                                 tooltip={{ children: t('Kotak Saran') }}
                             >
                                 <Link href="/kotak-saran" prefetch>
@@ -224,7 +248,11 @@ export function AppSidebar() {
                         </SidebarMenuItem>
 
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip={{ children: t('Bantuan') }}>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isCurrentOrParentUrl('/contact')}
+                                tooltip={{ children: t('Bantuan') }}
+                            >
                                 <Link href="/contact" prefetch>
                                     <CircleHelp />
                                     <span>{t('Bantuan')}</span>
@@ -235,6 +263,7 @@ export function AppSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
+                                isActive={isCurrentOrParentUrl('/penjelasan-status-layanan')}
                                 tooltip={{ children: t('Penjelasan Status Layanan') }}
                             >
                                 <Link href="/penjelasan-status-layanan" prefetch>
@@ -247,6 +276,7 @@ export function AppSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
+                                isActive={isCurrentOrParentUrl('/panduan-target')}
                                 tooltip={{ children: t('Contoh Pengisian Target') }}
                             >
                                 <Link href="/panduan-target" prefetch>
@@ -259,6 +289,7 @@ export function AppSidebar() {
                         <SidebarMenuItem>
                             <SidebarMenuButton
                                 asChild
+                                isActive={isCurrentOrParentUrl('/terms')}
                                 tooltip={{ children: t('Ketentuan Layanan') }}
                             >
                                 <Link href="/terms" prefetch>

@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import * as React from 'react';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n/i18n-provider';
 
 type ToastPayload = {
     type?: 'success' | 'error' | 'info' | 'warning';
@@ -10,6 +11,7 @@ type ToastPayload = {
 export default function FlashToasts() {
     const page = usePage();
     const props = page.props as any;
+    const { t, locale } = useI18n();
 
     const isAdminArea = Boolean(props?.isAdminArea);
 
@@ -42,17 +44,19 @@ export default function FlashToasts() {
             return;
         }
 
-        const key = `${page.url}|${finalType}|${finalMessage}`;
+        const translatedMessage = t(finalMessage);
+
+        const key = `${locale}|${page.url}|${finalType}|${translatedMessage}`;
         if (lastShownRef.current === key) {
             return;
         }
         lastShownRef.current = key;
 
-        if (finalType === 'success') toast.success(finalMessage);
-        else if (finalType === 'error') toast.error(finalMessage);
-        else if (finalType === 'warning') toast.warning(finalMessage);
-        else toast(finalMessage);
-    }, [finalType, finalMessage, page.url]);
+        if (finalType === 'success') toast.success(translatedMessage);
+        else if (finalType === 'error') toast.error(translatedMessage);
+        else if (finalType === 'warning') toast.warning(translatedMessage);
+        else toast(translatedMessage);
+    }, [finalType, finalMessage, locale, page.url, t]);
 
     return null;
 }

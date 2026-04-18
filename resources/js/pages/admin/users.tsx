@@ -187,7 +187,7 @@ export default function AdminUsers() {
                                     className="mt-2 h-10"
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
-                                    placeholder={t('')}
+                                    placeholder=""
                                 />
                             </div>
 

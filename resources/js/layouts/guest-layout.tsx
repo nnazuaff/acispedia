@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import LandingNavbar from '@/components/landing/landing-navbar';
 import { home, services } from '@/routes';
 import type { RouteDefinition } from '@/wayfinder';
+import { useI18n } from '@/i18n/i18n-provider';
 
 type NavItem = {
     label: string;
@@ -14,11 +15,12 @@ export default function GuestLayout({ children }: { children: ReactNode }) {
     const page = usePage();
     const authUser = (page.props as any)?.auth?.user;
     const canRegister = (page.props as any)?.canRegister ?? true;
+    const { t } = useI18n();
 
     const navItems: NavItem[] = [
-        { label: 'Beranda', href: home() },
-        { label: 'Layanan', href: services() },
-        { label: 'Kontak', href: '/contact' },
+        { label: t('Beranda'), href: home() },
+        { label: t('Layanan'), href: services() },
+        { label: t('Kontak'), href: '/contact' },
     ];
 
     return (

@@ -234,7 +234,7 @@ export default function AdminOrders() {
                                     id="q"
                                     value={q}
                                     onChange={(e) => setQ(e.target.value)}
-                                    placeholder={t('')}
+                                    placeholder=""
                                 />
                             </div>
 

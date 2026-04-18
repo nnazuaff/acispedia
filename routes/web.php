@@ -235,6 +235,8 @@ Route::get('terms', function () {
     ]);
 })->name('terms');
 
+Route::get('kotak-saran', [SuggestionBoxController::class, 'index'])->name('kotak-saran');
+
 Route::inertia('privacy', 'public/privacy')->name('privacy');
 
 Route::get('panduan-target', function () {
@@ -329,7 +331,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('api/topup', [BalanceController::class, 'topup'])->name('api.balance.topup');
 
-    Route::get('kotak-saran', [SuggestionBoxController::class, 'index'])->name('kotak-saran');
     Route::post('kotak-saran', [SuggestionBoxController::class, 'store'])->name('kotak-saran.store');
 });
 

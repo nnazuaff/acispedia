@@ -85,7 +85,7 @@ export default function AdminConnections() {
 
                     <Card>
                         <CardContent className="pt-6">
-                            <div className="text-sm font-semibold">Medanpedia</div>
+                            <div className="text-sm font-semibold">{t('Medanpedia')}</div>
                             <div className="mt-2 text-sm">
                                 {t('Status')}: {connections?.medanpedia?.configured ? t('Terkonfigurasi') : t('Belum dikonfigurasi')}
                             </div>
@@ -102,7 +102,7 @@ export default function AdminConnections() {
 
                     <Card>
                         <CardContent className="pt-6">
-                            <div className="text-sm font-semibold">Midtrans</div>
+                            <div className="text-sm font-semibold">{t('Midtrans')}</div>
                             <div className="mt-2 text-sm">
                                 {t('Status')}: {!connections?.midtrans?.enabled
                                     ? t('Dinonaktifkan sementara')
@@ -119,7 +119,7 @@ export default function AdminConnections() {
 
                     <Card>
                         <CardContent className="pt-6">
-                            <div className="text-sm font-semibold">Tripay</div>
+                            <div className="text-sm font-semibold">{t('Tripay')}</div>
                             <div className="mt-2 text-sm">
                                 {t('Status')}: {!connections?.tripay?.enabled
                                     ? t('Dinonaktifkan sementara')

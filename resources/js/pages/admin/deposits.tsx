@@ -241,7 +241,7 @@ export default function AdminDeposits() {
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-8">
                             <div className="lg:col-span-2">
                                 <Label htmlFor="q">{t('Nama / Email Pengguna')}</Label>
-                                <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('')} />
+                                <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder="" />
                             </div>
 
                             <div>

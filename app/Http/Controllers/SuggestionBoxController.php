@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Fortify\Features;
 use Throwable;
 
 class SuggestionBoxController extends Controller
@@ -15,6 +16,12 @@ class SuggestionBoxController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
+
+        if (!$user) {
+            return Inertia::render('public/kotak-saran', [
+                'canRegister' => Features::enabled(Features::registration()),
+            ]);
+        }
 
         return Inertia::render('kotak-saran', [
             'defaults' => [
