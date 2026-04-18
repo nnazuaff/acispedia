@@ -25,8 +25,20 @@ class SecurityController extends Controller implements HasMiddleware
     /**
      * Show the user's security settings page.
      */
-    public function edit(TwoFactorAuthenticationRequest $request): Response
+    public function edit(TwoFactorAuthenticationRequest $request): Response|RedirectResponse
     {
+        if (
+            Features::canManageTwoFactorAuthentication() &&
+            Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')
+        ) {
+            $confirmedAt = (int) $request->session()->get('auth.password_confirmed_at', 0);
+            $timeout = (int) config('auth.password_timeout', 10800);
+
+            if ($confirmedAt <= 0 || (time() - $confirmedAt) > $timeout) {
+                return redirect()->route('password.confirm');
+            }
+        }
+
         $props = [
             'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
         ];

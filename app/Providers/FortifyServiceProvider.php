@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Actions\CanonicalizeUsername;
 use Laravel\Fortify\Actions\PrepareAuthenticatedSession;
+use Laravel\Fortify\Contracts\RedirectsIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
@@ -42,10 +43,11 @@ class FortifyServiceProvider extends ServiceProvider
 
     private function configureLoginPipeline(): void
     {
-        Fortify::loginThrough(function () {
+        Fortify::loginThrough(function (Request $request) {
             return [
                 CanonicalizeUsername::class,
                 EnsureLoginIsNotThrottledInline::class,
+                Features::enabled(Features::twoFactorAuthentication()) ? RedirectsIfTwoFactorAuthenticatable::class : null,
                 AttemptToAuthenticateVerifiedUser::class,
                 PrepareAuthenticatedSession::class,
             ];

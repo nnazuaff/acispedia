@@ -4,7 +4,10 @@ namespace App\Models;
 
 use App\Services\MailketingClient;
 use App\Support\EmailTemplate;
+use Database\Factories\UserFactory;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -12,10 +15,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Throwable;
@@ -26,11 +30,11 @@ use Throwable;
  * @property string|null $email
  * @property string|null $phone
  * @property string|null $account_status
- * @property \Illuminate\Support\Carbon|null $email_verified_at
- * @property \Illuminate\Support\Carbon|null $last_login_at
- * @property \Illuminate\Support\Carbon|null $last_activity_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $email_verified_at
+ * @property Carbon|null $last_login_at
+ * @property Carbon|null $last_activity_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read UserBalance|null $balanceRow
  * @property-read float $balance
  */
@@ -38,8 +42,8 @@ use Throwable;
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, MustVerifyEmailTrait;
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, MustVerifyEmailTrait, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * @var array<int, string>
@@ -99,6 +103,14 @@ class User extends Authenticatable implements MustVerifyEmail
             return;
         }
 
+        $mailketingToken = (string) config('services.mailketing.api_token');
+
+        if ($mailketingToken === '') {
+            $this->notify(new VerifyEmail);
+
+            return;
+        }
+
         $key = 'mail:verify:'.$this->getKey();
 
         // Cooldown: allow 1 send per 60 seconds.
@@ -148,6 +160,14 @@ class User extends Authenticatable implements MustVerifyEmail
         $email = Str::lower(trim((string) $this->email));
 
         if ($email === '') {
+            return;
+        }
+
+        $mailketingToken = (string) config('services.mailketing.api_token');
+
+        if ($mailketingToken === '') {
+            $this->notify(new ResetPassword((string) $token));
+
             return;
         }
 

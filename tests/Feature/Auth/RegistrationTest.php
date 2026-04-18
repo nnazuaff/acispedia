@@ -16,13 +16,21 @@ test('registration screen can be rendered', function () {
 });
 
 test('new users can register', function () {
+    $this->withSession(['security_check_code' => 'ABCDE']);
+
     $response = $this->post(route('register.store'), [
         'name' => 'Test User',
         'email' => 'test@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
+        'phone' => '081234567890',
+        'security_check' => 'ABCDE',
+        'password' => 'Password1!',
+        'password_confirmation' => 'Password1!',
     ]);
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $this->assertGuest();
+    $response->assertRedirect(route('verify.email.notice'));
+
+    $this->assertDatabaseHas('users', [
+        'email' => 'test@example.com',
+    ]);
 });

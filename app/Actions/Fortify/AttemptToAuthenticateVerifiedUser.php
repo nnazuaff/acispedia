@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -12,7 +13,7 @@ use Laravel\Fortify\LoginRateLimiter;
 
 class AttemptToAuthenticateVerifiedUser
 {
-    public function __invoke(Request $request): void
+    public function handle(Request $request, Closure $next): mixed
     {
         $usernameField = Fortify::username();
         $username = (string) $request->input($usernameField);
@@ -84,5 +85,7 @@ class AttemptToAuthenticateVerifiedUser
 
         $guard->login($user, $remember);
         $limiter->clear($request);
+
+        return $next($request);
     }
 }
