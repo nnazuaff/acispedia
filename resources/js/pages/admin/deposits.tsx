@@ -289,7 +289,7 @@ export default function AdminDeposits() {
                                 <Label>{t('Metode')}</Label>
                                 <Select value={method || 'all'} onValueChange={(v) => setMethod(v === 'all' ? '' : v)}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder={t('-- Semua --')} />
+                                        <SelectValue placeholder={t('Semua')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">{t('Semua')}</SelectItem>

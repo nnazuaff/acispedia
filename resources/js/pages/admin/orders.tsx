@@ -229,7 +229,7 @@ export default function AdminOrders() {
                     <CardContent className="pt-6">
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-8">
                             <div className="lg:col-span-2">
-                                <Label htmlFor="q">{t('Cari Pengguna / Layanan')}</Label>
+                                <Label htmlFor="q">{t('Nama Pengguna / Layanan')}</Label>
                                 <Input
                                     id="q"
                                     value={q}
@@ -276,7 +276,7 @@ export default function AdminOrders() {
                                 <Label>{t('Status')}</Label>
                                 <Select value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder={t('-- Semua --')} />
+                                        <SelectValue placeholder={t('Semua')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">{t('Semua')}</SelectItem>

@@ -181,7 +181,7 @@ export default function AdminUsers() {
                     <CardContent className="pt-6">
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                             <div className="lg:col-span-2">
-                                <Label htmlFor="q">{t('Cari')}</Label>
+                                <Label htmlFor="q">{t('Nama / Email / Telepon Pengguna')}</Label>
                                 <Input
                                     id="q"
                                     className="mt-2 h-10"
@@ -208,7 +208,7 @@ export default function AdminUsers() {
                                 <Label>{t('Status')}</Label>
                                 <Select value={status} onValueChange={(v) => setStatus(v)}>
                                     <SelectTrigger className="mt-2 h-10">
-                                        <SelectValue placeholder={t('-- Semua --')} />
+                                        <SelectValue placeholder={t('Semua')} />
                                     </SelectTrigger>
                                     <SelectContent align="end">
                                         <SelectItem value={STATUS_ALL}>{t('Semua')}</SelectItem>
