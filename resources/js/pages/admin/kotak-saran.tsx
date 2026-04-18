@@ -97,6 +97,8 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
 
     const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 25));
 
+    const [markingDoneId, setMarkingDoneId] = React.useState<number | null>(null);
+
     const [detail, setDetail] = React.useState<SuggestionRow | null>(null);
 
     const [draft, setDraft] = React.useState(() => ({
@@ -306,9 +308,31 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{truncate(row.message)}</td>
                                                 <td className="px-4 py-3 text-right whitespace-nowrap">
-                                                    <Button variant="outline" size="sm" onClick={() => setDetail(row)}>
-                                                        {t('Detail')}
-                                                    </Button>
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button variant="outline" size="sm" onClick={() => setDetail(row)}>
+                                                            {t('Detail')}
+                                                        </Button>
+
+                                                        {row.status !== 'selesai' ? (
+                                                            <Button
+                                                                size="sm"
+                                                                disabled={markingDoneId === row.id}
+                                                                onClick={() => {
+                                                                    router.post(
+                                                                        `/kotak-saran/${row.id}/mark-done`,
+                                                                        {} as any,
+                                                                        {
+                                                                            preserveScroll: true,
+                                                                            onStart: () => setMarkingDoneId(row.id),
+                                                                            onFinish: () => setMarkingDoneId(null),
+                                                                        },
+                                                                    );
+                                                                }}
+                                                            >
+                                                                {t('Tandai Selesai')}
+                                                            </Button>
+                                                        ) : null}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))

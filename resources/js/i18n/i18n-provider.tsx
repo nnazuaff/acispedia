@@ -60,6 +60,8 @@ const dictionaries: Record<Locale, Dict> = {
         'Checkout URL': 'URL Checkout',
         'Provider Order ID': 'ID Order Provider',
         'Provider Payload': 'Payload Provider',
+
+        'Tandai Selesai': 'Tandai Selesai',
     },
     en: {
         'nav.dashboard': 'Dashboard',
@@ -93,6 +95,7 @@ const dictionaries: Record<Locale, Dict> = {
         'Reset': 'Reset',
         'Terapkan': 'Apply',
         'Detail': 'Details',
+        'Tandai Selesai': 'Mark as done',
         'Riwayat': 'History',
         'Data': 'Rows',
         'ID': 'ID',

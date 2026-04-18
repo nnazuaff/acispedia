@@ -165,7 +165,9 @@ if ($adminDomain !== '') {
                Route::get('user-activity-logs', [AdminUserActivityLogsController::class, 'index'])->name('admin.user-activity-logs');
             Route::get('admin-users', [AdminAdminUsersController::class, 'index'])->name('admin.admin-users');
 
-                Route::get('kotak-saran', [AdminSuggestionsController::class, 'index'])->name('admin.kotak-saran');
+            Route::get('kotak-saran', [AdminSuggestionsController::class, 'index'])->name('admin.kotak-saran');
+            Route::post('kotak-saran/{suggestion}/mark-done', [AdminSuggestionsController::class, 'markDone'])
+                ->name('admin.kotak-saran.mark-done');
         });
 }
 
