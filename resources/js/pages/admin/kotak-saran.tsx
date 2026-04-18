@@ -52,6 +52,8 @@ type PageProps = {
     filters: Filters;
 };
 
+const CATEGORY_ALL = '__all__';
+
 export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
     const { t } = useI18n();
     const rows = suggestions?.data ?? [];
@@ -62,7 +64,7 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
         date: filters?.date ?? '',
         id: filters?.id ? String(filters.id) : '',
         user: filters?.user ?? '',
-        category: filters?.category ?? '',
+        category: filters?.category ? filters.category : CATEGORY_ALL,
     }));
 
     const go = (params: Record<string, any>) => {
@@ -83,7 +85,7 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
             date: draft.date || undefined,
             id: Number.isFinite(idNum) && idNum > 0 ? idNum : undefined,
             user: draft.user.trim() || undefined,
-            category: draft.category || undefined,
+            category: draft.category === CATEGORY_ALL ? undefined : draft.category,
         });
     };
 
@@ -130,14 +132,14 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                             <div className="space-y-1">
                                 <Label>{t('Kategori')}</Label>
                                 <Select
-                                    value={draft.category || undefined}
+                                    value={draft.category}
                                     onValueChange={(v) => setDraft((s) => ({ ...s, category: v }))}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder={t('Semua')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="">{t('Semua')}</SelectItem>
+                                        <SelectItem value={CATEGORY_ALL}>{t('Semua')}</SelectItem>
                                         <SelectItem value="saran">{t('Saran')}</SelectItem>
                                         <SelectItem value="keluhan">{t('Keluhan')}</SelectItem>
                                         <SelectItem value="lainnya">{t('Lainnya')}</SelectItem>

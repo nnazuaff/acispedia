@@ -1,5 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import * as React from 'react';
+import { toast } from 'sonner';
 
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,7 @@ export default function KotakSaran() {
                                 post('/kotak-saran', {
                                     onSuccess: () => {
                                         reset('category', 'message');
+                                        toast.success(t('Saran berhasil dikirim.'));
                                     },
                                 });
                             }}
