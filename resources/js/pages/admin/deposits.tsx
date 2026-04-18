@@ -240,8 +240,8 @@ export default function AdminDeposits() {
                     <CardContent className="pt-6">
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-8">
                             <div className="lg:col-span-2">
-                                <Label htmlFor="q">{t('Cari')}</Label>
-                                <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('nama / email / ID deposit / nominal')} />
+                                <Label htmlFor="q">{t('Cari Nama / Email Pengguna')}</Label>
+                                <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('')} />
                             </div>
 
                             <div>
@@ -275,7 +275,7 @@ export default function AdminDeposits() {
                                         <SelectValue placeholder={t('-- Semua --')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">{t('Semua')}</SelectItem>
+                                        <SelectItem value="all">{t('-- Semua --')}</SelectItem>
                                         {(known_statuses ?? []).map((st) => (
                                             <SelectItem key={st} value={st}>
                                                 {st}

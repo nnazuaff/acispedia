@@ -74,7 +74,8 @@ class OrdersController extends Controller
             $query->where('user_id', $userIdInt);
         }
 
-        if ($idInt === null && $userIdInt === null) {
+        // Always respect date range filters, except when searching by a specific order ID.
+        if ($idInt === null) {
             $query->whereBetween('created_at', [$rangeStart, $rangeEnd]);
         }
 

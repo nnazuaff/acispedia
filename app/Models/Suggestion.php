@@ -13,10 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $phone
  * @property string $category
  * @property string $message
+ * @property string $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  */
-#[Fillable(['user_id', 'name', 'phone', 'category', 'message'])]
+#[Fillable(['user_id', 'name', 'phone', 'category', 'message', 'status'])]
 class Suggestion extends Model
 {
 	/**

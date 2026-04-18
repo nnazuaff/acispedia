@@ -34,6 +34,7 @@ type SuggestionRow = {
     phone: string;
     category: string;
     message: string;
+    status: string;
     created_at_wib?: string | null;
 };
 
@@ -55,6 +56,7 @@ type Filters = {
     id?: number | null;
     user?: string | null;
     category?: string | null;
+    status?: string | null;
 };
 
 type PageProps = {
@@ -63,6 +65,7 @@ type PageProps = {
 };
 
 const CATEGORY_ALL = '__all__';
+const STATUS_ALL = '__all__';
 
 function parseYmdToLocalDate(value: string): Date | undefined {
     const raw = String(value ?? '').trim();
@@ -92,6 +95,8 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
     const { t } = useI18n();
     const rows = suggestions?.data ?? [];
 
+    const [perPage, setPerPage] = React.useState<number>(Number(filters?.per_page ?? 25));
+
     const [detail, setDetail] = React.useState<SuggestionRow | null>(null);
 
     const [draft, setDraft] = React.useState(() => ({
@@ -99,10 +104,22 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
         id: filters?.id ? String(filters.id) : '',
         user: filters?.user ?? '',
         category: filters?.category ? filters.category : CATEGORY_ALL,
+        status: filters?.status ? filters.status : STATUS_ALL,
     }));
 
+    React.useEffect(() => {
+        setDraft({
+            date: filters?.date ?? '',
+            id: filters?.id ? String(filters.id) : '',
+            user: filters?.user ?? '',
+            category: filters?.category ? filters.category : CATEGORY_ALL,
+            status: filters?.status ? filters.status : STATUS_ALL,
+        });
+        setPerPage(Number(filters?.per_page ?? 25));
+    }, [filters?.date, filters?.id, filters?.user, filters?.category, filters?.status, filters?.per_page]);
+
     const go = (params: Record<string, any>) => {
-        router.get('/kotak-saran', { ...filters, ...params }, { preserveState: true, replace: true });
+        router.get('/kotak-saran', { ...filters, per_page: perPage, ...params }, { preserveState: true, replace: true });
     };
 
     const truncate = (text: string, max = 15) => {
@@ -120,7 +137,15 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
             id: Number.isFinite(idNum) && idNum > 0 ? idNum : undefined,
             user: draft.user.trim() || undefined,
             category: draft.category === CATEGORY_ALL ? undefined : draft.category,
+            status: draft.status === STATUS_ALL ? undefined : draft.status,
+            per_page: perPage,
         });
+    };
+
+    const resetFilters = () => {
+        setDraft({ date: '', id: '', user: '', category: CATEGORY_ALL, status: STATUS_ALL });
+        setPerPage(25);
+        go({ page: 1, date: undefined, id: undefined, user: undefined, category: undefined, status: undefined, per_page: 25 });
     };
 
     return (
@@ -131,7 +156,7 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
 
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="grid gap-3 pb-4 md:grid-cols-5">
+                        <div className="grid gap-3 pb-4 md:grid-cols-6">
                             <div className="space-y-1">
                                 <Label htmlFor="date">{t('Tanggal')}</Label>
                                 <Popover>
@@ -202,28 +227,28 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                                     </SelectContent>
                                 </Select>
                             </div>
+
+                            <div className="space-y-1">
+                                <Label>{t('Status')}</Label>
+                                <Select value={draft.status} onValueChange={(v) => setDraft((s) => ({ ...s, status: v }))}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('Semua')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={STATUS_ALL}>{t('Semua')}</SelectItem>
+                                        <SelectItem value="belum_selesai">{t('Belum Selesai')}</SelectItem>
+                                        <SelectItem value="selesai">{t('Selesai')}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
                         <div className="flex items-center justify-end gap-2 pb-4">
-                            <Button variant="outline" onClick={applyFilters}>
+                            <Button onClick={applyFilters}>
                                 {t('Filter')}
                             </Button>
-                        </div>
-
-                        <div className="flex items-center justify-end gap-2 pb-4">
-                            <Button
-                                variant="outline"
-                                disabled={!suggestions?.prev_page_url}
-                                onClick={() => go({ page: Math.max(1, (suggestions?.current_page ?? 1) - 1) })}
-                            >
-                                {t('Sebelumnya')}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                disabled={!suggestions?.next_page_url}
-                                onClick={() => go({ page: (suggestions?.current_page ?? 1) + 1 })}
-                            >
-                                {t('Berikutnya')}
+                            <Button variant="outline" onClick={resetFilters}>
+                                {t('Atur Ulang')}
                             </Button>
                         </div>
 
@@ -250,6 +275,9 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                                             {t('Kategori')}
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Status')}
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                             {t('Saran')}
                                         </th>
                                         <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -260,7 +288,7 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                                 <tbody>
                                     {rows.length === 0 ? (
                                         <tr>
-                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={8}>
+                                            <td className="px-4 py-6 text-center text-muted-foreground" colSpan={9}>
                                                 {t('Tidak ada data.')}
                                             </td>
                                         </tr>
@@ -273,6 +301,9 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.name}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.phone}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{row.category}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    {row.status === 'selesai' ? t('Selesai') : t('Belum Selesai')}
+                                                </td>
                                                 <td className="px-4 py-3 whitespace-nowrap">{truncate(row.message)}</td>
                                                 <td className="px-4 py-3 text-right whitespace-nowrap">
                                                     <Button variant="outline" size="sm" onClick={() => setDetail(row)}>
@@ -284,6 +315,54 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-sm text-muted-foreground">
+                                {t('Menampilkan')}{' '}
+                                {suggestions?.from ?? 0}–{suggestions?.to ?? rows.length} {t('dari')}{' '}
+                                {suggestions?.total ?? rows.length}
+                            </div>
+
+                            <div className="flex flex-wrap items-center justify-end gap-2">
+                                <Button
+                                    variant="outline"
+                                    disabled={!suggestions?.prev_page_url}
+                                    onClick={() => go({ page: Math.max(1, (suggestions?.current_page ?? 1) - 1) })}
+                                >
+                                    {t('Sebelumnya')}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    disabled={!suggestions?.next_page_url}
+                                    onClick={() => go({ page: (suggestions?.current_page ?? 1) + 1 })}
+                                >
+                                    {t('Berikutnya')}
+                                </Button>
+
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>{t('Data')}:</span>
+                                    <Select
+                                        value={String(perPage)}
+                                        onValueChange={(v) => {
+                                            const next = Number(v);
+                                            setPerPage(next);
+                                            go({ per_page: next, page: 1 });
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-9 w-24">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent align="end">
+                                            {[25, 50, 100, 200].map((n) => (
+                                                <SelectItem key={n} value={String(n)}>
+                                                    {n}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -355,9 +434,18 @@ export default function AdminKotakSaran({ suggestions, filters }: PageProps) {
 
                                     <div className="grid gap-1">
                                         <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            {t('Status')}
+                                        </div>
+                                        <div className="text-sm font-medium">
+                                            {detail.status === 'selesai' ? t('Selesai') : t('Belum Selesai')}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid gap-1">
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                             {t('Saran')}
                                         </div>
-                                        <div className="text-sm font-medium whitespace-pre-wrap break-words">{detail.message}</div>
+                                        <div className="text-sm font-medium whitespace-pre-wrap break-words break-all">{detail.message}</div>
                                     </div>
                                 </div>
                             </div>

@@ -23,9 +23,14 @@ class SuggestionsController extends Controller
         $id = (int) $request->query('id', 0);
         $user = trim((string) $request->query('user', ''));
         $category = trim((string) $request->query('category', ''));
+        $status = trim((string) $request->query('status', ''));
 
         if (! in_array($category, ['', 'saran', 'keluhan', 'lainnya'], true)) {
             $category = '';
+        }
+
+        if (! in_array($status, ['', 'belum_selesai', 'selesai'], true)) {
+            $status = '';
         }
 
         $range = WibDateRange::resolve($date, $date);
@@ -37,6 +42,7 @@ class SuggestionsController extends Controller
             ->whereBetween('created_at', [$startUtc, $endUtc])
             ->when($id > 0, fn ($q) => $q->where('id', $id))
             ->when($category !== '', fn ($q) => $q->where('category', $category))
+            ->when($status !== '', fn ($q) => $q->where('status', $status))
             ->when($user !== '', function ($q) use ($user) {
                 $needle = '%'.$user.'%';
 
@@ -62,6 +68,7 @@ class SuggestionsController extends Controller
                 'phone' => (string) ($row->phone ?? ''),
                 'category' => (string) ($row->category ?? ''),
                 'message' => (string) ($row->message ?? ''),
+                'status' => (string) ($row->status ?? 'belum_selesai'),
                 'created_at_wib' => $row->created_at?->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
             ];
         })->all();
@@ -76,6 +83,7 @@ class SuggestionsController extends Controller
                 'id' => $id > 0 ? $id : null,
                 'user' => $user !== '' ? $user : null,
                 'category' => $category !== '' ? $category : null,
+                'status' => $status !== '' ? $status : null,
             ],
         ]);
     }
